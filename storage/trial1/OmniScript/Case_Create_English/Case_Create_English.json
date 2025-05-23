@@ -1,0 +1,25 @@
+{
+  "ElementTypeComponentMapping": "{\"ElementTypeToHTMLTemplateList\":[]}",
+  "IsIntegrationProcedure": false,
+  "IsManagedUsingStdDesigner": false,
+  "IsMetadataCacheDisabled": false,
+  "IsOmniScriptEmbeddable": false,
+  "IsTestProcedure": false,
+  "IsWebCompEnabled": true,
+  "Language": "English",
+  "Name": "CreateCaseForContact",
+  "OmniProcessElement": [
+    "Case_Create_English_Element_Case-Details.json",
+    "Case_Create_English_Element_Description.json",
+    "Case_Create_English_Element_Subject.json",
+    "Case_Create_English_Element_Priority.json",
+    "Case_Create_English_Element_CreateCasePost.json"
+  ],
+  "OmniProcessType": "OmniScript",
+  "PropertySetConfig": "Case_Create_English_PropertySetConfig.json",
+  "SubType": "Create",
+  "Type": "Case",
+  "VlocityDataPackType": "SObject",
+  "VlocityRecordSObjectType": "OmniProcess",
+  "VlocityRecordSourceKey": "OmniProcess/Case/Create/English"
+}

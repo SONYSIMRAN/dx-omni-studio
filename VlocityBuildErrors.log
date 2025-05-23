@@ -1,0 +1,8 @@
+Org: trial1
+Version: 1.17.13
+PackageVersion: undefined
+Namespace: omnistudio
+Job: exportAllOmni.yaml
+Action: Export
+ProjectPath: .
+Errors: None

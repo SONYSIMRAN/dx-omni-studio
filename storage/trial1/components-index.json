@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-05-23T10:40:26.888Z",
+  "sourceAlias": "trial1",
+  "OmniScript": [
+    "Case_Create_English",
+    "Case_QuickEntry_English"
+  ],
+  "DataRaptor": [
+    "CaseSummaryD",
+    "CreateCaseDR"
+  ]
+}

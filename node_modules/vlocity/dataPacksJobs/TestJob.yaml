@@ -1,0 +1,27 @@
+projectPath: ./test
+expansionPath: testJobRunning
+buildFile: testJobRunning/testBuildFile.resource
+autoUpdateSettings: true
+queries: 
+  - VlocityDataPackType: IntegrationProcedure
+    query: Select Id, %vlocity_namespace%__Type__c, %vlocity_namespace%__SubType__c from %vlocity_namespace%__OmniScript__c WHERE %vlocity_namespace%__IsActive__c = true AND %vlocity_namespace%__IsProcedure__c = true AND %vlocity_namespace%__ProcedureKey__c LIKE 'dataPackTest_%'
+  - VlocityDataPackType: VlocityCard
+    query: SELECT Id, Name FROM %vlocity_namespace%__VlocityCard__c WHERE Name LIKE 'datapacktest_%' AND %vlocity_namespace%__Active__c = true
+preJobApex:
+  Deploy: TestJob.cls
+preStepApex:
+  Deploy: DeactivateTemplatesAndLayouts.cls
+postStepApex:
+  Deploy: TestJob.cls
+postJobApex:
+  Deploy: TestJob.cls
+preJobJavaScript:
+  Deploy: ../test/javascript/test.js
+postJobJavaScript:
+  Deploy: ../test/javascript/test.js
+OverrideSettings:
+  DataPacks:
+    AttributeCategory:
+      MaxDeploy: 1
+    VlocityUITemplate:
+      HeadersOnly: true

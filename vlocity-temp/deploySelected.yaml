@@ -1,0 +1,7 @@
+projectPath: ./vlocity-temp
+export:
+  OmniScript:
+    queries: []
+  DataRaptor:
+    queries:
+      - DataRaptor/CaseSummaryD

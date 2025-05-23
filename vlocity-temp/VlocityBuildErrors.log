@@ -1,0 +1,8 @@
+Org: target1
+Version: 1.17.13
+PackageVersion: undefined
+Namespace: omnistudio
+Job: nojob
+Action: Deploy
+ProjectPath: C:\Users\ssimran\dx-omni-deploy\vlocity-temp
+Errors: None

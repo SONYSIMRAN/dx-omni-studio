@@ -1,0 +1,666 @@
+{
+    "jobName": "nojob",
+    "ignoreAllErrors": true,
+    "job": "deploySelected.yaml",
+    "sfdx.username": "target1",
+    "nojob": true,
+    "force": true,
+    "tempFolder": "./vlocity-temp/",
+    "source": "local",
+    "target": "local",
+    "projectPath": "C:\\Users\\ssimran\\dx-omni-deploy\\vlocity-temp",
+    "sfdxUsername": "target1",
+    "passedInOptionsOverride": {
+        "ignoreAllErrors": true,
+        "job": "deploySelected.yaml",
+        "sfdx.username": "target1",
+        "nojob": true,
+        "force": true
+    },
+    "jobAction": "Deploy",
+    "expansionPath": ".",
+    "buildFile": "AllDataPacks.json",
+    "postStepApex": {
+        "Deploy": {
+            "Product2": {
+                "apexClass": "EPCProductJSONUpdate.cls",
+                "namespace": "vlocity_cmt"
+            }
+        }
+    },
+    "delete": true,
+    "activate": true,
+    "compileOnBuild": true,
+    "maxDepth": -1,
+    "defaultMaxParallel": 20,
+    "defaultMinToWaitForLWCOmniScript": 10,
+    "defaultMinToWaitForLWCClassicCards": 10,
+    "defaultMinToWaitForLWCFlexCards": 5,
+    "defaultLWCPullTimeInSeconds": 5,
+    "loginTimeoutForLoginLWC": 300000,
+    "puppeteerHeadless": true,
+    "lookForParentLayoutsForlWCCards": true,
+    "exportPacksMaxSize": 5,
+    "useAllRelationships": false,
+    "addSourceKeys": false,
+    "maximumDeployCount": 10,
+    "manifestOnly": false,
+    "autoUpdateSettings": true,
+    "supportHeadersOnly": true,
+    "allowHeadersPartial": true,
+    "supportForceDeploy": true,
+    "strict": false,
+    "cleanTestData": true,
+    "autoFixPicklists": true,
+    "reactivateOmniScriptsWhenEmbeddedTemplateFound": false,
+    "autoFixDeployErrors": {
+        "AttributeCategoryDisplaySequence": true
+    },
+    "tests": [
+        "Local",
+        "Org"
+    ],
+    "npmRepository": "https://repo.vlocity.com/repository/vlocity-public/",
+    "queryAll": true,
+    "queries": [
+        {
+            "VlocityDataPackType": "AttributeAssignmentRule",
+            "query": "Select Id, Name from %vlocity_namespace%__AttributeAssignmentRule__c"
+        },
+        {
+            "VlocityDataPackType": "AttributeCategory",
+            "query": "Select Id, Name, %vlocity_namespace%__Code__c from %vlocity_namespace%__AttributeCategory__c"
+        },
+        {
+            "VlocityDataPackType": "CalculationMatrix",
+            "query": "Select Id, Name from %vlocity_namespace%__CalculationMatrix__c"
+        },
+        {
+            "VlocityDataPackType": "CalculationMatrixVersion",
+            "query": "Select Id, Name from %vlocity_namespace%__CalculationMatrixVersion__c WHERE %vlocity_namespace%__IsEnabled__c = true",
+            "requiredSetting": "separateMatrixVersions"
+        },
+        {
+            "VlocityDataPackType": "CalculationProcedure",
+            "query": "Select Id, Name from %vlocity_namespace%__CalculationProcedure__c"
+        },
+        {
+            "VlocityDataPackType": "CalculationProcedureVersion",
+            "query": "Select Id, Name from %vlocity_namespace%__CalculationProcedureVersion__c WHERE %vlocity_namespace%__IsEnabled__c = true",
+            "requiredSetting": "separateCalculationProcedureVersions"
+        },
+        {
+            "VlocityDataPackType": "Catalog",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c, %vlocity_namespace%__CatalogCode__c from %vlocity_namespace%__Catalog__c"
+        },
+        {
+            "VlocityDataPackType": "ChargeMeasurement",
+            "query": "Select Id, Name from %vlocity_namespace%__ChargeMeasurement__c"
+        },
+        {
+            "VlocityDataPackType": "ContentVersion",
+            "query": "Select Id, Title, %vlocity_namespace%__GlobalKey__c from ContentVersion WHERE %vlocity_namespace%__GlobalKey__c != null"
+        },
+        {
+            "VlocityDataPackType": "ContextAction",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__ContextAction__c"
+        },
+        {
+            "VlocityDataPackType": "ContextDimension",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__ContextDimension__c"
+        },
+        {
+            "VlocityDataPackType": "ContextScope",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__ContextScope__c"
+        },
+        {
+            "VlocityDataPackType": "ContractType",
+            "query": "Select Id, Name from %vlocity_namespace%__ContractType__c"
+        },
+        {
+            "VlocityDataPackType": "CpqConfigurationSetup",
+            "query": "Select Id, Name from %vlocity_namespace%__CpqConfigurationSetup__c"
+        },
+        {
+            "VlocityDataPackType": "CustomFieldMap",
+            "query": "Select Id, Name from %vlocity_namespace%__CustomFieldMap__c"
+        },
+        {
+            "VlocityDataPackType": "CustomObjectMap",
+            "query": "Select Id, Name from %vlocity_namespace%__CustomObjectMap__c"
+        },
+        {
+            "VlocityDataPackType": "DecisionMatrix",
+            "query": "Select Id, Name from CalculationMatrix"
+        },
+        {
+            "VlocityDataPackType": "DecisionMatrixVersion",
+            "query": "Select Id, Name from CalculationMatrixVersion"
+        },
+        {
+            "VlocityDataPackType": "DataRaptor",
+            "query": "Select Id, Name from %vlocity_namespace%__DRBundle__c WHERE %vlocity_namespace%__Type__c != 'Migration'"
+        },
+        {
+            "VlocityDataPackType": "Document",
+            "query": "Select Id, DeveloperName from Document",
+            "manifestOnly": true
+        },
+        {
+            "VlocityDataPackType": "DocumentClause",
+            "query": "Select Id, Name from %vlocity_namespace%__DocumentClause__c"
+        },
+        {
+            "VlocityDataPackType": "DocumentTemplate",
+            "query": "Select Id, Name from %vlocity_namespace%__DocumentTemplate__c WHERE %vlocity_namespace%__Status__c = 'Active'"
+        },
+        {
+            "VlocityDataPackType": "DocumentTemplates",
+            "query": "Select Id, Name from DocumentTemplate WHERE Status = 'Active'"
+        },
+        {
+            "VlocityDataPackType": "EntityFilter",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__EntityFilter__c"
+        },
+        {
+            "VlocityDataPackType": "ExpressionSet",
+            "query": "Select Id, Name from CalculationProcedure"
+        },
+        {
+            "VlocityDataPackType": "ExpressionSetVersion",
+            "query": "Select Id, Name from CalculationProcedureVersion"
+        },
+        {
+            "VlocityDataPackType": "FlexCard",
+            "query": "SELECT Id, Name FROM OmniUiCard WHERE IsActive = true",
+            "standardOnly": true
+        },
+        {
+            "VlocityDataPackType": "GeneralSettings",
+            "query": "Select Id, Name from %vlocity_namespace%__GeneralSettings__c"
+        },
+        {
+            "VlocityDataPackType": "IntegrationProcedure",
+            "query": "Select Id, %vlocity_namespace%__Type__c, %vlocity_namespace%__SubType__c from %vlocity_namespace%__OmniScript__c WHERE %vlocity_namespace%__IsActive__c = true AND %vlocity_namespace%__IsProcedure__c = true"
+        },
+        {
+            "VlocityDataPackType": "IntegrationProcedure",
+            "query": "Select Id, %vlocity_namespace%__Type__c, %vlocity_namespace%__SubType__c, %vlocity_namespace%__Version__c from %vlocity_namespace%__OmniScript__c WHERE %vlocity_namespace%__IsProcedure__c = true",
+            "versionCompare": true
+        },
+        {
+            "VlocityDataPackType": "IntegrationRetryPolicy",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__IntegrationRetryPolicy__c"
+        },
+        {
+            "VlocityDataPackType": "InterfaceImplementation",
+            "query": "Select Id, Name from %vlocity_namespace%__InterfaceImplementation__c"
+        },
+        {
+            "VlocityDataPackType": "ItemImplementation",
+            "query": "Select Id, Name from %vlocity_namespace%__ItemImplementation__c"
+        },
+        {
+            "VlocityDataPackType": "ManualQueue",
+            "query": "Select Id, Name from %vlocity_namespace%__ManualQueue__c"
+        },
+        {
+            "VlocityDataPackType": "ObjectClass",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__ObjectClass__c"
+        },
+        {
+            "VlocityDataPackType": "ObjectContextRule",
+            "query": "Select Id, Name from %vlocity_namespace%__ObjectRuleAssignment__c"
+        },
+        {
+            "VlocityDataPackType": "ObjectLayout",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__ObjectLayout__c"
+        },
+        {
+            "VlocityDataPackType": "OfferMigrationPlan",
+            "query": "Select Id, Name, %vlocity_namespace%__Code__c from %vlocity_namespace%__OfferMigrationPlan__c"
+        },
+        {
+            "VlocityDataPackType": "OmniScript",
+            "query": "Select Id, %vlocity_namespace%__Type__c, %vlocity_namespace%__SubType__c, %vlocity_namespace%__Language__c, %vlocity_namespace%__IsLwcEnabled__c from %vlocity_namespace%__OmniScript__c WHERE %vlocity_namespace%__IsActive__c = true AND %vlocity_namespace%__IsProcedure__c = false"
+        },
+        {
+            "VlocityDataPackType": "OmniScript",
+            "query": "Select Id, %vlocity_namespace%__Type__c, %vlocity_namespace%__SubType__c, %vlocity_namespace%__Language__c, %vlocity_namespace%__Version__c from %vlocity_namespace%__OmniScript__c WHERE %vlocity_namespace%__IsProcedure__c = false",
+            "versionCompare": true
+        },
+        {
+            "VlocityDataPackType": "OrchestrationDependencyDefinition",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__OrchestrationDependencyDefinition__c"
+        },
+        {
+            "VlocityDataPackType": "OrchestrationItemDefinition",
+            "query": "Select Id, Name, %vlocity_namespace%__OrchestrationPlanDefinitionId__r.Name from %vlocity_namespace%__OrchestrationItemDefinition__c"
+        },
+        {
+            "VlocityDataPackType": "OrchestrationPlanDefinition",
+            "query": "Select Id, Name from %vlocity_namespace%__OrchestrationPlanDefinition__c"
+        },
+        {
+            "VlocityDataPackType": "OrchestrationQueueAssignmentRule",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__OrchestrationQueueAssignmentRule__c"
+        },
+        {
+            "VlocityDataPackType": "PriceList",
+            "query": "Select Id, Name, %vlocity_namespace%__Code__c from %vlocity_namespace%__PriceList__c"
+        },
+        {
+            "VlocityDataPackType": "Pricebook2",
+            "query": "Select Id, Name from Pricebook2",
+            "industryOnly": true
+        },
+        {
+            "VlocityDataPackType": "PricingPlan",
+            "query": "Select Id, Name from %vlocity_namespace%__PricingPlan__c"
+        },
+        {
+            "VlocityDataPackType": "PricingVariable",
+            "query": "Select Id, Name, %vlocity_namespace%__Code__c from %vlocity_namespace%__PricingVariable__c"
+        },
+        {
+            "VlocityDataPackType": "Product2",
+            "query": "Select Id, Name, ProductCode, %vlocity_namespace%__GlobalKey__c from Product2"
+        },
+        {
+            "VlocityDataPackType": "ProductAttributes",
+            "query": "Select Id, Name, ProductCode, %vlocity_namespace%__GlobalKey__c from Product2",
+            "requiredSetting": "separateProducts"
+        },
+        {
+            "VlocityDataPackType": "ProductConfiguration",
+            "query": "Select Id, Name, ProductCode, %vlocity_namespace%__GlobalKey__c from Product2",
+            "requiredSetting": "separateProducts"
+        },
+        {
+            "VlocityDataPackType": "ProductDecomposition",
+            "query": "Select Id, Name, ProductCode, %vlocity_namespace%__GlobalKey__c from Product2",
+            "requiredSetting": "separateProducts"
+        },
+        {
+            "VlocityDataPackType": "ProductHierarchy",
+            "query": "Select Id, Name, ProductCode, %vlocity_namespace%__GlobalKey__c from Product2",
+            "requiredSetting": "separateProducts"
+        },
+        {
+            "VlocityDataPackType": "ProductPricing",
+            "query": "Select Id, Name, ProductCode, %vlocity_namespace%__GlobalKey__c from Product2",
+            "requiredSetting": "separateProducts"
+        },
+        {
+            "VlocityDataPackType": "Project",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__Project__c"
+        },
+        {
+            "VlocityDataPackType": "Promotion",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__Promotion__c"
+        },
+        {
+            "VlocityDataPackType": "QueryBuilder",
+            "query": "Select Id from %vlocity_namespace%__QueryBuilder__c"
+        },
+        {
+            "VlocityDataPackType": "RateBand",
+            "query": "Select Id, Name from %vlocity_namespace%__RateBand__c"
+        },
+        {
+            "VlocityDataPackType": "RelationshipGraph",
+            "query": "Select Id, Name from %vlocity_namespace%__RelationshipGraph__c"
+        },
+        {
+            "VlocityDataPackType": "Rule",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__Rule__c"
+        },
+        {
+            "VlocityDataPackType": "SpecTemplateMapping",
+            "query": "Select Id, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__SpecTemplateMapping__c"
+        },
+        {
+            "VlocityDataPackType": "StoryObjectConfiguration",
+            "query": "Select Id, Name from %vlocity_namespace%__StoryObjectConfiguration__c"
+        },
+        {
+            "VlocityDataPackType": "String",
+            "query": "Select Id, Name from %vlocity_namespace%__String__c"
+        },
+        {
+            "VlocityDataPackType": "System",
+            "query": "Select Id, Name from %vlocity_namespace%__System__c"
+        },
+        {
+            "VlocityDataPackType": "ThorOrchestrationQueue",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__ThorOrchestrationQueue__c"
+        },
+        {
+            "VlocityDataPackType": "TimePlan",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__TimePlan__c"
+        },
+        {
+            "VlocityDataPackType": "TimePolicy",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__TimePolicy__c"
+        },
+        {
+            "VlocityDataPackType": "UIFacet",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__UIFacet__c"
+        },
+        {
+            "VlocityDataPackType": "UISection",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__UISection__c"
+        },
+        {
+            "VlocityDataPackType": "VlocityAction",
+            "query": "SELECT Id, Name FROM %vlocity_namespace%__VlocityAction__c WHERE %vlocity_namespace%__IsActive__c = true"
+        },
+        {
+            "VlocityDataPackType": "VlocityAttachment",
+            "query": "SELECT Id, Name, %vlocity_namespace%__GlobalKey__c FROM %vlocity_namespace%__VlocityAttachment__c"
+        },
+        {
+            "VlocityDataPackType": "VlocityCard",
+            "query": "SELECT Id, Name FROM %vlocity_namespace%__VlocityCard__c WHERE %vlocity_namespace%__Active__c = true"
+        },
+        {
+            "VlocityDataPackType": "VlocityDataStore",
+            "query": "SELECT Id, Name FROM %vlocity_namespace%__Datastore__c"
+        },
+        {
+            "VlocityDataPackType": "VlocityFunction",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__VlocityFunction__c"
+        },
+        {
+            "VlocityDataPackType": "VlocityPicklist",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__Picklist__c"
+        },
+        {
+            "VlocityDataPackType": "VlocityScheduledJob",
+            "query": "Select Id, Name, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__VlocityScheduledJob__c"
+        },
+        {
+            "VlocityDataPackType": "VlocitySearchWidgetSetup",
+            "query": "Select Id, Name from %vlocity_namespace%__VlocitySearchWidgetSetup__c"
+        },
+        {
+            "VlocityDataPackType": "VlocityStateModel",
+            "query": "Select Id, Name from %vlocity_namespace%__VlocityStateModel__c"
+        },
+        {
+            "VlocityDataPackType": "VlocityUILayout",
+            "query": "Select Id, Name from %vlocity_namespace%__VlocityUILayout__c WHERE %vlocity_namespace%__Active__c = true"
+        },
+        {
+            "VlocityDataPackType": "VlocityUITemplate",
+            "query": "Select Id, Name from %vlocity_namespace%__VlocityUITemplate__c WHERE %vlocity_namespace%__Active__c = true"
+        },
+        {
+            "VlocityDataPackType": "VlocityWebTrackingConfiguration",
+            "query": "Select Id, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__VlocityWebTrackingConfiguration__c"
+        },
+        {
+            "VlocityDataPackType": "VlocityTrackingGroup",
+            "query": "Select Id, %vlocity_namespace%__GlobalKey__c from %vlocity_namespace%__VlocityTrackingGroup__c"
+        },
+        {
+            "VlocityDataPackType": "VqMachine",
+            "query": "Select Id, Name from %vlocity_namespace%__VqMachine__c"
+        },
+        {
+            "VlocityDataPackType": "VqResource",
+            "query": "Select Id, Name from %vlocity_namespace%__VqResource__c"
+        }
+    ],
+    "ignoreQueryErrors": true,
+    "startTime": 1747843214092,
+    "originalAction": "Deploy",
+    "logName": "nojob-2025-05-21T16-00-18-110Z-Deploy.yaml",
+    "alreadyExportedKeys": [],
+    "allParents": [
+        "DataRaptor/CaseSummaryD"
+    ],
+    "errors": [],
+    "report": [],
+    "postDeployResults": [
+        {
+            "Id": "0jINS0000002nB72AI"
+        },
+        {
+            "Id": "0kdNS000000EZnVYAW"
+        },
+        {
+            "Id": "0kdNS000000EZnWYAW"
+        },
+        {
+            "Id": "0kdNS000000EZnXYAW"
+        },
+        {
+            "Id": "0kdNS000000EZnYYAW"
+        }
+    ],
+    "preDeployDataSummary": [
+        {
+            "VlocityRecordSObjectType": "OmniDataTransform",
+            "Name": "CaseSummaryD",
+            "VlocityRecordSourceKey": "OmniDataTransform/CaseSummaryD",
+            "VlocityDataPackType": "DataRaptor"
+        }
+    ],
+    "refreshVlocityBase": [],
+    "expandedDataPacks": [],
+    "currentStatus": {
+        "DataRaptor/CaseSummaryD": "Success"
+    },
+    "currentErrors": {},
+    "parallelStatus": {
+        "DataRaptor": false
+    },
+    "sourceKeysByParent": {},
+    "alreadyExportedIdsByType": {},
+    "alreadyErroredIdsByType": {},
+    "alreadyRetriedIdsByType": {},
+    "keyToType": {},
+    "vlocityKeysToNewNamesMap": {},
+    "vlocityRecordSourceKeyMap": {},
+    "VlocityDataPackIds": {},
+    "generatedKeysToNames": {
+        "DataRaptor/CaseSummaryD": "CaseSummaryD"
+    },
+    "sourceKeyToRecordId": {
+        "OmniDataTransform/CaseSummaryD": "0jINS0000002nB72AI",
+        "DataRaptor/CaseSummaryD/OmniDataTransformItem/0": "0kdNS000000EZnVYAW",
+        "DataRaptor/CaseSummaryD/OmniDataTransformItem/1": "0kdNS000000EZnWYAW",
+        "DataRaptor/CaseSummaryD/OmniDataTransformItem/2": "0kdNS000000EZnXYAW",
+        "DataRaptor/CaseSummaryD/OmniDataTransformItem/3": "0kdNS000000EZnYYAW"
+    },
+    "sourceKeyToMatchingKeysData": {
+        "OmniDataTransform/CaseSummaryD": {
+            "BatchSize": "",
+            "Description": "",
+            "ExpectedInputJson": "",
+            "ExpectedInputOtherData": "",
+            "ExpectedInputXml": "",
+            "ExpectedOutputJson": "",
+            "ExpectedOutputOtherData": "",
+            "ExpectedOutputXml": "",
+            "GlobalKey": "CaseSummaryD",
+            "InputParsingClass": "",
+            "InputType": "JSON",
+            "IsActive": false,
+            "IsAssignmentRulesUsed": false,
+            "IsDeletedOnSuccess": false,
+            "IsErrorIgnored": false,
+            "IsFieldLevelSecurityEnabled": false,
+            "IsManagedUsingStdDesigner": false,
+            "IsNullInputsIncludedInOutput": false,
+            "IsProcessSuperBulk": false,
+            "IsRollbackOnError": false,
+            "IsSourceObjectDefault": false,
+            "IsXmlDeclarationRemoved": false,
+            "Name": "CaseSummaryD",
+            "Namespace": "",
+            "OmniDataTransformItem": "CaseSummaryD_Items.json",
+            "OutputParsingClass": "",
+            "OutputType": "JSON",
+            "OverrideKey": "",
+            "PreprocessorClassName": "",
+            "PreviewJsonData": "CaseSummaryD_SampleInputJson.json",
+            "PreviewOtherData": "",
+            "PreviewSourceObjectData": "",
+            "PreviewXmlData": "",
+            "RequiredPermission": "",
+            "ResponseCacheTtlMinutes": "",
+            "ResponseCacheType": "",
+            "SourceObject": "json",
+            "SynchronousProcessThreshold": "",
+            "TargetOutputDocumentIdentifier": "",
+            "TargetOutputFileName": "",
+            "Type": "Extract",
+            "UniqueName": "",
+            "VersionNumber": 1,
+            "VlocityDataPackType": "SObject",
+            "VlocityRecordSObjectType": "OmniDataTransform",
+            "VlocityRecordSourceKey": "OmniDataTransform/CaseSummaryD",
+            "XmlOutputTagsOrder": ""
+        },
+        "DataRaptor/CaseSummaryD/OmniDataTransformItem/0": {
+            "FilterGroup": 0,
+            "FilterOperator": "=",
+            "FilterValue": "500NS00000tBo1sYAC",
+            "GlobalKey": "CaseSummaryD6146327094039521",
+            "InputFieldName": "Id",
+            "InputObjectName": "Case",
+            "InputObjectQuerySequence": 1,
+            "IsDisabled": false,
+            "IsRequiredForUpsert": false,
+            "IsUpsertKey": false,
+            "Name": "CaseSummaryD",
+            "OmniDataTransformationId": {
+                "Name": "CaseSummaryD",
+                "VlocityDataPackType": "VlocityMatchingKeyObject",
+                "VlocityMatchingRecordSourceKey": "OmniDataTransform/CaseSummaryD",
+                "VlocityRecordSObjectType": "OmniDataTransform"
+            },
+            "OutputCreationSequence": 0,
+            "OutputFieldName": "data",
+            "OutputObjectName": "json",
+            "VlocityDataPackType": "SObject",
+            "VlocityRecordSObjectType": "OmniDataTransformItem",
+            "VlocityDataPackIsIncluded": true,
+            "VlocityRecordSourceKey": "DataRaptor/CaseSummaryD/OmniDataTransformItem/0"
+        },
+        "DataRaptor/CaseSummaryD/OmniDataTransformItem/1": {
+            "FormulaSequence": 1,
+            "GlobalKey": "CaseSummaryD2842901753060243",
+            "IsDisabled": false,
+            "IsRequiredForUpsert": false,
+            "IsUpsertKey": false,
+            "Name": "CaseSummaryD",
+            "OmniDataTransformationId": {
+                "Name": "CaseSummaryD",
+                "VlocityDataPackType": "VlocityMatchingKeyObject",
+                "VlocityMatchingRecordSourceKey": "OmniDataTransform/CaseSummaryD",
+                "VlocityRecordSObjectType": "OmniDataTransform"
+            },
+            "OutputCreationSequence": 0,
+            "OutputFieldName": "Formula",
+            "OutputObjectName": "Formula",
+            "VlocityDataPackType": "SObject",
+            "VlocityRecordSObjectType": "OmniDataTransformItem",
+            "VlocityDataPackIsIncluded": true,
+            "VlocityRecordSourceKey": "DataRaptor/CaseSummaryD/OmniDataTransformItem/1"
+        },
+        "DataRaptor/CaseSummaryD/OmniDataTransformItem/2": {
+            "GlobalKey": "CaseSummaryD013158496829863364",
+            "InputFieldName": "data:Priority",
+            "IsDisabled": false,
+            "IsRequiredForUpsert": false,
+            "IsUpsertKey": false,
+            "Name": "CaseSummaryD",
+            "OmniDataTransformationId": {
+                "Name": "CaseSummaryD",
+                "VlocityDataPackType": "VlocityMatchingKeyObject",
+                "VlocityMatchingRecordSourceKey": "OmniDataTransform/CaseSummaryD",
+                "VlocityRecordSObjectType": "OmniDataTransform"
+            },
+            "OutputCreationSequence": 1,
+            "OutputFieldFormat": "String",
+            "OutputFieldName": "data:Priority",
+            "OutputObjectName": "json",
+            "VlocityDataPackType": "SObject",
+            "VlocityRecordSObjectType": "OmniDataTransformItem",
+            "VlocityDataPackIsIncluded": true,
+            "VlocityRecordSourceKey": "DataRaptor/CaseSummaryD/OmniDataTransformItem/2"
+        },
+        "DataRaptor/CaseSummaryD/OmniDataTransformItem/3": {
+            "GlobalKey": "CaseSummaryD26169430850143094",
+            "InputFieldName": "data:Subject",
+            "IsDisabled": false,
+            "IsRequiredForUpsert": false,
+            "IsUpsertKey": false,
+            "Name": "CaseSummaryD",
+            "OmniDataTransformationId": {
+                "Name": "CaseSummaryD",
+                "VlocityDataPackType": "VlocityMatchingKeyObject",
+                "VlocityMatchingRecordSourceKey": "OmniDataTransform/CaseSummaryD",
+                "VlocityRecordSObjectType": "OmniDataTransform"
+            },
+            "OutputCreationSequence": 1,
+            "OutputFieldFormat": "String",
+            "OutputFieldName": "data:Subject",
+            "OutputObjectName": "json",
+            "VlocityDataPackType": "SObject",
+            "VlocityRecordSObjectType": "OmniDataTransformItem",
+            "VlocityDataPackIsIncluded": true,
+            "VlocityRecordSourceKey": "DataRaptor/CaseSummaryD/OmniDataTransformItem/3"
+        }
+    },
+    "dataPackKeyToPrimarySourceKey": {
+        "OmniDataTransform/CaseSummaryD": "DataRaptor/CaseSummaryD"
+    },
+    "diffType": {},
+    "sourceHashCodes": {},
+    "targetHashCodes": {},
+    "fullManifest": {},
+    "manifestFound": {},
+    "dataPackDisplayLabels": {
+        "DataRaptor/CaseSummaryD": "CaseSummaryD (DataRaptor/CaseSummaryD)"
+    },
+    "allDataSummary": {
+        "DataRaptor/CaseSummaryD": {
+            "VlocityRecordSObjectType": "OmniDataTransform",
+            "Name": "CaseSummaryD",
+            "VlocityRecordSourceKey": "OmniDataTransform/CaseSummaryD",
+            "VlocityDataPackType": "DataRaptor"
+        }
+    },
+    "pendingFromManifest": {},
+    "keysToDirectories": {
+        "DataRaptor/CaseSummaryD": "DataRaptor/CaseSummaryD"
+    },
+    "VlocityDataPackKeyToUrlMapping": {},
+    "relationshipKeyToChildKeys": {},
+    "dataPackLabelsByDir": {
+        "C:\\Users\\ssimran\\dx-omni-deploy\\vlocity-temp\\DataRaptor\\CaseSummaryD": "CaseSummaryD"
+    },
+    "upgradeDataPackFields": false,
+    "supportParallel": true,
+    "resetFileData": false,
+    "shouldSendUpdates": true,
+    "buildImportCachedAlreadyNull": null,
+    "elapsedTime": "0m 7s",
+    "hasValidImportsCached": {},
+    "records": [
+        {
+            "VlocityDataPackKey": "DataRaptor/CaseSummaryD",
+            "VlocityRecordSObjectType": "OmniDataTransform",
+            "Name": "CaseSummaryD",
+            "VlocityRecordSourceKey": "OmniDataTransform/CaseSummaryD",
+            "VlocityDataPackType": "DataRaptor",
+            "VlocityDataPackStatus": "Success",
+            "Id": "0jINS0000002nB72AI",
+            "VlocityDataPackDisplayLabel": "CaseSummaryD (DataRaptor/CaseSummaryD)"
+        }
+    ]
+}

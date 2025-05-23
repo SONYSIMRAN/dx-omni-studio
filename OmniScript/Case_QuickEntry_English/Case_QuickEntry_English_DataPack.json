@@ -1,0 +1,22 @@
+{
+    "ElementTypeComponentMapping": "{\"ElementTypeToHTMLTemplateList\":[]}",
+    "IsIntegrationProcedure": false,
+    "IsManagedUsingStdDesigner": false,
+    "IsMetadataCacheDisabled": false,
+    "IsOmniScriptEmbeddable": false,
+    "IsTestProcedure": false,
+    "IsWebCompEnabled": true,
+    "Language": "English",
+    "Name": "CaseQuickEntry",
+    "OmniProcessElement": [
+        "Case_QuickEntry_English_Element_Step1.json",
+        "Case_QuickEntry_English_Element_Text1.json"
+    ],
+    "OmniProcessType": "OmniScript",
+    "PropertySetConfig": "Case_QuickEntry_English_PropertySetConfig.json",
+    "SubType": "QuickEntry",
+    "Type": "Case",
+    "VlocityDataPackType": "SObject",
+    "VlocityRecordSObjectType": "OmniProcess",
+    "VlocityRecordSourceKey": "OmniProcess/Case/QuickEntry/English"
+}

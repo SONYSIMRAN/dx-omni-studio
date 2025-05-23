@@ -1,0 +1,27 @@
+Org: trial1
+Version: 1.17.13
+Node: v22.15.0
+PackageVersion: !<tag:yaml.org,2002:js/undefined> ''
+Namespace: omnistudio
+Job: VDX
+Action: Export
+ProjectPath: .
+TotalTime: 0m 13s
+Count:
+  Success:
+    OmniScript: 2
+    DataRaptor: 2
+Errors: []
+Status:
+  Success:
+    OmniScript:
+      - Case_Create_English
+      - Case_QuickEntry_English
+    DataRaptor:
+      - CaseSummaryD
+      - CreateCaseDR
+StatusCount:
+  Remaining: 0
+  Success: 5
+  Error: 0
+id: !<tag:yaml.org,2002:js/undefined> ''

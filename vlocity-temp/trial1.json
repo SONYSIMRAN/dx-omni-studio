@@ -1,0 +1,12 @@
+{
+    "id": "00DNS00000IxDgQ2AV",
+    "apiVersion": "63.0",
+    "accessToken": "00DNS00000IxDgQ!AQEAQO1B7zRur_9BW7RpiSoUMeFAZ1e9OkLWFMBHbGLyzTfvg4E0fwvGq22SZUC4xu2iRJ4pBBejNBqC5tpCXnRfPSpfO1ER",
+    "instanceUrl": "https://tgs45-dev-ed.develop.my.salesforce.com",
+    "username": "ssimran@tgs.com",
+    "clientId": "PlatformCLI",
+    "connectedStatus": "Connected",
+    "sfdxAuthUrl": "force://PlatformCLI::5Aep861EpUcQheJKFNdBLAPJ2HATrzxUqbz0UlBjmqZFhhFV0fPEtTMEynhc.q3GrjRWpupJi6f01aZj3nanPRM@tgs45-dev-ed.develop.my.salesforce.com",
+    "alias": "trial1",
+    "vbtSfdxUsername": "trial1"
+}
