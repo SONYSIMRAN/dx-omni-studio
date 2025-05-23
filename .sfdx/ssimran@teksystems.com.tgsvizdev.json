@@ -1,0 +1,19 @@
+{
+  "username": "ssimran@teksystems.com.tgsvizdev",
+  "accessToken": "d395457dbe4f047e5fa6353d97993b37b08373abd12c7e68dd20ef433a96a4c57d5d9b225a928674357c720bfe641145a47ed673e8204886268b4478df04d4aecba37c590a356e5f57c2c69651365866c08d44aa92d5fe3223202b9f0237168bfd481dd979ff88c9a4f1ffd897c65ce79a94799b3c17:800b00281a8b39e62dd042968c11aa3a",
+  "instanceUrl": "https://teksystems4--tgsvizdev.sandbox.my.salesforce.com",
+  "orgId": "00DDz000001qduPMAQ",
+  "loginUrl": "https://test.salesforce.com/",
+  "refreshToken": "dff1155f4914c6fabbdf0a79732ba012b8605cbcf0c57e141f40eb69075f75a4f239805d587aff5fe477ceee96b58920c5fef4a1166e26b4a0b9f8aa728afcb4dcefc885ebeb5a719d148698140f8fbff28c2d339a39bed5f7a478916a:e1241db773bf3db626a5b1469a7e0ee9",
+  "clientId": "PlatformCLI",
+  "isDevHub": false,
+  "instanceApiVersion": "64.0",
+  "instanceApiVersionLastRetrieved": "5/22/2025, 11:12:59 PM",
+  "name": "TEKsystems",
+  "instanceName": "CS276",
+  "namespacePrefix": null,
+  "isSandbox": true,
+  "isScratch": false,
+  "trailExpirationDate": null,
+  "tracksSource": false
+}

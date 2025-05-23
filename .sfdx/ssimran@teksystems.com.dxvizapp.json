@@ -1,0 +1,19 @@
+{
+  "accessToken": "252be45b9d22b65fe4a7aed601af35b81c8bb628932fc0f78b44699a3f64ed56127e02378e2f1911d576de72be0824a5306ad05ab17be30791bab409e04afe110725e1ed44d505b8d2ecb7f34c2ef714ff6e0aba75aa0fec0eb6d1c72e224936998ab63641b0a53ba7a10530bfb42319a1d4991169ec:7c2e08d7098828e0e80b3e5f77f582b4",
+  "instanceUrl": "https://allegisgroup--dxvizapp.sandbox.my.salesforce.com",
+  "orgId": "00DDy0000008uzAMAQ",
+  "username": "ssimran@teksystems.com.dxvizapp",
+  "loginUrl": "https://test.salesforce.com/",
+  "refreshToken": "196bdb47319214b6744ae37398cf2580c4250ed7aef6b798f8ccbdfcfc57ea8d447bf627dacf1476c48fbcda375f62893646acb7138828720d363df3d96bb04b91ec13fbee8cfc2dced98ec72b72c998e82114cb4cf5a40c3044ae95ec:fc2c59e9ef21e02672111d8d44a66321",
+  "clientId": "PlatformCLI",
+  "isDevHub": false,
+  "instanceApiVersion": "63.0",
+  "instanceApiVersionLastRetrieved": "5/21/2025, 8:44:10 PM",
+  "name": "Allegis Group",
+  "instanceName": "CS275",
+  "namespacePrefix": null,
+  "isSandbox": true,
+  "isScratch": false,
+  "trailExpirationDate": null,
+  "tracksSource": true
+}

@@ -1,0 +1,12 @@
+{
+  "accessToken": "33cb786e906aeff3832083dab09197f6eac7b2a937d2810fbb270a95f86685200f3684f1dfe36fa27966611ef2533d2d08c81bb0b03885fdf01545ce5b45c887092fe9ba3ce0a7efc83072a9cdd031ae45366ef87d058e4dc4955e3b84bff49d1bb76247178a35d107b31bb92c524aa023ad5b89b8bd:cb90d76a139076f53f3325f41f135773",
+  "instanceUrl": "https://teksystems4--tgsapptest.sandbox.my.salesforce.com",
+  "orgId": "00DD4000000HtJqMAK",
+  "username": "ssimran@teksystems.com.tgsapptest",
+  "loginUrl": "https://test.salesforce.com/",
+  "refreshToken": "f7060b2941c6a9b9c3aa987028caf878e73c3ed0c9fe1307d12240cdbb527456dac8c709f9008b0f2be2bb91aaf573063e426937a6d0b280aeee91035fcca24c14abdd8b3834c9b4816bd7acc34cacb48d7bfb30113c8bfd236ad12f68:f5b02bc53b6029350edc6a2bf61f9a81",
+  "clientId": "PlatformCLI",
+  "isDevHub": false,
+  "instanceApiVersion": "64.0",
+  "instanceApiVersionLastRetrieved": "5/21/2025, 8:44:11 PM"
+}

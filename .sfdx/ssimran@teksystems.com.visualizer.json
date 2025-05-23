@@ -1,0 +1,19 @@
+{
+  "accessToken": "7aba64dc5e161391bd161f26cc56176872b98d48ae42cc84c1370fa8ff30db45b79c418a587fb22df11fded5f4df6ddad4ed0ab610e9eee9cbc36f69daba503e62b1d10bbbfd5172114cc258b31afb7f114a358249d9b3af7a344416953c45c420c0536607471b804350b4d782b69310bda7e7d20626:2103c49368e25b17e0fb78af62590046",
+  "instanceUrl": "https://allegisgroup--visualizer.sandbox.my.salesforce.com",
+  "orgId": "00DD20000008wlhMAA",
+  "username": "ssimran@teksystems.com.visualizer",
+  "loginUrl": "https://test.salesforce.com/",
+  "refreshToken": "58b2608318677e1982f773a4d9a444d331626c444bb09699f9cbebef2f00a3f2fce8bb88fa524fc4b5070a9a835690c4fd4c143e2b27f53090ec1086dfcac6f1de43e05276cda264f8a625d7ba17fbd596000d35b306e80ffb1b97d576:db95c76bcc79dde860f6c114bfcf25fb",
+  "clientId": "PlatformCLI",
+  "isDevHub": false,
+  "instanceApiVersion": "64.0",
+  "instanceApiVersionLastRetrieved": "5/21/2025, 8:44:10 PM",
+  "name": "Visualizer",
+  "instanceName": "CS278",
+  "namespacePrefix": null,
+  "isSandbox": true,
+  "isScratch": false,
+  "trailExpirationDate": null,
+  "tracksSource": false
+}

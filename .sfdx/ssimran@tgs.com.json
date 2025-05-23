@@ -1,0 +1,12 @@
+{
+  "accessToken": "543b0d24e8e675e6307d69fe85dc6bd2c8ca19611300b11b0fffaf8b565eb66462138ba0aa238eb94b5a4a798a276f6307027215b9407d23221db0b87df6a89ca02f349f6b8e6eb658e6a3f68c0ff5fbe3dcafa394cee2f836fae7f5c74106e77c4c9b3bfdd5689b93b651bf815a6e7dd1ff19ca9982:a2c2c9696dff6bb9c2a131292ba9c808",
+  "instanceUrl": "https://tgs45-dev-ed.develop.my.salesforce.com",
+  "orgId": "00DNS00000IxDgQ2AV",
+  "username": "ssimran@tgs.com",
+  "loginUrl": "https://login.salesforce.com",
+  "refreshToken": "2e05e4b161b91f981e91f9b76cc7656c0fcb012dd1c7a6255e14314173da49e1450ad8dbfe47f1328956077bf0149714171133849964bd33668b91cab9582d1d72b3073a4df966d4be5db62aa499b202d1603c9a3f5c426b02a6661a62:d3c593b73bafc0cf986dcff3b4d0ecf8",
+  "clientId": "PlatformCLI",
+  "isDevHub": false,
+  "instanceApiVersion": "63.0",
+  "instanceApiVersionLastRetrieved": "5/22/2025, 10:34:28 PM"
+}

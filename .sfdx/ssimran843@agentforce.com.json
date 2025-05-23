@@ -1,0 +1,19 @@
+{
+  "accessToken": "bf2c35d7f760aa78e6f6df6b2442b23a494029021682b7c04aad957fb5c45cc52959fe0d29f8ffba2fa56322d196cc80983305d6d728495e07aec0dc07cc2af3169def1affab69896386197d44f6df8e592f35508ea2a577765fa2377a13872da817b4373a10983db87162730aa408ff0f4e2e42f879:f5b3041c1a5c8d860a395420c860d07f",
+  "instanceUrl": "https://orgfarm-83a93e45d0-dev-ed.develop.my.salesforce.com",
+  "orgId": "00DgL000002tWpMUAU",
+  "username": "ssimran843@agentforce.com",
+  "loginUrl": "https://login.salesforce.com/",
+  "refreshToken": "354361642a4faf9474825035d4965477f348a255fe4ff05deac16964ad494e311372dac936fea2a5351e55d733bdd9c8c2a1a88320457124b42df46783bcc81ff5a311bc3cb890ba59f3796de08490c8a478d84b37a8749ec8e6cd72cb:62b12e349d98554a62525785f0d5fd0f",
+  "clientId": "PlatformCLI",
+  "isDevHub": false,
+  "instanceApiVersion": "63.0",
+  "instanceApiVersionLastRetrieved": "5/21/2025, 8:44:10 PM",
+  "name": "TEKSystems.com",
+  "instanceName": "CAN98",
+  "namespacePrefix": "tgsdxvis",
+  "isSandbox": false,
+  "isScratch": false,
+  "trailExpirationDate": null,
+  "tracksSource": false
+}

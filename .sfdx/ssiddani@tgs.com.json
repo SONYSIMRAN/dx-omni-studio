@@ -1,0 +1,12 @@
+{
+  "accessToken": "f128c76f41365b25af07fae6604c46345b98c99dd9c3cd5aa42fd05e67d342feebe21f9e11c5ac152bae5abee798d7244679179f3ea46e48d9db09517783eef405ab12d31d851ed74d43f034a77c4b2189a9e103480da443c5dad3b3924cfaf5b4994077b127218b119332bc1b72b581f4a16c2afaca:786f6227d975ad6a9dab81d917ced6da",
+  "instanceUrl": "https://teksystemsglobalservices8-dev-ed.develop.my.salesforce.com",
+  "orgId": "00DNS00000JcYKL2A3",
+  "username": "ssiddani@tgs.com",
+  "loginUrl": "https://login.salesforce.com",
+  "refreshToken": "5717585db16451445d57754a2b06cf28725fd5b7ee5686d6909942ef6fcd2dd83f2578d11012df6255686cbea15700773862e3f5719e8b9197c46cb7b712dc31bb11f41943bee8422b4f50b77548a0c56ca7f374b1784c51b1ae9e7b59:756bd3168fb60552434be591625663bc",
+  "clientId": "PlatformCLI",
+  "isDevHub": false,
+  "instanceApiVersion": "63.0",
+  "instanceApiVersionLastRetrieved": "5/21/2025, 8:44:10 PM"
+}
