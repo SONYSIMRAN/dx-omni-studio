@@ -35,7 +35,7 @@ app.get('/components', (req, res) => {
 
     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
 
-    const exportCmd = `vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
+    const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
     console.log(`Exporting with command: ${exportCmd}`);
 
     exec(exportCmd, (err, stdout, stderr) => {
@@ -101,8 +101,8 @@ app.post('/deploy', (req, res) => {
     console.log('Selected Components:', JSON.stringify(selectedComponents, null, 2));
 
     try {
-        execSync(`vlocity -sfdx.username ${sourceAlias} packUpdateSettings`, { stdio: 'inherit' });
-        execSync(`vlocity -sfdx.username ${targetAlias} packUpdateSettings`, { stdio: 'inherit' });
+        execSync(`npx  vlocity -sfdx.username ${sourceAlias} packUpdateSettings`, { stdio: 'inherit' });
+        execSync(`npx  vlocity -sfdx.username ${targetAlias} packUpdateSettings`, { stdio: 'inherit' });
     } catch (err) {
         console.error('Error updating settings:', err.message);
     }
@@ -139,7 +139,7 @@ app.post('/deploy', (req, res) => {
     const yamlPath = path.join(tempDir, 'deploySelected.yaml');
     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
 
-    const deployCmd = `vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+    const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
 
     exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
         if (err) {
