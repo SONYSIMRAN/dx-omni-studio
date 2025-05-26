@@ -3,15 +3,11 @@
   "version": "1.0.0",
   "main": "deployServer.js",
   "scripts": {
-    "start": "node deployServer.js"
+    "start": "node deployServer.js",
+    "postinstall": "npm install https://github.com/vlocityinc/vlocity_build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "express": "^5.1.0",
-    "js-yaml": "^4.1.0",
-    "vlocity": "github:vlocityinc/vlocity_build"
+    "js-yaml": "^4.1.0"
   }
 }
