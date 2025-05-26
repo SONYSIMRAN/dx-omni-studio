@@ -190,7 +190,9 @@ app.get('/components', (req, res) => {
 
     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
 
-    const exportCmd = `node ./node_modules/vlocity_build/vlocity.js -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
+  //  const exportCmd = `node ./node_modules/vlocity_build/vlocity.js -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
+    const exportCmd = `vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
+
 
     console.log(`Exporting with command: ${exportCmd}`);
 
