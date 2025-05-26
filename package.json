@@ -2,8 +2,12 @@
   "name": "dx-omni-deploy",
   "version": "1.0.0",
   "main": "index.js",
+//  "scripts": {
+  //  "start": "node deployServer.js"
+  //},
   "scripts": {
-    "start": "node deployServer.js"
+  "start": "node deployServer.js",
+  "vlocity": "vlocity"
   },
   "keywords": [],
   "author": "",
