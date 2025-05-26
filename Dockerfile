@@ -27,11 +27,17 @@ EXPOSE 3000
 # 1. Write JWT key from env
 # 2. Authenticate to Salesforce using JWT
 # 3. Run the Node.js deployment server
+# CMD sh -c 'echo "$SF_JWT_KEY" > jwt.key && \
+#     sfdx auth:jwt:grant \
+#       --clientid "$SF_CLIENT_ID" \
+#       --jwtkeyfile jwt.key \
+#       --username "$SF_USERNAME" \
+#       --instanceurl "$SF_LOGIN_URL" \
+#       --setalias trial1 && \
+#     node deployServer.js'
+
 CMD sh -c 'echo "$SF_JWT_KEY" > jwt.key && \
-    sfdx auth:jwt:grant \
-      --clientid "$SF_CLIENT_ID" \
-      --jwtkeyfile jwt.key \
-      --username "$SF_USERNAME" \
-      --instanceurl "$SF_LOGIN_URL" \
-      --setalias trial1 && \
+    sfdx auth:jwt:grant --clientid "$SF_CLIENT_ID" --jwtkeyfile jwt.key --username "$SF_USERNAME" --instanceurl "$SF_LOGIN_URL" --setalias trial1 && \
+    sfdx auth:list && \
     node deployServer.js'
+
