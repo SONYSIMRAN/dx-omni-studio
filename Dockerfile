@@ -1,43 +1,41 @@
 # Use official Node 18 image
 FROM node:18
 
-# Install Salesforce CLI
-RUN npm install -g sfdx-cli
-
-# Install Git (required for Vlocity CLI clone)
+# Install Git (required for cloning Vlocity)
 RUN apt-get update && apt-get install -y git
+
+# Install SF CLI (latest stable)
+RUN npm install --global @salesforce/cli
 
 # Clone and install Vlocity CLI
 RUN git clone https://github.com/vlocityinc/vlocity_build.git && \
     cd vlocity_build && npm install && npm link
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy project files into the container
+# Copy your project files
 COPY . .
 
-# Install app dependencies
+# Install project dependencies
 RUN npm install
 
-# Expose your app port
+# Set environment variable to ensure SF CLI uses correct behavior
+ENV SF_USE_PROGRESS_BAR=false
+
+# Expose app port
 EXPOSE 3000
 
-# Final runtime command:
-# 1. Write JWT key from env
-# 2. Authenticate to Salesforce using JWT
-# 3. Run the Node.js deployment server
-# CMD sh -c 'echo "$SF_JWT_KEY" > jwt.key && \
-#     sfdx auth:jwt:grant \
-#       --clientid "$SF_CLIENT_ID" \
-#       --jwtkeyfile jwt.key \
-#       --username "$SF_USERNAME" \
-#       --instanceurl "$SF_LOGIN_URL" \
-#       --setalias trial1 && \
-#     node deployServer.js'
-
+# Runtime command:
+# 1. Save private key from env
+# 2. Authenticate to Salesforce via JWT
+# 3. Start your deployment server
 CMD sh -c 'echo "$SF_JWT_KEY" > jwt.key && \
-    sfdx auth:jwt:grant --clientid "$SF_CLIENT_ID" --jwtkeyfile jwt.key --username "$SF_USERNAME" --instanceurl "$SF_LOGIN_URL" --setalias trial1 && \
-    sfdx auth:list && \
+    sf auth:jwt:grant \
+      --client-id "$SF_CLIENT_ID" \
+      --jwt-key-file jwt.key \
+      --username "$SF_USERNAME" \
+      --instance-url "$SF_LOGIN_URL" \
+      --alias trial1 && \
+    sf org list && \
     node deployServer.js'
-
