@@ -1,36 +1,37 @@
+# Use official Node 18 image
 FROM node:18
 
-# Install SFDX CLI globally
+# Install Salesforce CLI
 RUN npm install -g sfdx-cli
 
-# Install git (needed to clone Vlocity CLI)
+# Install Git (required for Vlocity CLI clone)
 RUN apt-get update && apt-get install -y git
 
-# Clone and install Vlocity CLI globally
+# Clone and install Vlocity CLI
 RUN git clone https://github.com/vlocityinc/vlocity_build.git && \
     cd vlocity_build && npm install && npm link
 
-# Set working directory for your app
+# Set the working directory
 WORKDIR /app
 
-# Copy app source code
+# Copy project files into the container
 COPY . .
 
 # Install app dependencies
 RUN npm install
 
-# ⚠️ Add JWT key and login to Salesforce
-# These env vars must be set in Railway: SF_JWT_KEY, SF_CLIENT_ID, SF_USERNAME, SF_LOGIN_URL
-RUN echo "$SF_JWT_KEY" > jwt.key && \
+# Expose your app port
+EXPOSE 3000
+
+# Final runtime command:
+# 1. Write JWT key from env
+# 2. Authenticate to Salesforce using JWT
+# 3. Run the Node.js deployment server
+CMD sh -c 'echo "$SF_JWT_KEY" > jwt.key && \
     sfdx auth:jwt:grant \
       --clientid "$SF_CLIENT_ID" \
       --jwtkeyfile jwt.key \
       --username "$SF_USERNAME" \
       --instanceurl "$SF_LOGIN_URL" \
-      --setalias trial1
-
-# Expose app port
-EXPOSE 3000
-
-# Start your Node app
-CMD ["node", "deployServer.js"]
+      --setalias trial1 && \
+    node deployServer.js'
