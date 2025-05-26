@@ -4,36 +4,38 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 const storage = require('./storageHelper');
-const { getSupportedObjects } = require('./dxUtils');
+const { getSupportedObjects, getObjectFields } = require('./dxUtils');
 
 const app = express();
 app.use(express.json());
 
-// GET all OmniStudio components (export full with dependencies)
 app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
     const allOmniTypes = [
-        'OmniScript',
-        'IntegrationProcedure',
-        'DataRaptor',
-        'FlexCard',
-        'OmniStudioAction',
-        'VlocityUITemplate',
-        'VlocityUILayout',
-        'CalculationMatrix',
-        'CalculationProcedure',
+        'OmniScript', 'IntegrationProcedure', 'DataRaptor', 'FlexCard', 'OmniStudioAction',
+        'VlocityUITemplate', 'VlocityUILayout', 'CalculationMatrix', 'CalculationProcedure',
         'OmniStudioTrackingService'
     ];
 
-    const supportedObjects = getSupportedObjects(sourceAlias);
+    const unsupportedTypes = [
+        'omnistudio__VlocitySearchWidgetSetup__c', 'omnistudio__VlocityCard__c',
+        'omnistudio__UIFacet__c', 'omnistudio__VlocityWebTrackingConfiguration__c',
+        'omnistudio__VqMachine__c', 'omnistudio__OrchestrationQueueAssignmentRule__c'
+    ];
 
-    const filteredOmniTypes = allOmniTypes.filter(type =>
-        supportedObjects.includes(type)
-        || supportedObjects.includes(`vlocity_ins__${type}__c`)
-        || supportedObjects.includes(`omnistudio__${type}__c`)
-    );
+    const supportedObjects = getSupportedObjects(sourceAlias);
+    const filteredOmniTypes = allOmniTypes.filter(type => {
+        const sObjectName1 = type;
+        const sObjectName2 = `vlocity_ins__${type}__c`;
+        const sObjectName3 = `omnistudio__${type}__c`;
+        return (
+            supportedObjects.includes(sObjectName1) ||
+            supportedObjects.includes(sObjectName2) ||
+            supportedObjects.includes(sObjectName3)
+        ) && !unsupportedTypes.includes(sObjectName3);
+    });
 
     const yamlContent = {
         export: {},
@@ -85,6 +87,7 @@ app.get('/components', (req, res) => {
         res.json(summary);
     });
 });
+
 
 // GET stored components
 app.get('/stored-components', (req, res) => {
