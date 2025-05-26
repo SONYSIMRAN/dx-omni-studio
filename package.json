@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "main": "deployServer.js",
   "scripts": {
-    "start": "node deployServer.js",
-    "postinstall": "npm install https://github.com/vlocityinc/vlocity_build/archive/refs/heads/master.tar.gz"
+    "start": "node deployServer.js"
   },
   "dependencies": {
     "express": "^4.18.2",
