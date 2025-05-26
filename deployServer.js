@@ -192,7 +192,8 @@ app.get('/components', (req, res) => {
     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
 
     //const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
-    const exportCmd = `npm run vlocity -- -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
+    const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
+   // const exportCmd = `npm run vlocity -- -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
 
     console.log(`Exporting with command: ${exportCmd}`);
 
