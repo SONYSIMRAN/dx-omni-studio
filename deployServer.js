@@ -29,9 +29,9 @@ app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
+    // ✅ Moved here so sourceAlias is defined
     const allTypes = getSupportedOmniTypes(sourceAlias);
 
-    // YAML config
     const yamlContent = {
         export: {},
         exportPacks: {
@@ -39,12 +39,13 @@ app.get('/components', (req, res) => {
             autoAddDependencies: true
         }
     };
-    allTypes.forEach(type => yamlContent.export[type] = {});
 
-    // Save export job file
+    allTypes.forEach(type => {
+        yamlContent.export[type] = {};
+    });
+
     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
 
-    // Execute export with error suppression
     const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
     console.log(`Exporting with command: ${exportCmd}`);
 
@@ -82,6 +83,7 @@ app.get('/components', (req, res) => {
         res.json(summary);
     });
 });
+
 
 // GET: View Stored Components
 app.get('/stored-components', (req, res) => {
