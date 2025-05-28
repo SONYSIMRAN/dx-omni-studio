@@ -10,18 +10,18 @@ const app = express();
 app.use(express.json());
 
 // Supported OmniStudio Types (safe for most orgs)
-// const allTypes = [
-//     'OmniScript',
-//     'DataRaptor',
-//     'IntegrationProcedure',
-//     'FlexCard',
-//     // 'VlocityUITemplate',
-//     // 'VlocityUILayout',
-//     // 'OmniStudioAction',
-//     // 'CalculationProcedure',
-//     // 'CalculationMatrix',
-//     // 'OmniStudioTrackingService'
-// ];
+const allTypes = [
+    'OmniScript',
+    'DataRaptor',
+    'IntegrationProcedure',
+    'FlexCard',
+    // 'VlocityUITemplate',
+    // 'VlocityUILayout',
+    // 'OmniStudioAction',
+    // 'CalculationProcedure',
+    // 'CalculationMatrix',
+    // 'OmniStudioTrackingService'
+];
 // const allTypes = getSupportedOmniTypes(sourceAlias);
 
 //GET: Export and Store OmniStudio Components
@@ -30,7 +30,7 @@ app.get('/components', (req, res) => {
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
     // ✅ Moved here so sourceAlias is defined
-    const allTypes = getSupportedOmniTypes(sourceAlias);
+    // const allTypes = getSupportedOmniTypes(sourceAlias);
 
     const yamlContent = {
         export: {},
