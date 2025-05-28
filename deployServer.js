@@ -16,10 +16,10 @@ const allTypes = [
     'FlexCard',
     'VlocityUITemplate',
     'VlocityUILayout',
-    'OmniStudioAction',
-    'CalculationProcedure',
-    'CalculationMatrix',
-    'OmniStudioTrackingService'
+    // 'OmniStudioAction',
+    // 'CalculationProcedure',
+    // 'CalculationMatrix',
+    // 'OmniStudioTrackingService'
 ];
 
 //GET: Export and Store OmniStudio Components
