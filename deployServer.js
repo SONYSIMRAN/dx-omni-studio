@@ -9,34 +9,103 @@ const { getSupportedObjects, getObjectFields } = require('./dxUtils');
 const app = express();
 app.use(express.json());
 
+// app.get('/components', (req, res) => {
+//     const { sourceAlias } = req.query;
+//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+//     const allOmniTypes = [
+//         'OmniScript', 'IntegrationProcedure', 'DataRaptor', 'FlexCard', 'OmniStudioAction',
+//         'VlocityUITemplate', 'VlocityUILayout', 'CalculationMatrix', 'CalculationProcedure',
+//         'OmniStudioTrackingService'
+//     ];
+
+//     const unsupportedTypes = [
+//         'omnistudio__VlocitySearchWidgetSetup__c', 'omnistudio__VlocityCard__c',
+//         'omnistudio__UIFacet__c', 'omnistudio__VlocityWebTrackingConfiguration__c',
+//         'omnistudio__VqMachine__c', 'omnistudio__OrchestrationQueueAssignmentRule__c'
+//     ];
+
+//     const supportedObjects = getSupportedObjects(sourceAlias);
+//     const filteredOmniTypes = allOmniTypes.filter(type => {
+//         const sObjectName1 = type;
+//         const sObjectName2 = `vlocity_ins__${type}__c`;
+//         const sObjectName3 = `omnistudio__${type}__c`;
+//         return (
+//             supportedObjects.includes(sObjectName1) ||
+//             supportedObjects.includes(sObjectName2) ||
+//             supportedObjects.includes(sObjectName3)
+//         ) && !unsupportedTypes.includes(sObjectName3);
+//     });
+
+//     const yamlContent = {
+//         export: {},
+//         exportPacks: {
+//             autoAddDependentFields: true,
+//             autoAddDependencies: true
+//         }
+//     };
+
+//     filteredOmniTypes.forEach(type => {
+//         yamlContent.export[type] = {};
+//     });
+
+//     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
+
+//     const exportCmd = `vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
+//     console.log(`Exporting with command: ${exportCmd}`);
+
+//     exec(exportCmd, (err, stdout, stderr) => {
+//         console.log('Export STDOUT:\n', stdout);
+//         console.error('Export STDERR:\n', stderr);
+
+//         if (err) return res.status(500).send('Export failed');
+
+//         const omniScripts = fs.existsSync('./OmniScript') ? fs.readdirSync('./OmniScript').filter(entry =>
+//             fs.statSync(path.join('./OmniScript', entry)).isDirectory()) : [];
+
+//         const dataRaptors = fs.existsSync('./DataRaptor') ? fs.readdirSync('./DataRaptor').filter(entry =>
+//             fs.statSync(path.join('./DataRaptor', entry)).isDirectory()) : [];
+
+//         const summary = {
+//             timestamp: new Date().toISOString(),
+//             sourceAlias,
+//             OmniScript: omniScripts,
+//             DataRaptor: dataRaptors
+//         };
+
+//         storage.saveIndex(sourceAlias, summary);
+
+//         [...omniScripts.map(name => ['OmniScript', name]), ...dataRaptors.map(name => ['DataRaptor', name])]
+//             .forEach(([type, name]) => {
+//                 const jsonPath = path.join(`./${type}/${name}`, `${name}_DataPack.json`);
+//                 if (fs.existsSync(jsonPath)) {
+//                     const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+//                     storage.saveComponent(sourceAlias, type, name, data);
+//                 }
+//             });
+
+//         res.json(summary);
+//     });
+// });
+
 app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
-    const allOmniTypes = [
-        'OmniScript', 'IntegrationProcedure', 'DataRaptor', 'FlexCard', 'OmniStudioAction',
-        'VlocityUITemplate', 'VlocityUILayout', 'CalculationMatrix', 'CalculationProcedure',
+    const allTypes = [
+        'OmniScript',
+        'IntegrationProcedure',
+        'DataRaptor',
+        'FlexCard',
+        'OmniStudioAction',
+        'VlocityUITemplate',
+        'VlocityUILayout',
+        'CalculationMatrix',
+        'CalculationProcedure',
         'OmniStudioTrackingService'
     ];
 
-    const unsupportedTypes = [
-        'omnistudio__VlocitySearchWidgetSetup__c', 'omnistudio__VlocityCard__c',
-        'omnistudio__UIFacet__c', 'omnistudio__VlocityWebTrackingConfiguration__c',
-        'omnistudio__VqMachine__c', 'omnistudio__OrchestrationQueueAssignmentRule__c'
-    ];
-
-    const supportedObjects = getSupportedObjects(sourceAlias);
-    const filteredOmniTypes = allOmniTypes.filter(type => {
-        const sObjectName1 = type;
-        const sObjectName2 = `vlocity_ins__${type}__c`;
-        const sObjectName3 = `omnistudio__${type}__c`;
-        return (
-            supportedObjects.includes(sObjectName1) ||
-            supportedObjects.includes(sObjectName2) ||
-            supportedObjects.includes(sObjectName3)
-        ) && !unsupportedTypes.includes(sObjectName3);
-    });
-
+    // Build the exportAllOmni.yaml content dynamically
     const yamlContent = {
         export: {},
         exportPacks: {
@@ -45,48 +114,51 @@ app.get('/components', (req, res) => {
         }
     };
 
-    filteredOmniTypes.forEach(type => {
+    allTypes.forEach(type => {
         yamlContent.export[type] = {};
     });
 
     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
 
-    const exportCmd = `vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
+    const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
     console.log(`Exporting with command: ${exportCmd}`);
 
     exec(exportCmd, (err, stdout, stderr) => {
         console.log('Export STDOUT:\n', stdout);
         console.error('Export STDERR:\n', stderr);
 
-        if (err) return res.status(500).send('Export failed');
-
-        const omniScripts = fs.existsSync('./OmniScript') ? fs.readdirSync('./OmniScript').filter(entry =>
-            fs.statSync(path.join('./OmniScript', entry)).isDirectory()) : [];
-
-        const dataRaptors = fs.existsSync('./DataRaptor') ? fs.readdirSync('./DataRaptor').filter(entry =>
-            fs.statSync(path.join('./DataRaptor', entry)).isDirectory()) : [];
+        if (err) {
+            return res.status(500).send('Export failed');
+        }
 
         const summary = {
             timestamp: new Date().toISOString(),
-            sourceAlias,
-            OmniScript: omniScripts,
-            DataRaptor: dataRaptors
+            sourceAlias
         };
 
+        allTypes.forEach(type => {
+            const dir = `./${type}`;
+            if (fs.existsSync(dir)) {
+                const entries = fs.readdirSync(dir).filter(entry =>
+                    fs.statSync(path.join(dir, entry)).isDirectory());
+
+                summary[type] = entries;
+
+                entries.forEach(name => {
+                    const jsonPath = path.join(dir, name, `${name}_DataPack.json`);
+                    if (fs.existsSync(jsonPath)) {
+                        const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+                        storage.saveComponent(sourceAlias, type, name, data);
+                    }
+                });
+            }
+        });
+
         storage.saveIndex(sourceAlias, summary);
-
-        [...omniScripts.map(name => ['OmniScript', name]), ...dataRaptors.map(name => ['DataRaptor', name])]
-            .forEach(([type, name]) => {
-                const jsonPath = path.join(`./${type}/${name}`, `${name}_DataPack.json`);
-                if (fs.existsSync(jsonPath)) {
-                    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-                    storage.saveComponent(sourceAlias, type, name, data);
-                }
-            });
-
         res.json(summary);
     });
 });
+
 
 
 // GET stored components
