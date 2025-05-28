@@ -64,12 +64,12 @@ function getSupportedOmniTypes(alias) {
         'IntegrationProcedure',
         'DataRaptor',
         'FlexCard',
-        'OmniStudioAction',
-        'VlocityUITemplate',
-        'VlocityUILayout',
-        'CalculationMatrix',
-        'CalculationProcedure',
-        'OmniStudioTrackingService'
+        // 'OmniStudioAction',
+        // 'VlocityUITemplate',
+        // 'VlocityUILayout',
+        // 'CalculationMatrix',
+        // 'CalculationProcedure',
+        // 'OmniStudioTrackingService'
     ];
 
     const supportedObjects = getSupportedObjects(alias);
