@@ -1,6 +1,7 @@
 const express = require('express');
 const { exec, execSync } = require('child_process');
 const fs = require('fs');
+const { getSupportedOmniTypes } = require('./dxUtils');
 const path = require('path');
 const yaml = require('js-yaml');
 const storage = require('./storageHelper');
@@ -9,18 +10,19 @@ const app = express();
 app.use(express.json());
 
 // Supported OmniStudio Types (safe for most orgs)
-const allTypes = [
-    'OmniScript',
-    'DataRaptor',
-    'IntegrationProcedure',
-    'FlexCard',
-    // 'VlocityUITemplate',
-    // 'VlocityUILayout',
-    // 'OmniStudioAction',
-    // 'CalculationProcedure',
-    // 'CalculationMatrix',
-    // 'OmniStudioTrackingService'
-];
+// const allTypes = [
+//     'OmniScript',
+//     'DataRaptor',
+//     'IntegrationProcedure',
+//     'FlexCard',
+//     // 'VlocityUITemplate',
+//     // 'VlocityUILayout',
+//     // 'OmniStudioAction',
+//     // 'CalculationProcedure',
+//     // 'CalculationMatrix',
+//     // 'OmniStudioTrackingService'
+// ];
+const allTypes = getSupportedOmniTypes(sourceAlias);
 
 //GET: Export and Store OmniStudio Components
 app.get('/components', (req, res) => {
