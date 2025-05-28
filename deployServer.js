@@ -106,10 +106,13 @@ app.post('/deploy', (req, res) => {
     console.log('Selected Components:', JSON.stringify(selectedComponents, null, 2));
     try {
         const sourceUsername = process.env.SOURCE_USERNAME || sourceAlias;
-        const targetUsername = process.env.TARGET_USERNAME || target1;
+        // const targetUsername = process.env.TARGET_USERNAME || target1;
+        const targetUsername = target1;
 
         execSync(`npx vlocity -sfdx.username ${sourceUsername} packUpdateSettings`, { stdio: 'inherit' });
         execSync(`npx vlocity -sfdx.username ${targetUsername} packUpdateSettings`, { stdio: 'inherit' });
+        // execSync(`npx vlocity -sfdx.username target1 packUpdateSettings`, { stdio: 'inherit' });
+
     } catch (err) {
         console.error('Error updating settings:', err.message);
         return res.status(500).send(`Settings update failed for one of the orgs: ${err.message}`);
@@ -145,8 +148,10 @@ app.post('/deploy', (req, res) => {
     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
 
     // const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
-    const targetUsername = process.env.TARGET_USERNAME || target1;
+    const targetUsername = target1;
     const deployCmd = `npx vlocity -sfdx.username ${targetUsername} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+    // const deployCmd = `npx vlocity -sfdx.username target1 packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+
 
 
 
