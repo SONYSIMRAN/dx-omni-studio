@@ -104,18 +104,17 @@ app.post('/deploy', (req, res) => {
 
     console.log(`Starting deployment from ${sourceAlias} to ${targetAlias}`);
     console.log('Selected Components:', JSON.stringify(selectedComponents, null, 2));
-
     try {
-        execSync(`npx vlocity -sfdx.username ${sourceAlias} packUpdateSettings`, { stdio: 'inherit' });
-        // execSync(`npx vlocity -sfdx.username ${targetAlias} packUpdateSettings`, { stdio: 'inherit' });
-       
-
+        const sourceUsername = process.env.SOURCE_USERNAME || sourceAlias;
         const targetUsername = process.env.TARGET_USERNAME || targetAlias;
-        execSync(` npx vlocity -sfdx.username ssiddani@tgs.com packUpdateSettings`, { stdio: 'inherit' });
 
+        execSync(`npx vlocity -sfdx.username ${sourceUsername} packUpdateSettings`, { stdio: 'inherit' });
+        execSync(`npx vlocity -sfdx.username ${targetUsername} packUpdateSettings`, { stdio: 'inherit' });
     } catch (err) {
         console.error('Error updating settings:', err.message);
+        return res.status(500).send(`Settings update failed for one of the orgs: ${err.message}`);
     }
+
 
     const tempDir = './vlocity-temp';
     fs.rmSync(tempDir, { recursive: true, force: true });
@@ -146,8 +145,9 @@ app.post('/deploy', (req, res) => {
     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
 
     // const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
-    const deployCmd = `npx vlocity -sfdx.username ssiddani@tgs.com packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
-    // const deployCmd = `npx vlocity -sfdx.username ${process.env.TARGET_USERNAME} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+    const targetUsername = process.env.TARGET_USERNAME || targetAlias;
+    const deployCmd = `npx vlocity -sfdx.username ${targetUsername} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+
 
 
     exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
