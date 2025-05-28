@@ -1,4 +1,4 @@
-✅ dxUtils.js
+// ✅ dxUtils.js
 const { execSync } = require('child_process');
 
 function getSupportedObjects(alias) {
