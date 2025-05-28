@@ -145,7 +145,7 @@ app.post('/deploy', (req, res) => {
     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
 
     // const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
-    const targetUsername = process.env.TARGET_USERNAME || targetAlias;
+    const targetUsername = process.env.TARGET_USERNAME || target1;
     const deployCmd = `npx vlocity -sfdx.username ${targetUsername} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
 
 
