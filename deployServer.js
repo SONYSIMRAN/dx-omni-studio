@@ -29,7 +29,7 @@ app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
-    // ✅ Moved here so sourceAlias is defined
+    // Moved here so sourceAlias is defined
     // const allTypes = getSupportedOmniTypes(sourceAlias);
 
     const yamlContent = {
