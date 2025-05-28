@@ -140,7 +140,9 @@ app.post('/deploy', (req, res) => {
     const yamlPath = path.join(tempDir, 'deploySelected.yaml');
     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
 
-    const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+    // const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+    const deployCmd = `npx vlocity -sfdx.username ${process.env.TARGET_USERNAME} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+
 
     exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
         if (err) {
