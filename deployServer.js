@@ -22,12 +22,14 @@ app.use(express.json());
 //     // 'CalculationMatrix',
 //     // 'OmniStudioTrackingService'
 // ];
-const allTypes = getSupportedOmniTypes(sourceAlias);
+// const allTypes = getSupportedOmniTypes(sourceAlias);
 
 //GET: Export and Store OmniStudio Components
 app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+    const allTypes = getSupportedOmniTypes(sourceAlias);
 
     // YAML config
     const yamlContent = {
