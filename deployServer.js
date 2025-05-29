@@ -17,21 +17,21 @@ const allTypes = [
 ];
 
 // 🔐 Authenticate trial1 and target using JWT
-authenticateWithJWT(
-  'trial1',
-  process.env.SF_CLIENT_ID,
-  process.env.SF_USERNAME,
-  process.env.SF_LOGIN_URL,
-  process.env.SF_JWT_KEY
-);
+// authenticateWithJWT(
+//   'trial1',
+//   process.env.SF_CLIENT_ID,
+//   process.env.SF_USERNAME,
+//   process.env.SF_LOGIN_URL,
+//   process.env.SF_JWT_KEY
+// );
 
-authenticateWithJWT(
-  'target',
-  process.env.TARGET_CLIENT_ID,
-  process.env.TARGET_USERNAME,
-  process.env.TARGET_LOGIN_URL,
-  process.env.TARGET_JWT_KEY
-);
+// authenticateWithJWT(
+//   'target',
+//   process.env.TARGET_CLIENT_ID,
+//   process.env.TARGET_USERNAME,
+//   process.env.TARGET_LOGIN_URL,
+//   process.env.TARGET_JWT_KEY
+// );
 
 
 // GET: Export and store OmniStudio components
