@@ -1,5 +1,6 @@
 const express = require('express');
 const { exec, execSync } = require('child_process');
+const { authenticateWithJWT } = require('./authHelper');
 const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
