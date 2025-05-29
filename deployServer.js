@@ -1,7 +1,6 @@
 const express = require('express');
 const { exec, execSync } = require('child_process');
 const fs = require('fs');
-const { getSupportedOmniTypes } = require('./dxUtils');
 const path = require('path');
 const yaml = require('js-yaml');
 const storage = require('./storageHelper');
@@ -9,28 +8,17 @@ const storage = require('./storageHelper');
 const app = express();
 app.use(express.json());
 
-// Supported OmniStudio Types (safe for most orgs)
 const allTypes = [
     'OmniScript',
     'DataRaptor',
     'IntegrationProcedure',
-    'FlexCard',
-    // 'VlocityUITemplate',
-    // 'VlocityUILayout',
-    // 'OmniStudioAction',
-    // 'CalculationProcedure',
-    // 'CalculationMatrix',
-    // 'OmniStudioTrackingService'
+    'FlexCard'
 ];
-// const allTypes = getSupportedOmniTypes(sourceAlias);
 
-//GET: Export and Store OmniStudio Components
+// GET: Export and store OmniStudio components
 app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
-
-    // Moved here so sourceAlias is defined
-    // const allTypes = getSupportedOmniTypes(sourceAlias);
 
     const yamlContent = {
         export: {},
@@ -84,8 +72,7 @@ app.get('/components', (req, res) => {
     });
 });
 
-
-// GET: View Stored Components
+// GET: View stored components
 app.get('/stored-components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
@@ -95,7 +82,7 @@ app.get('/stored-components', (req, res) => {
     res.json(index);
 });
 
-// POST: Deploy Selected Components to Target
+// POST: Deploy selected components to target org
 app.post('/deploy', (req, res) => {
     const { sourceAlias, targetAlias, selectedComponents } = req.body;
     if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
@@ -104,20 +91,17 @@ app.post('/deploy', (req, res) => {
 
     console.log(`Starting deployment from ${sourceAlias} to ${targetAlias}`);
     console.log('Selected Components:', JSON.stringify(selectedComponents, null, 2));
-    try {
-        const sourceUsername = process.env.SOURCE_USERNAME || sourceAlias;
-        // const targetUsername = process.env.TARGET_USERNAME || target1;
-        const targetUsername = target1;
 
+    const sourceUsername = process.env.SOURCE_USERNAME || sourceAlias;
+    const targetUsername = process.env.TARGET_USERNAME || targetAlias;
+
+    try {
         execSync(`npx vlocity -sfdx.username ${sourceUsername} packUpdateSettings`, { stdio: 'inherit' });
         execSync(`npx vlocity -sfdx.username ${targetUsername} packUpdateSettings`, { stdio: 'inherit' });
-        // execSync(`npx vlocity -sfdx.username target1 packUpdateSettings`, { stdio: 'inherit' });
-
     } catch (err) {
         console.error('Error updating settings:', err.message);
         return res.status(500).send(`Settings update failed for one of the orgs: ${err.message}`);
     }
-
 
     const tempDir = './vlocity-temp';
     fs.rmSync(tempDir, { recursive: true, force: true });
@@ -147,13 +131,7 @@ app.post('/deploy', (req, res) => {
     const yamlPath = path.join(tempDir, 'deploySelected.yaml');
     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
 
-    // const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
-    const targetUsername = target1;
     const deployCmd = `npx vlocity -sfdx.username ${targetUsername} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
-    // const deployCmd = `npx vlocity -sfdx.username target1 packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
-
-
-
 
     exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
         if (err) {
@@ -163,6 +141,7 @@ app.post('/deploy', (req, res) => {
     });
 });
 
+// Start server
 app.listen(3000, () => {
     console.log('Deployment API running at http://localhost:3000');
 });
