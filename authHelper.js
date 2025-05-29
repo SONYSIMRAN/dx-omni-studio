@@ -1,17 +1,18 @@
-const { execSync } = require('child_process');
 const fs = require('fs');
+const { execSync } = require('child_process');
 
-function writeKeyToTemp(keyName, base64Key) {
-  const filePath = `/tmp/${keyName}.key`;
-  fs.writeFileSync(filePath, Buffer.from(base64Key, 'base64').toString('utf8'));
-  return filePath;
+function writeKeyToFile(base64Key, name) {
+  const decoded = Buffer.from(base64Key, 'base64').toString('utf8');
+  const path = `/tmp/${name}.key`;
+  fs.writeFileSync(path, decoded);
+  return path;
 }
 
 function authenticateWithJWT(alias, clientId, username, loginUrl, base64Key) {
-  const keyFilePath = writeKeyToTemp(alias, base64Key);
-  const cmd = `sfdx auth:jwt:grant --client-id ${clientId} --username ${username} --instance-url ${loginUrl} --jwt-key-file ${keyFilePath} --alias ${alias}`;
+  const keyPath = writeKeyToFile(base64Key, alias);
+  const command = `sfdx auth:jwt:grant --clientid ${clientId} --username ${username} --instanceurl ${loginUrl} --jwtkeyfile ${keyPath} --setalias ${alias}`;
   console.log(`[🔐] Authenticating ${alias}...`);
-  execSync(cmd, { stdio: 'inherit' });
+  execSync(command, { stdio: 'inherit' });
 }
 
 module.exports = { authenticateWithJWT };
