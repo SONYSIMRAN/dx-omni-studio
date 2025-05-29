@@ -5,8 +5,8 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 const storage = require('./storageHelper');
-require('dotenv').config();
 
+require('dotenv').config();
 const app = express();
 app.use(express.json());
 
