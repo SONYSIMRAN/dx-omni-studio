@@ -1,18 +1,49 @@
 const fs = require('fs');
 const { execSync } = require('child_process');
+const path = require('path');
 
-function writeKeyToFile(base64Key, name) {
-  const decoded = Buffer.from(base64Key, 'base64').toString('utf8');
-  const path = `/tmp/${name}.key`;
-  fs.writeFileSync(path, decoded);
-  return path;
+/**
+ * Write JWT private key to a file (only if needed from env)
+ */
+function writeKeyToFile(keyContent, filePath) {
+    if (!keyContent) {
+        throw new Error('Private key content is undefined');
+    }
+
+    if (!fs.existsSync(filePath)) {
+        fs.writeFileSync(filePath, keyContent, { encoding: 'utf-8' });
+        console.log(`[🔐] Wrote private key to ${filePath}`);
+    }
 }
 
-function authenticateWithJWT(alias, clientId, username, loginUrl, base64Key) {
-  const keyPath = writeKeyToFile(base64Key, alias);
-  const command = `sfdx auth:jwt:grant --clientid ${clientId} --username ${username} --instanceurl ${loginUrl} --jwtkeyfile ${keyPath} --setalias ${alias}`;
-  console.log(`[🔐] Authenticating ${alias}...`);
-  execSync(command, { stdio: 'inherit' });
+/**
+ * Authenticate with SFDX using JWT
+ */
+function authenticateWithJWT(alias, clientId, username, instanceUrl, privateKeyPathOrContent) {
+    const keyPath = path.join('/tmp', `${alias}.key`);
+
+    if (privateKeyPathOrContent.includes('BEGIN PRIVATE KEY')) {
+        // It’s the actual key content — write to file
+        writeKeyToFile(privateKeyPathOrContent, keyPath);
+    } else {
+        // Assume it's a path to an existing key file
+        if (!fs.existsSync(privateKeyPathOrContent)) {
+            throw new Error(`Private key file not found: ${privateKeyPathOrContent}`);
+        }
+        fs.copyFileSync(privateKeyPathOrContent, keyPath);
+    }
+
+    const command = `sfdx auth:jwt:grant \
+      --client-id ${clientId} \
+      --username ${username} \
+      --instance-url ${instanceUrl} \
+      --jwt-key-file ${keyPath} \
+      --alias ${alias}`;
+
+    console.log(`[🔐] Authenticating ${alias} (${username})...`);
+    execSync(command, { stdio: 'inherit' });
 }
 
-module.exports = { authenticateWithJWT };
+module.exports = {
+    authenticateWithJWT
+};

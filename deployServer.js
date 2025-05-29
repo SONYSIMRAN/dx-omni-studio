@@ -17,6 +17,22 @@ const allTypes = [
 ];
 
 // Before any Vlocity calls:
+// authenticateWithJWT(
+//   'trial1',
+//   process.env.SF_CLIENT_ID,
+//   process.env.SF_USERNAME,
+//   process.env.SF_LOGIN_URL,
+//   process.env.SF_JWT_KEY
+// );
+
+// authenticateWithJWT(
+//   'target',
+//   process.env.TARGET_CLIENT_ID,
+//   process.env.TARGET_USERNAME,
+//   process.env.TARGET_LOGIN_URL,
+//   process.env.TARGET_JWT_KEY
+// );
+
 authenticateWithJWT(
   'trial1',
   process.env.SF_CLIENT_ID,
@@ -32,6 +48,7 @@ authenticateWithJWT(
   process.env.TARGET_LOGIN_URL,
   process.env.TARGET_JWT_KEY
 );
+
 
 
 // GET: Export and store OmniStudio components
@@ -102,113 +119,113 @@ app.get('/stored-components', (req, res) => {
 });
 
 // POST: Deploy selected components to target org
-// app.post('/deploy', (req, res) => {
-//     const { sourceAlias, targetAlias, selectedComponents } = req.body;
-//     if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
-//         return res.status(400).send('sourceAlias, targetAlias, and selectedComponents {type: [name]} are required');
-//     }
+app.post('/deploy', (req, res) => {
+    const { sourceAlias, targetAlias, selectedComponents } = req.body;
+    if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
+        return res.status(400).send('sourceAlias, targetAlias, and selectedComponents {type: [name]} are required');
+    }
 
-//     console.log(`Starting deployment from ${sourceAlias} to ${targetAlias}`);
-//     console.log('Selected Components:', JSON.stringify(selectedComponents, null, 2));
+    console.log(`Starting deployment from ${sourceAlias} to ${targetAlias}`);
+    console.log('Selected Components:', JSON.stringify(selectedComponents, null, 2));
 
-//     const sourceUsername = process.env.SOURCE_USERNAME || sourceAlias;
-//     const targetUsername = process.env.TARGET_USERNAME || targetAlias;
+    const sourceUsername = process.env.SOURCE_USERNAME || sourceAlias;
+    const targetUsername = process.env.TARGET_USERNAME || targetAlias;
 
-//     try {
-//         execSync(`npx vlocity -sfdx.username ${sourceUsername} packUpdateSettings`, { stdio: 'inherit' });
-//         execSync(`npx vlocity -sfdx.username ${targetUsername} packUpdateSettings`, { stdio: 'inherit' });
-//     } catch (err) {
-//         console.error('Error updating settings:', err.message);
-//         return res.status(500).send(`Settings update failed for one of the orgs: ${err.message}`);
-//     }
+    try {
+        execSync(`npx vlocity -sfdx.username ${sourceUsername} packUpdateSettings`, { stdio: 'inherit' });
+        execSync(`npx vlocity -sfdx.username ${targetUsername} packUpdateSettings`, { stdio: 'inherit' });
+    } catch (err) {
+        console.error('Error updating settings:', err.message);
+        return res.status(500).send(`Settings update failed for one of the orgs: ${err.message}`);
+    }
 
-//     const tempDir = './vlocity-temp';
-//     fs.rmSync(tempDir, { recursive: true, force: true });
-//     fs.mkdirSync(tempDir, { recursive: true });
+    const tempDir = './vlocity-temp';
+    fs.rmSync(tempDir, { recursive: true, force: true });
+    fs.mkdirSync(tempDir, { recursive: true });
 
-//     const deployYaml = {
-//         export: {}
-//     };
+    const deployYaml = {
+        export: {}
+    };
 
-//     for (const [type, items] of Object.entries(selectedComponents)) {
-//         deployYaml.export[type] = {
-//             queries: items.map(name => `${type}/${name}`)
-//         };
+    for (const [type, items] of Object.entries(selectedComponents)) {
+        deployYaml.export[type] = {
+            queries: items.map(name => `${type}/${name}`)
+        };
 
-//         items.forEach(name => {
-//             const srcDir = path.join(type, name);
-//             const destDir = path.join(tempDir, type, name);
-//             if (fs.existsSync(srcDir)) {
-//                 fs.mkdirSync(destDir, { recursive: true });
-//                 fs.readdirSync(srcDir).forEach(file => {
-//                     fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
-//                 });
-//             }
-//         });
-//     }
+        items.forEach(name => {
+            const srcDir = path.join(type, name);
+            const destDir = path.join(tempDir, type, name);
+            if (fs.existsSync(srcDir)) {
+                fs.mkdirSync(destDir, { recursive: true });
+                fs.readdirSync(srcDir).forEach(file => {
+                    fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+                });
+            }
+        });
+    }
 
-//     const yamlPath = path.join(tempDir, 'deploySelected.yaml');
-//     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
+    const yamlPath = path.join(tempDir, 'deploySelected.yaml');
+    fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
 
-//     const deployCmd = `npx vlocity -sfdx.username ${targetUsername} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+    const deployCmd = `npx vlocity -sfdx.username ${targetUsername} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
 
-//     exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
-//         if (err) {
-//             return res.status(500).send(`Deployment failed:\n${stderr || stdout}`);
-//         }
-//         res.send('Deployment successful!\n' + stdout);
-//     });
-// });
+    exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
+        if (err) {
+            return res.status(500).send(`Deployment failed:\n${stderr || stdout}`);
+        }
+        res.send('Deployment successful!\n' + stdout);
+    });
+});
 
 // 🔄 /deploy API
-app.post('/deploy', (req, res) => {
-  const { sourceAlias, targetAlias, selectedComponents } = req.body;
-  if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
-    return res.status(400).send('sourceAlias, targetAlias, and selectedComponents are required');
-  }
+// app.post('/deploy', (req, res) => {
+//   const { sourceAlias, targetAlias, selectedComponents } = req.body;
+//   if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
+//     return res.status(400).send('sourceAlias, targetAlias, and selectedComponents are required');
+//   }
 
-  console.log(`[📦] Deploying from ${sourceAlias} to ${targetAlias}`);
-  console.log('[📦] Selected Components:', JSON.stringify(selectedComponents, null, 2));
+//   console.log(`[📦] Deploying from ${sourceAlias} to ${targetAlias}`);
+//   console.log('[📦] Selected Components:', JSON.stringify(selectedComponents, null, 2));
 
-  try {
-    execSync(`npx vlocity -sfdx.username ${sourceAlias} packUpdateSettings`, { stdio: 'inherit' });
-    execSync(`npx vlocity -sfdx.username ${targetAlias} packUpdateSettings`, { stdio: 'inherit' });
-  } catch (err) {
-    console.error('[❌] packUpdateSettings failed:', err.message);
-    return res.status(500).send(`Settings update failed: ${err.message}`);
-  }
+//   try {
+//     execSync(`npx vlocity -sfdx.username ${sourceAlias} packUpdateSettings`, { stdio: 'inherit' });
+//     execSync(`npx vlocity -sfdx.username ${targetAlias} packUpdateSettings`, { stdio: 'inherit' });
+//   } catch (err) {
+//     console.error('[❌] packUpdateSettings failed:', err.message);
+//     return res.status(500).send(`Settings update failed: ${err.message}`);
+//   }
 
-  const tempDir = './vlocity-temp';
-  fs.rmSync(tempDir, { recursive: true, force: true });
-  fs.mkdirSync(tempDir, { recursive: true });
+//   const tempDir = './vlocity-temp';
+//   fs.rmSync(tempDir, { recursive: true, force: true });
+//   fs.mkdirSync(tempDir, { recursive: true });
 
-  const deployYaml = { export: {} };
-  for (const [type, items] of Object.entries(selectedComponents)) {
-    deployYaml.export[type] = { queries: items.map(name => `${type}/${name}`) };
-    items.forEach(name => {
-      const srcDir = path.join(type, name);
-      const destDir = path.join(tempDir, type, name);
-      if (fs.existsSync(srcDir)) {
-        fs.mkdirSync(destDir, { recursive: true });
-        fs.readdirSync(srcDir).forEach(file => {
-          fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
-        });
-      }
-    });
-  }
+//   const deployYaml = { export: {} };
+//   for (const [type, items] of Object.entries(selectedComponents)) {
+//     deployYaml.export[type] = { queries: items.map(name => `${type}/${name}`) };
+//     items.forEach(name => {
+//       const srcDir = path.join(type, name);
+//       const destDir = path.join(tempDir, type, name);
+//       if (fs.existsSync(srcDir)) {
+//         fs.mkdirSync(destDir, { recursive: true });
+//         fs.readdirSync(srcDir).forEach(file => {
+//           fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+//         });
+//       }
+//     });
+//   }
 
-  const yamlPath = path.join(tempDir, 'deploySelected.yaml');
-  fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
+//   const yamlPath = path.join(tempDir, 'deploySelected.yaml');
+//   fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
 
-  const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+//   const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
 
-  exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
-    if (err) {
-      return res.status(500).send(`Deployment failed:\n${stderr || stdout}`);
-    }
-    res.send(`Deployment successful!\n${stdout}`);
-  });
-});
+//   exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
+//     if (err) {
+//       return res.status(500).send(`Deployment failed:\n${stderr || stdout}`);
+//     }
+//     res.send(`Deployment successful!\n${stdout}`);
+//   });
+// });
 
 
 // Start server
