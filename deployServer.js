@@ -16,26 +16,6 @@ const allTypes = [
     'FlexCard'
 ];
 
-// Before any Vlocity calls:
-// authenticateWithJWT(
-//   'trial1',
-//   process.env.SF_CLIENT_ID,
-//   process.env.SF_USERNAME,
-//   process.env.SF_LOGIN_URL,
-//   process.env.SF_JWT_KEY
-// );
-
-// authenticateWithJWT(
-//   'target',
-//   process.env.TARGET_CLIENT_ID,
-//   process.env.TARGET_USERNAME,
-//   process.env.TARGET_LOGIN_URL,
-//   process.env.TARGET_JWT_KEY
-// );
-
-
-
-
 // GET: Export and store OmniStudio components
 app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
@@ -231,7 +211,7 @@ app.post('/deploy', async (req, res) => {
     console.log(`Starting deployment from ${sourceAlias} to ${targetAlias}`);
     console.log('Selected Components:', JSON.stringify(selectedComponents, null, 2));
 
-    // ✅ Authenticate source and target using JWT
+    // Authenticate source and target using JWT
     try {
         await authenticateWithJWT(
             sourceAlias,

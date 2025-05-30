@@ -10,7 +10,7 @@ function writeKeyToTempFile(keyString, filename = 'server.key') {
 async function authenticateWithJWT(alias, clientId, username, loginUrl, jwtKey) {
     const keyPath = writeKeyToTempFile(jwtKey);
     const cmd = `sfdx auth:jwt:grant --clientid ${clientId} --username ${username} --jwtkeyfile ${keyPath} --instanceurl ${loginUrl} --setalias ${alias}`;
-    console.log(`[🔐] Authenticating ${alias} using JWT...`);
+    console.log(`Authenticating ${alias} using JWT...`);
     execSync(cmd, { stdio: 'inherit' });
 }
 
