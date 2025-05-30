@@ -113,13 +113,13 @@ app.post('/deploy', (req, res) => {
     console.log(`Starting deployment from ${sourceAlias} to ${targetAlias}`);
     console.log('Selected Components:', JSON.stringify(selectedComponents, null, 2));
 
-    const sourceUsername = process.env.SOURCE_USERNAME || sourceAlias;
-    const targetUsername = process.env.TARGET_USERNAME || targetAlias;
+    // const sourceUsername = process.env.SOURCE_USERNAME || sourceAlias;
+    // const targetUsername = process.env.TARGET_USERNAME || targetAlias;
     // const targetUsername = targetAlias; 
 
     try {
-        execSync(`npx vlocity -sfdx.username ${sourceUsername} packUpdateSettings`, { stdio: 'inherit' });
-        execSync(`npx vlocity -sfdx.username ${targetUsername} packUpdateSettings`, { stdio: 'inherit' });
+        execSync(`npx vlocity -sfdx.username ${sourceAlias} packUpdateSettings`, { stdio: 'inherit' });
+        execSync(`npx vlocity -sfdx.username ${targetAlias} packUpdateSettings`, { stdio: 'inherit' });
     } catch (err) {
         console.error('Error updating settings:', err.message);
         return res.status(500).send(`Settings update failed for one of the orgs: ${err.message}`);
@@ -153,7 +153,8 @@ app.post('/deploy', (req, res) => {
     const yamlPath = path.join(tempDir, 'deploySelected.yaml');
     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
 
-    const deployCmd = `npx vlocity -sfdx.username ${targetUsername} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+    //const deployCmd = `npx vlocity -sfdx.username ${targetUsername} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+    const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
 
     exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
         if (err) {
@@ -163,7 +164,7 @@ app.post('/deploy', (req, res) => {
     });
 });
 
-// 🔄 /deploy API
+//  /deploy API
 // app.post('/deploy', (req, res) => {
 //   const { sourceAlias, targetAlias, selectedComponents } = req.body;
 //   if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
