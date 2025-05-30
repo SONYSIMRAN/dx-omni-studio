@@ -114,8 +114,8 @@ app.post('/deploy', (req, res) => {
     console.log('Selected Components:', JSON.stringify(selectedComponents, null, 2));
 
     const sourceUsername = process.env.SOURCE_USERNAME || sourceAlias;
-    // const targetUsername = process.env.TARGET_USERNAME || targetAlias;
-    const targetUsername = targetAlias; 
+    const targetUsername = process.env.TARGET_USERNAME || targetAlias;
+    // const targetUsername = targetAlias; 
 
     try {
         execSync(`npx vlocity -sfdx.username ${sourceUsername} packUpdateSettings`, { stdio: 'inherit' });
