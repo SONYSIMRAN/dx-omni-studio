@@ -223,31 +223,68 @@ app.post('/deploy', async (req, res) => {
     //     res.send('Deployment successful!\n' + stdout);
     // });
     //Dynamic import to avoid ESM error
+    // const stripAnsi = (await import('strip-ansi')).default;
+
+    // exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
+    //     const rawOutput = stdout || stderr || '';
+    //     const cleanOutput = stripAnsi(rawOutput);
+    //     const maxLength = 4000;
+
+    //     const trimmedOutput = cleanOutput.length > maxLength
+    //         ? cleanOutput.substring(0, maxLength) + '\n... (truncated)'
+    //         : cleanOutput;
+
+    //     if (err) {
+    //         return res.status(500).json({
+    //             status: 'error',
+    //             message: 'Deployment failed',
+    //             details: trimmedOutput
+    //         });
+    //     }
+
+    //     res.json({
+    //         status: 'success',
+    //         message: 'Deployment successful',
+    //         details: trimmedOutput
+    //     });
+    // });
     const stripAnsi = (await import('strip-ansi')).default;
 
-    exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
-        const rawOutput = stdout || stderr || '';
-        const cleanOutput = stripAnsi(rawOutput);
-        const maxLength = 4000;
+exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
+    const rawOutput = stdout || stderr || '';
+    const cleanOutput = stripAnsi(rawOutput);
 
-        const trimmedOutput = cleanOutput.length > maxLength
-            ? cleanOutput.substring(0, maxLength) + '\n... (truncated)'
-            : cleanOutput;
+    const deployedComponents = [];
+    const lines = cleanOutput.split('\n');
 
-        if (err) {
-            return res.status(500).json({
-                status: 'error',
-                message: 'Deployment failed',
-                details: trimmedOutput
-            });
+    let elapsedTime = '';
+    let warnings = [];
+
+    lines.forEach(line => {
+        if (line.includes('Adding to Deploy >>')) {
+            deployedComponents.push(line.split('>>')[1].trim());
         }
-
-        res.json({
-            status: 'success',
-            message: 'Deployment successful',
-            details: trimmedOutput
-        });
+        if (line.includes('Elapsed Time')) {
+            elapsedTime = line.split('>>')[1].trim();
+        }
+        if (line.includes('Error') || line.includes('Unauthorized')) {
+            warnings.push(line.trim());
+        }
     });
+
+    const response = {
+        status: err ? 'error' : 'success',
+        message: err ? 'Deployment failed' : 'Deployment successful',
+        deployedComponents,
+        elapsedTime,
+        warnings,
+        details: cleanOutput  // for logs
+    };
+
+    const code = err ? 500 : 200;
+    res.status(code).json(response);
+});
+
 });
 
 // Start server
