@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 const storage = require('./storageHelper');
-const stripAnsi = require('strip-ansi');
+// const stripAnsi = require('strip-ansi');
 
 const app = express();
 app.use(express.json());
@@ -211,6 +211,8 @@ app.post('/deploy', async (req, res) => {
 
     const yamlPath = path.join(tempDir, 'deploySelected.yaml');
     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
+    // dynamic import
+    const stripAnsi = (await import('strip-ansi')).default;
 
     const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
 
