@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 const storage = require('./storageHelper');
+const stripAnsi = require('strip-ansi');
 
 const app = express();
 app.use(express.json());
@@ -220,20 +221,23 @@ app.post('/deploy', async (req, res) => {
     //     res.send('Deployment successful!\n' + stdout);
     // });
     exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
+        const cleanOutput = stripAnsi(stdout || stderr || '');
+
         if (err) {
             return res.status(500).json({
                 status: 'error',
                 message: 'Deployment failed',
-                details: stderr || stdout
+                details: cleanOutput
             });
         }
 
         res.json({
             status: 'success',
             message: 'Deployment successful',
-            details: stdout
+            details: cleanOutput
         });
     });
+
 
 });
 
