@@ -212,7 +212,7 @@ app.post('/deploy', async (req, res) => {
     const yamlPath = path.join(tempDir, 'deploySelected.yaml');
     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
     // dynamic import
-    const stripAnsi = (await import('strip-ansi')).default;
+    // const stripAnsi = (await import('strip-ansi')).default;
 
     const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
 
@@ -222,25 +222,32 @@ app.post('/deploy', async (req, res) => {
     //     }
     //     res.send('Deployment successful!\n' + stdout);
     // });
+    //Dynamic import to avoid ESM error
+    const stripAnsi = (await import('strip-ansi')).default;
+
     exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
-        const cleanOutput = stripAnsi(stdout || stderr || '');
+        const rawOutput = stdout || stderr || '';
+        const cleanOutput = stripAnsi(rawOutput);
+        const maxLength = 4000;
+
+        const trimmedOutput = cleanOutput.length > maxLength
+            ? cleanOutput.substring(0, maxLength) + '\n... (truncated)'
+            : cleanOutput;
 
         if (err) {
             return res.status(500).json({
                 status: 'error',
                 message: 'Deployment failed',
-                details: cleanOutput
+                details: trimmedOutput
             });
         }
 
         res.json({
             status: 'success',
             message: 'Deployment successful',
-            details: cleanOutput
+            details: trimmedOutput
         });
     });
-
-
 });
 
 // Start server
