@@ -147,6 +147,146 @@ app.get('/stored-components', (req, res) => {
 
 
 // POST: Deploy selected components to target org
+// app.post('/deploy', async (req, res) => {
+//     const { sourceAlias, targetAlias, selectedComponents } = req.body;
+//     if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
+//         return res.status(400).send('sourceAlias, targetAlias, and selectedComponents {type: [name]} are required');
+//     }
+
+//     console.log(`Starting deployment from ${sourceAlias} to ${targetAlias}`);
+//     console.log('Selected Components:', JSON.stringify(selectedComponents, null, 2));
+
+//     // Authenticate source and target using JWT
+//     try {
+//         await authenticateWithJWT(
+//             sourceAlias,
+//             process.env.SF_CLIENT_ID,
+//             process.env.SF_USERNAME,
+//             process.env.SF_LOGIN_URL,
+//             process.env.SF_JWT_KEY
+//         );
+
+//         await authenticateWithJWT(
+//             targetAlias,
+//             process.env.TARGET_CLIENT_ID,
+//             process.env.TARGET_USERNAME,
+//             process.env.TARGET_LOGIN_URL,
+//             process.env.TARGET_JWT_KEY
+//         );
+//     } catch (err) {
+//         console.error('JWT authentication failed:', err.message);
+//         return res.status(500).send(`JWT auth failed: ${err.message}`);
+//     }
+
+//     // Run packUpdateSettings on both
+//     try {
+//         execSync(`npx vlocity -sfdx.username ${sourceAlias} packUpdateSettings`, { stdio: 'inherit' });
+//         execSync(`npx vlocity -sfdx.username ${targetAlias} packUpdateSettings`, { stdio: 'inherit' });
+//     } catch (err) {
+//         console.error('Error updating settings:', err.message);
+//         return res.status(500).send(`Settings update failed for one of the orgs: ${err.message}`);
+//     }
+
+//     const tempDir = './vlocity-temp';
+//     fs.rmSync(tempDir, { recursive: true, force: true });
+//     fs.mkdirSync(tempDir, { recursive: true });
+
+//     const deployYaml = { export: {} };
+//     for (const [type, items] of Object.entries(selectedComponents)) {
+//         deployYaml.export[type] = {
+//             queries: items.map(name => `${type}/${name}`)
+//         };
+
+//         items.forEach(name => {
+//             const srcDir = path.join(type, name);
+//             const destDir = path.join(tempDir, type, name);
+//             if (fs.existsSync(srcDir)) {
+//                 fs.mkdirSync(destDir, { recursive: true });
+//                 fs.readdirSync(srcDir).forEach(file => {
+//                     fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+//                 });
+//             }
+//         });
+//     }
+
+//     const yamlPath = path.join(tempDir, 'deploySelected.yaml');
+//     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
+//     // dynamic import
+//     // const stripAnsi = (await import('strip-ansi')).default;
+
+//     const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+
+//     // exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
+//     //     if (err) {
+//     //         return res.status(500).send(`Deployment failed:\n${stderr || stdout}`);
+//     //     }
+//     //     res.send('Deployment successful!\n' + stdout);
+//     // });
+//     //Dynamic import to avoid ESM error
+//     // const stripAnsi = (await import('strip-ansi')).default;
+
+//     // exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
+//     //     const rawOutput = stdout || stderr || '';
+//     //     const cleanOutput = stripAnsi(rawOutput);
+//     //     const maxLength = 4000;
+
+//     //     const trimmedOutput = cleanOutput.length > maxLength
+//     //         ? cleanOutput.substring(0, maxLength) + '\n... (truncated)'
+//     //         : cleanOutput;
+
+//     //     if (err) {
+//     //         return res.status(500).json({
+//     //             status: 'error',
+//     //             message: 'Deployment failed',
+//     //             details: trimmedOutput
+//     //         });
+//     //     }
+
+//     //     res.json({
+//     //         status: 'success',
+//     //         message: 'Deployment successful',
+//     //         details: trimmedOutput
+//     //     });
+//     // });
+//     const stripAnsi = (await import('strip-ansi')).default;
+
+// exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
+//     const rawOutput = stdout || stderr || '';
+//     const cleanOutput = stripAnsi(rawOutput);
+
+//     const deployedComponents = [];
+//     const lines = cleanOutput.split('\n');
+
+//     let elapsedTime = '';
+//     let warnings = [];
+
+//     lines.forEach(line => {
+//         if (line.includes('Adding to Deploy >>')) {
+//             deployedComponents.push(line.split('>>')[1].trim());
+//         }
+//         if (line.includes('Elapsed Time')) {
+//             elapsedTime = line.split('>>')[1].trim();
+//         }
+//         if (line.includes('Error') || line.includes('Unauthorized')) {
+//             warnings.push(line.trim());
+//         }
+//     });
+
+//     const response = {
+//         status: err ? 'error' : 'success',
+//         message: err ? 'Deployment failed' : 'Deployment successful',
+//         deployedComponents,
+//         elapsedTime,
+//         warnings,
+//         details: cleanOutput  // for logs
+//     };
+
+//     const code = err ? 500 : 200;
+//     res.status(code).json(response);
+// });
+
+// });
+
 app.post('/deploy', async (req, res) => {
     const { sourceAlias, targetAlias, selectedComponents } = req.body;
     if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
@@ -156,7 +296,7 @@ app.post('/deploy', async (req, res) => {
     console.log(`Starting deployment from ${sourceAlias} to ${targetAlias}`);
     console.log('Selected Components:', JSON.stringify(selectedComponents, null, 2));
 
-    // Authenticate source and target using JWT
+    // JWT auth
     try {
         await authenticateWithJWT(
             sourceAlias,
@@ -175,18 +315,19 @@ app.post('/deploy', async (req, res) => {
         );
     } catch (err) {
         console.error('JWT authentication failed:', err.message);
-        return res.status(500).send(`JWT auth failed: ${err.message}`);
+        return res.status(500).json({ status: 'error', message: 'JWT auth failed', details: err.message });
     }
 
-    // Run packUpdateSettings on both
+    // packUpdateSettings for both orgs
     try {
         execSync(`npx vlocity -sfdx.username ${sourceAlias} packUpdateSettings`, { stdio: 'inherit' });
         execSync(`npx vlocity -sfdx.username ${targetAlias} packUpdateSettings`, { stdio: 'inherit' });
     } catch (err) {
         console.error('Error updating settings:', err.message);
-        return res.status(500).send(`Settings update failed for one of the orgs: ${err.message}`);
+        return res.status(500).json({ status: 'error', message: 'Settings update failed', details: err.message });
     }
 
+    // Create temp directory and copy components
     const tempDir = './vlocity-temp';
     fs.rmSync(tempDir, { recursive: true, force: true });
     fs.mkdirSync(tempDir, { recursive: true });
@@ -211,81 +352,50 @@ app.post('/deploy', async (req, res) => {
 
     const yamlPath = path.join(tempDir, 'deploySelected.yaml');
     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
-    // dynamic import
-    // const stripAnsi = (await import('strip-ansi')).default;
 
+    // ✅ Import strip-ansi dynamically (ESM compatibility)
+    const stripAnsi = (await import('strip-ansi')).default;
     const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
 
-    // exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
-    //     if (err) {
-    //         return res.status(500).send(`Deployment failed:\n${stderr || stdout}`);
-    //     }
-    //     res.send('Deployment successful!\n' + stdout);
-    // });
-    //Dynamic import to avoid ESM error
-    // const stripAnsi = (await import('strip-ansi')).default;
+    exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
+        const rawOutput = stdout || stderr || '';
+        const cleanOutput = stripAnsi(rawOutput);
 
-    // exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
-    //     const rawOutput = stdout || stderr || '';
-    //     const cleanOutput = stripAnsi(rawOutput);
-    //     const maxLength = 4000;
+        // Parse the output for key info
+        const deployedComponents = [];
+        let elapsedTime = '';
+        let warnings = [];
 
-    //     const trimmedOutput = cleanOutput.length > maxLength
-    //         ? cleanOutput.substring(0, maxLength) + '\n... (truncated)'
-    //         : cleanOutput;
+        const lines = cleanOutput.split('\n');
+        lines.forEach(line => {
+            if (line.includes('Adding to Deploy >>')) {
+                const part = line.split('>>')[1]?.trim();
+                if (part) deployedComponents.push(part);
+            }
 
-    //     if (err) {
-    //         return res.status(500).json({
-    //             status: 'error',
-    //             message: 'Deployment failed',
-    //             details: trimmedOutput
-    //         });
-    //     }
+            if (line.includes('Elapsed Time')) {
+                elapsedTime = line.split('>>')[1]?.trim() || '';
+            }
 
-    //     res.json({
-    //         status: 'success',
-    //         message: 'Deployment successful',
-    //         details: trimmedOutput
-    //     });
-    // });
-    const stripAnsi = (await import('strip-ansi')).default;
+            if (line.toLowerCase().includes('unauthorized') || line.toLowerCase().includes('error')) {
+                warnings.push(line.trim());
+            }
+        });
 
-exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
-    const rawOutput = stdout || stderr || '';
-    const cleanOutput = stripAnsi(rawOutput);
+        const response = {
+            status: err ? 'error' : 'success',
+            message: err ? 'Deployment failed' : 'Deployment successful',
+            deployedComponents,
+            elapsedTime,
+            warnings,
+            details: cleanOutput
+        };
 
-    const deployedComponents = [];
-    const lines = cleanOutput.split('\n');
-
-    let elapsedTime = '';
-    let warnings = [];
-
-    lines.forEach(line => {
-        if (line.includes('Adding to Deploy >>')) {
-            deployedComponents.push(line.split('>>')[1].trim());
-        }
-        if (line.includes('Elapsed Time')) {
-            elapsedTime = line.split('>>')[1].trim();
-        }
-        if (line.includes('Error') || line.includes('Unauthorized')) {
-            warnings.push(line.trim());
-        }
+        const statusCode = err ? 500 : 200;
+        return res.status(statusCode).json(response);
     });
-
-    const response = {
-        status: err ? 'error' : 'success',
-        message: err ? 'Deployment failed' : 'Deployment successful',
-        deployedComponents,
-        elapsedTime,
-        warnings,
-        details: cleanOutput  // for logs
-    };
-
-    const code = err ? 500 : 200;
-    res.status(code).json(response);
 });
 
-});
 
 // Start server
 app.listen(3000, () => {
