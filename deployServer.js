@@ -213,12 +213,28 @@ app.post('/deploy', async (req, res) => {
 
     const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
 
+    // exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
+    //     if (err) {
+    //         return res.status(500).send(`Deployment failed:\n${stderr || stdout}`);
+    //     }
+    //     res.send('Deployment successful!\n' + stdout);
+    // });
     exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
         if (err) {
-            return res.status(500).send(`Deployment failed:\n${stderr || stdout}`);
+            return res.status(500).json({
+                status: 'error',
+                message: 'Deployment failed',
+                details: stderr || stdout
+            });
         }
-        res.send('Deployment successful!\n' + stdout);
+
+        res.json({
+            status: 'success',
+            message: 'Deployment successful',
+            details: stdout
+        });
     });
+
 });
 
 // Start server
