@@ -3,7 +3,7 @@ export:
   DataRaptor: {}
   IntegrationProcedure: {}
   FlexCard: {}
-  VlocityCard__CardState__c: {}
+  VlocityCard__CardState__c: {} 
   VlocityUILayout: {}
   VlocityUITemplate: {}
 exportPacks:
