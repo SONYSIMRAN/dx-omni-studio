@@ -1,4 +1,4 @@
-// vlocity backend (updated for FlexCard activation)
+// vlocity backend (updated with full FlexCard visibility and activation)
 const express = require('express');
 const { exec, execSync } = require('child_process');
 const { authenticateWithJWT } = require('./authHelper');
@@ -14,10 +14,11 @@ const allTypes = [
     'DataRaptor',
     'IntegrationProcedure',
     'FlexCard',
-    'VlocityCard__CardState__c' // ✅ Needed for FlexCard visibility
+    'VlocityCard__CardState__c',
+    'VlocityUILayout',
+    'VlocityUITemplate'
 ];
 
-// GET: Export and store OmniStudio components
 app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
@@ -63,7 +64,6 @@ app.get('/components', (req, res) => {
     });
 });
 
-// GET: View stored components
 app.get('/stored-components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
@@ -72,7 +72,6 @@ app.get('/stored-components', (req, res) => {
     res.json(index);
 });
 
-// POST: Deploy selected components
 app.post('/deploy', async (req, res) => {
     const { sourceAlias, targetAlias, selectedComponents } = req.body;
     if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
@@ -148,6 +147,14 @@ app.post('/deploy', async (req, res) => {
                     }
                 }
             });
+        }
+
+        // ✅ Optionally run packActivate (recommended)
+        try {
+            const packActivateCmd = `npx vlocity -sfdx.username ${targetAlias} packActivate -job deploySelected.yaml`;
+            execSync(packActivateCmd, { cwd: tempDir, stdio: 'inherit' });
+        } catch (e) {
+            warnings.push('packActivate failed: ' + e.message);
         }
 
         const response = {
