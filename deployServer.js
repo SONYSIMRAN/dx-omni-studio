@@ -60,100 +60,154 @@ app.get('/components', (req, res) => {
   });
 });
 
-app.get('/stored-components', (req, res) => {
-  const { sourceAlias } = req.query;
-  if (!sourceAlias) return res.status(400).send('sourceAlias is required');
-  const index = storage.getIndex(sourceAlias);
-  if (!index) return res.status(404).send('No stored components found');
-  res.json(index);
-});
+    app.get('/stored-components', (req, res) => {
+    const { sourceAlias } = req.query;
+    if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+    const index = storage.getIndex(sourceAlias);
+    if (!index) return res.status(404).send('No stored components found');
+    res.json(index);
+    });
 
-app.post('/deploy', async (req, res) => {
-  const { sourceAlias, targetAlias, selectedComponents } = req.body;
-  if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
-    return res.status(400).send('sourceAlias, targetAlias, and selectedComponents {type: [name]} are required');
-  }
+// app.post('/deploy', async (req, res) => {
+//   const { sourceAlias, targetAlias, selectedComponents } = req.body;
+//   if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
+//     return res.status(400).send('sourceAlias, targetAlias, and selectedComponents {type: [name]} are required');
+//   }
 
-  try {
-    await authenticateWithJWT(sourceAlias, process.env.SF_CLIENT_ID, process.env.SF_USERNAME, process.env.SF_LOGIN_URL, process.env.SF_JWT_KEY);
-    await authenticateWithJWT(targetAlias, process.env.TARGET_CLIENT_ID, process.env.TARGET_USERNAME, process.env.TARGET_LOGIN_URL, process.env.TARGET_JWT_KEY);
-  } catch (err) {
-    return res.status(500).json({ status: 'error', message: 'JWT auth failed', details: err.message });
-  }
+//   try {
+//     await authenticateWithJWT(sourceAlias, process.env.SF_CLIENT_ID, process.env.SF_USERNAME, process.env.SF_LOGIN_URL, process.env.SF_JWT_KEY);
+//     await authenticateWithJWT(targetAlias, process.env.TARGET_CLIENT_ID, process.env.TARGET_USERNAME, process.env.TARGET_LOGIN_URL, process.env.TARGET_JWT_KEY);
+//   } catch (err) {
+//     return res.status(500).json({ status: 'error', message: 'JWT auth failed', details: err.message });
+//   }
 
-  // Dependency Check
-  const missingDependencies = [];
-  for (const [type, items] of Object.entries(selectedComponents)) {
-    for (const itemName of items) {
-      const stored = storage.getComponent(sourceAlias, type, itemName);
-      if (stored?.dependencies) {
-        for (const dep of stored.dependencies) {
-          const depType = dep.VlocityDataPackType;
-          const depName = dep.Id;
-          const alreadyIncluded = selectedComponents[depType]?.includes(depName);
-          const alreadyStored = fs.existsSync(path.join(depType, depName));
-          if (!alreadyIncluded && !alreadyStored) {
-            missingDependencies.push(`${depType}/${depName}`);
-          }
+//   // Dependency Check
+//   const missingDependencies = [];
+//   for (const [type, items] of Object.entries(selectedComponents)) {
+//     for (const itemName of items) {
+//       const stored = storage.getComponent(sourceAlias, type, itemName);
+//       if (stored?.dependencies) {
+//         for (const dep of stored.dependencies) {
+//           const depType = dep.VlocityDataPackType;
+//           const depName = dep.Id;
+//           const alreadyIncluded = selectedComponents[depType]?.includes(depName);
+//           const alreadyStored = fs.existsSync(path.join(depType, depName));
+//           if (!alreadyIncluded && !alreadyStored) {
+//             missingDependencies.push(`${depType}/${depName}`);
+//           }
+//         }
+//       }
+//     }
+//   }
+
+//   if (missingDependencies.length > 0) {
+//     return res.status(200).json({
+//       status: 'dependency_required',
+//       message: 'Missing required dependencies.',
+//       dependencies: missingDependencies
+//     });
+//   }
+
+//   // Continue with deployment
+//   const tempDir = './vlocity-temp';
+//   fs.rmSync(tempDir, { recursive: true, force: true });
+//   fs.mkdirSync(tempDir, { recursive: true });
+
+//   const deployYaml = { export: {} };
+//   for (const [type, items] of Object.entries(selectedComponents)) {
+//     deployYaml.export[type] = { queries: items.map(name => `${type}/${name}`) };
+//     items.forEach(name => {
+//       const srcDir = path.join(type, name);
+//       const destDir = path.join(tempDir, type, name);
+//       if (fs.existsSync(srcDir)) {
+//         fs.mkdirSync(destDir, { recursive: true });
+//         fs.readdirSync(srcDir).forEach(file => {
+//           fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+//         });
+//       }
+//     });
+//   }
+
+//   fs.writeFileSync(path.join(tempDir, 'deploySelected.yaml'), yaml.dump(deployYaml));
+//   const stripAnsi = (await import('strip-ansi')).default;
+//   const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+
+//   exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
+//     const rawOutput = stdout || stderr || '';
+//     const cleanOutput = stripAnsi(rawOutput);
+//     const deployedComponents = [];
+//     const warnings = [];
+//     let elapsedTime = '';
+
+//     cleanOutput.split('\n').forEach(line => {
+//       if (line.includes('Adding to Deploy >>')) deployedComponents.push(line.split('>>')[1]?.trim());
+//       if (line.includes('Elapsed Time')) elapsedTime = line.split('>>')[1]?.trim();
+//       if (line.toLowerCase().includes('unauthorized') || line.toLowerCase().includes('error')) warnings.push(line.trim());
+//     });
+
+//     res.status(err ? 500 : 200).json({
+//       status: err ? 'error' : 'success',
+//       message: err ? 'Deployment failed' : 'Deployment successful',
+//       deployedComponents,
+//       elapsedTime,
+//       warnings,
+//       details: cleanOutput
+//     });
+//   });
+// });
+
+// Serve deploy endpoint
+    app.post('/deploy', async (req, res) => {
+        const { sourceAlias, targetAlias, selectedComponents } = req.body;
+
+        if (!sourceAlias || !targetAlias || !selectedComponents) {
+            return res.status(400).json({ error: 'Missing sourceAlias, targetAlias or selectedComponents' });
         }
-      }
-    }
-  }
 
-  if (missingDependencies.length > 0) {
-    return res.status(200).json({
-      status: 'dependency_required',
-      message: 'Missing required dependencies.',
-      dependencies: missingDependencies
+        try {
+            // Step 1: Save selected components to a temp file
+            const tempFilePath = path.join(__dirname, 'selected-components.json');
+            fs.writeFileSync(tempFilePath, JSON.stringify(selectedComponents, null, 2));
+
+            // Step 2: Create job file
+            const jobYaml = `
+    projectPath: .
+    export:
+    ${Object.keys(selectedComponents).join(': {},\n  ')}: {}
+    deploy:
+    ${Object.keys(selectedComponents).join(': {},\n  ')}: {}
+    `;
+            const jobFilePath = path.join(__dirname, 'deployJob.yaml');
+            fs.writeFileSync(jobFilePath, jobYaml);
+
+            // Step 3: Run packDeploy
+            const command = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deployJob.yaml`;
+
+            exec(command, { maxBuffer: 1024 * 5000 }, (err, stdout, stderr) => {
+                let dependencies = [];
+
+                if (stderr && (stderr.includes('Missing') || stderr.toLowerCase().includes('not found'))) {
+                    // Simple regex to capture dependency mentions
+                    const depMatches = stderr.match(/Missing.*?:\s*(.*?)\s*[\n\r]/gi);
+                    if (depMatches) {
+                        dependencies = depMatches.map(d => d.replace(/.*?:/, '').trim());
+                    }
+                }
+
+                const response = {
+                    success: !err,
+                    details: stdout || stderr || 'Deployment finished.',
+                    dependencies
+                };
+
+                return res.json(response);
+            });
+        } catch (e) {
+            return res.status(500).json({
+                error: 'Unexpected server error',
+                details: e.toString()
+            });
+        }
     });
-  }
-
-  // Continue with deployment
-  const tempDir = './vlocity-temp';
-  fs.rmSync(tempDir, { recursive: true, force: true });
-  fs.mkdirSync(tempDir, { recursive: true });
-
-  const deployYaml = { export: {} };
-  for (const [type, items] of Object.entries(selectedComponents)) {
-    deployYaml.export[type] = { queries: items.map(name => `${type}/${name}`) };
-    items.forEach(name => {
-      const srcDir = path.join(type, name);
-      const destDir = path.join(tempDir, type, name);
-      if (fs.existsSync(srcDir)) {
-        fs.mkdirSync(destDir, { recursive: true });
-        fs.readdirSync(srcDir).forEach(file => {
-          fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
-        });
-      }
-    });
-  }
-
-  fs.writeFileSync(path.join(tempDir, 'deploySelected.yaml'), yaml.dump(deployYaml));
-  const stripAnsi = (await import('strip-ansi')).default;
-  const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
-
-  exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
-    const rawOutput = stdout || stderr || '';
-    const cleanOutput = stripAnsi(rawOutput);
-    const deployedComponents = [];
-    const warnings = [];
-    let elapsedTime = '';
-
-    cleanOutput.split('\n').forEach(line => {
-      if (line.includes('Adding to Deploy >>')) deployedComponents.push(line.split('>>')[1]?.trim());
-      if (line.includes('Elapsed Time')) elapsedTime = line.split('>>')[1]?.trim();
-      if (line.toLowerCase().includes('unauthorized') || line.toLowerCase().includes('error')) warnings.push(line.trim());
-    });
-
-    res.status(err ? 500 : 200).json({
-      status: err ? 'error' : 'success',
-      message: err ? 'Deployment failed' : 'Deployment successful',
-      deployedComponents,
-      elapsedTime,
-      warnings,
-      details: cleanOutput
-    });
-  });
-});
 
 app.listen(3000, () => console.log('Deployment API running at http://localhost:3000'));
