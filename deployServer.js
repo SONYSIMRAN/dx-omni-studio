@@ -1,4 +1,3 @@
-// vlocity backend (updated with full FlexCard visibility and activation)
 const express = require('express');
 const { exec, execSync } = require('child_process');
 const { authenticateWithJWT } = require('./authHelper');
@@ -6,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 const storage = require('./storageHelper');
+
 const app = express();
 app.use(express.json());
 
@@ -19,6 +19,9 @@ const allTypes = [
     'VlocityUITemplate'
 ];
 
+// =======================
+// EXPORT COMPONENTS
+// =======================
 app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
@@ -40,15 +43,18 @@ app.get('/components', (req, res) => {
     console.log(`Exporting with command: ${exportCmd}`);
 
     exec(exportCmd, (err, stdout, stderr) => {
+        if (err) return res.status(500).send('Export failed');
         console.log('Export STDOUT:\n', stdout);
         console.error('Export STDERR:\n', stderr);
-        if (err) return res.status(500).send('Export failed');
 
         const summary = { timestamp: new Date().toISOString(), sourceAlias };
+
         allTypes.forEach(type => {
             const dir = `./${type}`;
             if (fs.existsSync(dir)) {
-                const entries = fs.readdirSync(dir).filter(entry => fs.statSync(path.join(dir, entry)).isDirectory());
+                const entries = fs.readdirSync(dir).filter(entry =>
+                    fs.statSync(path.join(dir, entry)).isDirectory()
+                );
                 summary[type] = entries;
                 entries.forEach(name => {
                     const jsonPath = path.join(dir, name, `${name}_DataPack.json`);
@@ -59,27 +65,34 @@ app.get('/components', (req, res) => {
                 });
             }
         });
+
         storage.saveIndex(sourceAlias, summary);
         res.json(summary);
     });
 });
 
+// =======================
+// FETCH STORED COMPONENTS
+// =======================
 app.get('/stored-components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
     const index = storage.getIndex(sourceAlias);
     if (!index) return res.status(404).send('No stored components found');
     res.json(index);
 });
 
+// =======================
+// DEPLOY COMPONENTS
+// =======================
 app.post('/deploy', async (req, res) => {
     const { sourceAlias, targetAlias, selectedComponents } = req.body;
     if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
         return res.status(400).send('sourceAlias, targetAlias, and selectedComponents {type: [name]} are required');
     }
 
-    console.log(`Starting deployment from ${sourceAlias} to ${targetAlias}`);
-    console.log('Selected Components:', JSON.stringify(selectedComponents, null, 2));
+    console.log(`Deploying from ${sourceAlias} to ${targetAlias}`);
 
     try {
         await authenticateWithJWT(sourceAlias, process.env.SF_CLIENT_ID, process.env.SF_USERNAME, process.env.SF_LOGIN_URL, process.env.SF_JWT_KEY);
@@ -101,7 +114,9 @@ app.post('/deploy', async (req, res) => {
 
     const deployYaml = { export: {} };
     for (const [type, items] of Object.entries(selectedComponents)) {
-        deployYaml.export[type] = { queries: items.map(name => `${type}/${name}`) };
+        deployYaml.export[type] = {
+            queries: items.map(name => `${type}/${name}`)
+        };
         items.forEach(name => {
             const srcDir = path.join(type, name);
             const destDir = path.join(tempDir, type, name);
@@ -121,7 +136,6 @@ app.post('/deploy', async (req, res) => {
     exec(deployCmd, { cwd: tempDir }, (err, stdout, stderr) => {
         const rawOutput = stdout || stderr || '';
         const cleanOutput = stripAnsi(rawOutput);
-
         const deployedComponents = [];
         const warnings = [];
         let elapsedTime = '';
@@ -132,42 +146,43 @@ app.post('/deploy', async (req, res) => {
             if (line.toLowerCase().includes('unauthorized') || line.toLowerCase().includes('error')) warnings.push(line.trim());
         });
 
-        // ✅ Auto-activate FlexCards after deploy
+        // ✅ FlexCard Activation
         if (!err) {
             deployedComponents.forEach(name => {
                 if (name.startsWith('FlexCard/')) {
-                    const flexCardName = name.split('/')[1];
-                    const activateCmd = `npx vlocity -sfdx.username ${targetAlias} flexcards.activate --name \"${flexCardName}\"`;
+                    const cardName = name.split('/')[1];
+                    const activateCmd = `npx vlocity -sfdx.username ${targetAlias} flexcards.activate --name "${cardName}"`;
                     try {
-                        console.log(`Activating ${flexCardName}`);
                         execSync(activateCmd, { stdio: 'inherit' });
-                    } catch (activationErr) {
-                        console.error(`Activation failed for ${flexCardName}:`, activationErr.message);
-                        warnings.push(`Activation failed for ${flexCardName}: ${activationErr.message}`);
+                    } catch (e) {
+                        warnings.push(`Activation failed for ${cardName}: ${e.message}`);
                     }
                 }
             });
         }
 
-        // ✅ Optionally run packActivate (recommended)
+        // ✅ Optional global packActivate
         try {
-            const packActivateCmd = `npx vlocity -sfdx.username ${targetAlias} packActivate -job deploySelected.yaml`;
-            execSync(packActivateCmd, { cwd: tempDir, stdio: 'inherit' });
+            const activateAllCmd = `npx vlocity -sfdx.username ${targetAlias} packActivate -job deploySelected.yaml`;
+            execSync(activateAllCmd, { cwd: tempDir, stdio: 'inherit' });
         } catch (e) {
-            warnings.push('packActivate failed: ' + e.message);
+            warnings.push('Global activation failed: ' + e.message);
         }
 
-        const response = {
+        return res.status(err ? 500 : 200).json({
             status: err ? 'error' : 'success',
             message: err ? 'Deployment failed' : 'Deployment successful',
             deployedComponents,
             elapsedTime,
             warnings,
             details: cleanOutput
-        };
-
-        res.status(err ? 500 : 200).json(response);
+        });
     });
 });
 
-app.listen(3000, () => console.log('Deployment API running at http://localhost:3000'));
+// =======================
+// START SERVER
+// =======================
+app.listen(3000, () => {
+    console.log('Deployment API running at http://localhost:3000');
+});
