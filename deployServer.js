@@ -77,19 +77,31 @@ const allTypes = [
 //     });
 // });
 
-// GET: Export and store OmniStudio components
 app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
-    // ✅ Clean up old folders before export
-    allTypes.forEach(type => {
+    const safeTypes = [
+        'OmniScript',
+        'FlexCard',
+        'DataRaptor',
+        'IntegrationProcedure',
+        'OmniStudioTrackingService',
+        'VlocityUILayout',
+        'VlocityUITemplate',
+        'CalculationMatrix',
+        'CalculationProcedure'
+    ];
+
+    // 🧹 Clean previous folders
+    safeTypes.forEach(type => {
         const dirPath = path.join(__dirname, type);
         if (fs.existsSync(dirPath)) {
             fs.rmSync(dirPath, { recursive: true, force: true });
         }
     });
 
+    // 🛠️ Build YAML config
     const yamlContent = {
         export: {},
         exportPacks: {
@@ -98,24 +110,40 @@ app.get('/components', (req, res) => {
         }
     };
 
-    allTypes.forEach(type => {
+    safeTypes.forEach(type => {
         yamlContent.export[type] = {};
     });
 
     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
-
-    const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
+    const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+    console.log('🔧 Executing export command:', exportCmd);
 
     try {
-        const result = execSync(exportCmd, { encoding: 'utf-8' });
+        const result = execSync(exportCmd, {
+            encoding: 'utf-8',
+            stdio: 'pipe'
+        });
 
-        // After export, load components and store index
+        console.log('✅ Export STDOUT:\n', result);
+
+        // 📦 Collect components
         const summary = {};
-        allTypes.forEach(type => {
+        safeTypes.forEach(type => {
             const typeDir = path.join(__dirname, type);
             if (fs.existsSync(typeDir)) {
-                const files = fs.readdirSync(typeDir).filter(f => f.endsWith('.json'));
-                summary[type] = files.map(f => f.replace('.json', ''));
+                const entries = fs.readdirSync(typeDir).filter(entry =>
+                    fs.statSync(path.join(typeDir, entry)).isDirectory()
+                );
+
+                summary[type] = entries;
+
+                entries.forEach(name => {
+                    const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
+                    if (fs.existsSync(jsonPath)) {
+                        const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+                        storage.saveComponent(sourceAlias, type, name, data);
+                    }
+                });
             }
         });
 
@@ -123,11 +151,21 @@ app.get('/components', (req, res) => {
         summary.sourceAlias = sourceAlias;
 
         storage.saveIndex(sourceAlias, summary);
-        res.json(summary);
+        return res.json(summary);
+
     } catch (err) {
-        res.status(500).send('Export failed: ' + err.message);
+        console.error('❌ Export failed');
+        console.error('Message:', err.message);
+        console.error('STDOUT:', err.stdout?.toString?.());
+        console.error('STDERR:', err.stderr?.toString?.());
+
+        return res.status(500).send('Export failed:\n' +
+            (err.stderr?.toString?.() || err.message)
+        );
     }
 });
+
+
 
 
 // GET: View stored components

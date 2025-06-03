@@ -1,11 +1,13 @@
 export:
   OmniScript: {}
+  FlexCard: {}
   DataRaptor: {}
   IntegrationProcedure: {}
-  FlexCard: {}
-  VlocityCard__CardState__c: {} 
+  OmniStudioTrackingService: {}
   VlocityUILayout: {}
   VlocityUITemplate: {}
+  CalculationMatrix: {}
+  CalculationProcedure: {}
 exportPacks:
   autoAddDependentFields: true
   autoAddDependencies: true
