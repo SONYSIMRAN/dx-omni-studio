@@ -530,6 +530,83 @@ app.post('/detect-dependencies', (req, res) => {
     });
 });
 
+app.get('/refresh-components', (req, res) => {
+    const { sourceAlias } = req.query;
+    if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+    console.log(` Refreshing metadata from ${sourceAlias}...`);
+
+    const safeTypes = [
+        'OmniScript',
+        'FlexCard',
+        'DataRaptor',
+        'IntegrationProcedure',
+        'OmniStudioTrackingService',
+        'VlocityUILayout',
+        'VlocityUITemplate',
+        'CalculationMatrix',
+        'CalculationProcedure'
+    ];
+
+    // Clean folders
+    safeTypes.forEach(type => {
+        const dirPath = path.join(__dirname, type);
+        if (fs.existsSync(dirPath)) {
+            fs.rmSync(dirPath, { recursive: true, force: true });
+        }
+    });
+
+    // YAML
+    const yamlContent = {
+        export: {},
+        exportPacks: {
+            autoAddDependentFields: true,
+            autoAddDependencies: true
+        }
+    };
+    safeTypes.forEach(type => {
+        yamlContent.export[type] = {};
+    });
+
+    fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
+    const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+    console.log('🛠️ Executing:', exportCmd);
+
+    try {
+        const result = execSync(exportCmd, { encoding: 'utf-8' });
+        console.log('Export complete');
+
+        const summary = {};
+        safeTypes.forEach(type => {
+            const typeDir = path.join(__dirname, type);
+            if (fs.existsSync(typeDir)) {
+                const entries = fs.readdirSync(typeDir).filter(entry =>
+                    fs.statSync(path.join(typeDir, entry)).isDirectory()
+                );
+                summary[type] = entries;
+
+                entries.forEach(name => {
+                    const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
+                    if (fs.existsSync(jsonPath)) {
+                        const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+                        storage.saveComponent(sourceAlias, type, name, data);
+                    }
+                });
+            }
+        });
+
+        summary.timestamp = new Date().toISOString();
+        summary.sourceAlias = sourceAlias;
+        storage.saveIndex(sourceAlias, summary);
+
+        return res.json(summary);
+    } catch (err) {
+        console.error('Refresh failed:', err.message);
+        return res.status(500).send('Refresh failed:\n' + (err.stderr?.toString?.() || err.message));
+    }
+});
+
+
 
 // Start server
 app.listen(3000, () => {
