@@ -21,6 +21,63 @@ const allTypes = [
 ];
 
 // GET: Export and store OmniStudio components
+// app.get('/components', (req, res) => {
+//     const { sourceAlias } = req.query;
+//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+//     const yamlContent = {
+//         export: {},
+//         exportPacks: {
+//             autoAddDependentFields: true,
+//             autoAddDependencies: true
+//         }
+//     };
+
+//     allTypes.forEach(type => {
+//         yamlContent.export[type] = {};
+//     });
+
+//     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
+
+//     const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+//     console.log(`Exporting with command: ${exportCmd}`);
+
+//     exec(exportCmd, (err, stdout, stderr) => {
+//         console.log('Export STDOUT:\n', stdout);
+//         console.error('Export STDERR:\n', stderr);
+
+//         if (err) return res.status(500).send('Export failed');
+
+//         const summary = {
+//             timestamp: new Date().toISOString(),
+//             sourceAlias
+//         };
+
+//         allTypes.forEach(type => {
+//             const dir = `./${type}`;
+//             if (fs.existsSync(dir)) {
+//                 const entries = fs.readdirSync(dir).filter(entry =>
+//                     fs.statSync(path.join(dir, entry)).isDirectory()
+//                 );
+
+//                 summary[type] = entries;
+
+//                 entries.forEach(name => {
+//                     const jsonPath = path.join(dir, name, `${name}_DataPack.json`);
+//                     if (fs.existsSync(jsonPath)) {
+//                         const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+//                         storage.saveComponent(sourceAlias, type, name, data);
+//                     }
+//                 });
+//             }
+//         });
+
+//         storage.saveIndex(sourceAlias, summary);
+//         res.json(summary);
+//     });
+// });
+
+// GET: Export and store OmniStudio components
 app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
@@ -38,6 +95,14 @@ app.get('/components', (req, res) => {
     });
 
     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
+
+    // 🧼 CLEANUP STEP: delete previous folders
+    allTypes.forEach(type => {
+        const dir = `./${type}`;
+        if (fs.existsSync(dir)) {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
 
     const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
     console.log(`Exporting with command: ${exportCmd}`);
@@ -76,6 +141,7 @@ app.get('/components', (req, res) => {
         res.json(summary);
     });
 });
+
 
 // GET: View stored components
 app.get('/stored-components', (req, res) => {
