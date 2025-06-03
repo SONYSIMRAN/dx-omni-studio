@@ -82,6 +82,14 @@ app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
+    // ✅ Clean up old folders before export
+    allTypes.forEach(type => {
+        const dirPath = path.join(__dirname, type);
+        if (fs.existsSync(dirPath)) {
+            fs.rmSync(dirPath, { recursive: true, force: true });
+        }
+    });
+
     const yamlContent = {
         export: {},
         exportPacks: {
@@ -96,50 +104,29 @@ app.get('/components', (req, res) => {
 
     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
 
-    // 🧼 CLEANUP STEP: delete previous folders
-    allTypes.forEach(type => {
-        const dir = `./${type}`;
-        if (fs.existsSync(dir)) {
-            fs.rmSync(dir, { recursive: true, force: true });
-        }
-    });
+    const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all`;
 
-    const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
-    console.log(`Exporting with command: ${exportCmd}`);
+    try {
+        const result = execSync(exportCmd, { encoding: 'utf-8' });
 
-    exec(exportCmd, (err, stdout, stderr) => {
-        console.log('Export STDOUT:\n', stdout);
-        console.error('Export STDERR:\n', stderr);
-
-        if (err) return res.status(500).send('Export failed');
-
-        const summary = {
-            timestamp: new Date().toISOString(),
-            sourceAlias
-        };
-
+        // After export, load components and store index
+        const summary = {};
         allTypes.forEach(type => {
-            const dir = `./${type}`;
-            if (fs.existsSync(dir)) {
-                const entries = fs.readdirSync(dir).filter(entry =>
-                    fs.statSync(path.join(dir, entry)).isDirectory()
-                );
-
-                summary[type] = entries;
-
-                entries.forEach(name => {
-                    const jsonPath = path.join(dir, name, `${name}_DataPack.json`);
-                    if (fs.existsSync(jsonPath)) {
-                        const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-                        storage.saveComponent(sourceAlias, type, name, data);
-                    }
-                });
+            const typeDir = path.join(__dirname, type);
+            if (fs.existsSync(typeDir)) {
+                const files = fs.readdirSync(typeDir).filter(f => f.endsWith('.json'));
+                summary[type] = files.map(f => f.replace('.json', ''));
             }
         });
 
+        summary.timestamp = new Date().toISOString();
+        summary.sourceAlias = sourceAlias;
+
         storage.saveIndex(sourceAlias, summary);
         res.json(summary);
-    });
+    } catch (err) {
+        res.status(500).send('Export failed: ' + err.message);
+    }
 });
 
 
