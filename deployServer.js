@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const { exec, execSync } = require('child_process');
 const { authenticateWithJWT } = require('./authHelper');
@@ -5,6 +7,9 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 const storage = require('./storageHelper');
+const axios = require('axios');
+
+
 // const stripAnsi = require('strip-ansi');
 
 const app = express();
@@ -570,7 +575,7 @@ app.get('/refresh-components', (req, res) => {
 
     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
     const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
-    console.log('🛠️ Executing:', exportCmd);
+    console.log('Executing:', exportCmd);
 
     try {
         const result = execSync(exportCmd, { encoding: 'utf-8' });
@@ -605,6 +610,114 @@ app.get('/refresh-components', (req, res) => {
         return res.status(500).send('Refresh failed:\n' + (err.stderr?.toString?.() || err.message));
     }
 });
+
+
+// POST: Trigger GitLab pipeline
+const simpleGit = require('simple-git');
+const fsExtra = require('fs-extra');
+
+app.post('/deploy-and-git', async (req, res) => {
+    const {
+        sourceAlias,
+        targetAlias,
+        selectedComponents,
+        gitBranch = 'main',
+        commitMessage = 'Deploy and Git Commit'
+    } = req.body;
+
+    if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
+        return res.status(400).json({ status: 'error', message: 'Missing required fields' });
+    }
+
+    try {
+        const exportYamlPath = path.join(__dirname, 'exportDeployGit.yaml');
+        const deployYamlPath = path.join(__dirname, 'deploySelected.yaml');
+        const tempDir = './vlocity_temp';
+
+        // Step 1: Build YAML for export
+        const exportYaml = {
+            export: {},
+            exportPacks: {
+                autoAddDependencies: true,
+                autoAddDependentFields: true
+            }
+        };
+
+        Object.entries(selectedComponents).forEach(([type, names]) => {
+            exportYaml.export[type] = {};
+            names.forEach(name => {
+                exportYaml.export[type][name] = {};
+            });
+        });
+
+        fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml));
+
+        // Step 2: Export from source
+        const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportDeployGit.yaml --ignoreAllErrors`;
+        console.log('▶ Export:', exportCmd);
+        execSync(exportCmd, { stdio: 'inherit' });
+
+        // Step 3: Prepare tempDir for deploy and Git
+        fs.rmSync(tempDir, { recursive: true, force: true });
+        fs.mkdirSync(tempDir, { recursive: true });
+
+        const deployYaml = { export: {} };
+
+        for (const [type, names] of Object.entries(selectedComponents)) {
+            deployYaml.export[type] = {
+                queries: names.map(name => `${type}/${name}`)
+            };
+
+            for (const name of names) {
+                const srcDir = path.join(__dirname, type, name);
+                const destDir = path.join(tempDir, type, name);
+
+                if (fs.existsSync(srcDir)) {
+                    fs.mkdirSync(destDir, { recursive: true });
+                    fs.readdirSync(srcDir).forEach(file => {
+                        fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+                    });
+                }
+            }
+        }
+
+        fs.writeFileSync(deployYamlPath, yaml.dump(deployYaml));
+
+        // Step 4: Deploy to target org
+        const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+        console.log('Deploy:', deployCmd);
+        execSync(deployCmd, { cwd: tempDir, stdio: 'inherit' });
+
+        // Step 5: Push to Git
+        const repoDir = path.join(__dirname, 'git-export');
+        const GITLAB_REPO_URL = process.env.GITLAB_REPO_URL;
+
+        fsExtra.removeSync(repoDir);
+        await simpleGit().clone(GITLAB_REPO_URL, repoDir);
+
+        await fsExtra.copy(tempDir, path.join(repoDir, 'components'), { overwrite: true });
+
+        const git = simpleGit(repoDir);
+        await git.checkout(gitBranch);
+        await git.add('./*');
+        await git.commit(commitMessage);
+        await git.push('origin', gitBranch);
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Deployment and Git commit successful.'
+        });
+
+    } catch (err) {
+        console.error('deploy-and-git error:', err.message || err);
+        return res.status(500).json({
+            status: 'error',
+            message: err.message || 'Unexpected error during deploy-and-git'
+        });
+    }
+});
+
+
 
 
 
