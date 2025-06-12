@@ -732,7 +732,11 @@ app.post('/deploy-and-git', async (req, res) => {
     }
 
     try {
-        // ✅ Step 0: Authenticate both orgs using JWT env variables
+        const exportYamlPath = path.join(__dirname, 'exportDeployGit.yaml');
+        const deployYamlPath = path.join(__dirname, 'deploySelected.yaml');
+        const tempDir = './vlocity_temp';
+
+        // Step 1: Authenticate via JWT for source and target orgs
         await authenticateWithJWT(
             sourceAlias,
             process.env.SF_CLIENT_ID,
@@ -749,11 +753,7 @@ app.post('/deploy-and-git', async (req, res) => {
             process.env.TARGET_JWT_KEY
         );
 
-        const exportYamlPath = path.join(__dirname, 'exportDeployGit.yaml');
-        const deployYamlPath = path.join(__dirname, 'deploySelected.yaml');
-        const tempDir = './vlocity_temp';
-
-        // Step 1: Build YAML for export
+        // Step 2: Create export YAML file
         const exportYaml = {
             export: {},
             exportPacks: {
@@ -771,17 +771,16 @@ app.post('/deploy-and-git', async (req, res) => {
 
         fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml));
 
-        // Step 2: Export from source org
+        // Step 3: Export selected components
         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportDeployGit.yaml --ignoreAllErrors`;
         console.log('▶ Export:', exportCmd);
         execSync(exportCmd, { stdio: 'inherit' });
 
-        // Step 3: Prepare deployment folder
+        // Step 4: Prepare deployment directory
         fs.rmSync(tempDir, { recursive: true, force: true });
         fs.mkdirSync(tempDir, { recursive: true });
 
         const deployYaml = { export: {} };
-
         for (const [type, names] of Object.entries(selectedComponents)) {
             deployYaml.export[type] = {
                 queries: names.map(name => `${type}/${name}`)
@@ -802,20 +801,26 @@ app.post('/deploy-and-git', async (req, res) => {
 
         fs.writeFileSync(deployYamlPath, yaml.dump(deployYaml));
 
-        // Step 4: Deploy to target org
+        // Step 5: Deploy to target org
         const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
         console.log('▶ Deploy:', deployCmd);
         execSync(deployCmd, { cwd: tempDir, stdio: 'inherit' });
 
-        // Step 5: Push to GitLab
+        // Step 6: Git operations
         const repoDir = path.join(__dirname, 'git-export');
         const GITLAB_REPO_URL = process.env.GITLAB_REPO_URL;
 
         fsExtra.removeSync(repoDir);
         await simpleGit().clone(GITLAB_REPO_URL, repoDir);
+
         await fsExtra.copy(tempDir, path.join(repoDir, 'components'), { overwrite: true });
 
         const git = simpleGit(repoDir);
+
+        // Set Git user identity
+        await git.addConfig('user.email', process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com');
+        await git.addConfig('user.name', process.env.GIT_COMMIT_NAME || 'Omni Deployer');
+
         await git.checkout(gitBranch);
         await git.add('./*');
         await git.commit(commitMessage);
@@ -834,8 +839,6 @@ app.post('/deploy-and-git', async (req, res) => {
         });
     }
 });
-
-
 
 
 
