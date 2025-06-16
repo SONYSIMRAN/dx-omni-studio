@@ -703,18 +703,22 @@ function getKeyInput(value) {
 async function triggerGitlabPipeline() {
     const GITLAB_API_URL = `https://gitlab.com/api/v4/projects/${process.env.GITLAB_PROJECT_ID}/pipeline`;
 
-    const response = await axios.post(
-        GITLAB_API_URL,
-        { ref: process.env.GITLAB_BRANCH || 'main' },
-        {
-            headers: {
-                'Private-Token': process.env.GITLAB_TOKEN,
-                'Content-Type': 'application/json'
+    try {
+        const response = await axios.post(
+            GITLAB_API_URL,
+            { ref: process.env.GITLAB_BRANCH || 'main' },
+            {
+                headers: {
+                    'Private-Token': process.env.GITLAB_TOKEN,
+                    'Content-Type': 'application/json'
+                }
             }
-        }
-    );
-
-    return response.data; // includes id, status, web_url
+        );
+        return response.data;
+    } catch (err) {
+        console.error('GitLab pipeline trigger failed:', err.response?.data || err.message);
+        throw err;
+    }
 }
 
 
