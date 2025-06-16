@@ -673,11 +673,14 @@ app.post('/deploy-and-git', async (req, res) => {
             elapsedTime,
             warnings,
             details: cleanOutput,
-            pipelineId: pipelineData.id,
-            pipelineStatus: pipelineData.status,
-            pipelineUrl: pipelineData.web_url
+            pipeline: {
+                id: pipelineData.id,
+                status: pipelineData.status,
+                url: pipelineData.web_url,
+                ref: pipelineData.ref,
+                created_at: pipelineData.created_at
+            }
         });
-
 
     } catch (err) {
         console.error('deploy-and-git error:', err.message || err);
