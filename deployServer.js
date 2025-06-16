@@ -487,7 +487,7 @@ const fsExtra = require('fs-extra');
 
 app.post('/deploy-and-git', async (req, res) => {
     console.log('Using JWT key:', process.env.SF_JWT_KEY);
-    const stripAnsi = (await import('strip-ansi')).default;
+    // const stripAnsi = (await import('strip-ansi')).default;
 
     const {
         sourceAlias,
