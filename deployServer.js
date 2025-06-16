@@ -597,6 +597,7 @@ app.post('/deploy-and-git', async (req, res) => {
         // Step 5: Deploy to target org
         const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
         console.log('Deploy:', deployCmd);
+        const stripAnsi = (await import('strip-ansi')).default;
         // execSync(deployCmd, { cwd: tempDir, stdio: 'inherit' });
 
         const deployOutput = execSync(deployCmd, { cwd: tempDir, encoding: 'utf-8' });
