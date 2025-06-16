@@ -525,8 +525,12 @@ app.post('/deploy-and-git', async (req, res) => {
 
 
 
-        const jwtKeyString = fs.readFileSync(path.resolve(__dirname, process.env.SF_JWT_KEY), 'utf-8');
-        const targetJwtKeyString = fs.readFileSync(path.resolve(__dirname, process.env.TARGET_JWT_KEY), 'utf-8');
+        // const jwtKeyString = fs.readFileSync(path.resolve(__dirname, process.env.SF_JWT_KEY), 'utf-8');
+        // const targetJwtKeyString = fs.readFileSync(path.resolve(__dirname, process.env.TARGET_JWT_KEY), 'utf-8');
+
+        const jwtKeyString = getKeyInput(process.env.SF_JWT_KEY);
+const targetJwtKeyString = getKeyInput(process.env.TARGET_JWT_KEY);
+
 
         await authenticateWithJWT(
             sourceAlias,
@@ -683,6 +687,15 @@ app.post('/deploy-and-git', async (req, res) => {
         });
     }
 });
+
+
+function getKeyInput(value) {
+    if (value.trim().startsWith('-----BEGIN')) {
+        return value; // it's a raw key string
+    } else {
+        return fs.readFileSync(path.resolve(__dirname, value), 'utf-8'); // it's a path
+    }
+}
 
 
 
