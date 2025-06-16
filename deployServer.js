@@ -507,37 +507,12 @@ app.post('/deploy-and-git', async (req, res) => {
         const tempDir = './vlocity_temp';
 
         // Step 1: Authenticate via JWT for source and target orgs
-        // await authenticateWithJWT(
-        //     sourceAlias,
-        //     process.env.SF_CLIENT_ID,
-        //     process.env.SF_USERNAME,
-        //     process.env.SF_LOGIN_URL,
-        //     process.env.SF_JWT_KEY
-        // );
-
-        // await authenticateWithJWT(
-        //     targetAlias,
-        //     process.env.TARGET_CLIENT_ID,
-        //     process.env.TARGET_USERNAME,
-        //     process.env.TARGET_LOGIN_URL,
-        //     process.env.TARGET_JWT_KEY
-        // );
-
-
-
-        // const jwtKeyString = fs.readFileSync(path.resolve(__dirname, process.env.SF_JWT_KEY), 'utf-8');
-        // const targetJwtKeyString = fs.readFileSync(path.resolve(__dirname, process.env.TARGET_JWT_KEY), 'utf-8');
-
-        const jwtKeyString = getKeyInput(process.env.SF_JWT_KEY);
-const targetJwtKeyString = getKeyInput(process.env.TARGET_JWT_KEY);
-
-
         await authenticateWithJWT(
             sourceAlias,
             process.env.SF_CLIENT_ID,
             process.env.SF_USERNAME,
             process.env.SF_LOGIN_URL,
-            jwtKeyString
+            process.env.SF_JWT_KEY
         );
 
         await authenticateWithJWT(
@@ -545,8 +520,33 @@ const targetJwtKeyString = getKeyInput(process.env.TARGET_JWT_KEY);
             process.env.TARGET_CLIENT_ID,
             process.env.TARGET_USERNAME,
             process.env.TARGET_LOGIN_URL,
-            targetJwtKeyString
+            process.env.TARGET_JWT_KEY
         );
+
+
+
+        // const jwtKeyString = fs.readFileSync(path.resolve(__dirname, process.env.SF_JWT_KEY), 'utf-8');
+        // const targetJwtKeyString = fs.readFileSync(path.resolve(__dirname, process.env.TARGET_JWT_KEY), 'utf-8');
+
+//         const jwtKeyString = getKeyInput(process.env.SF_JWT_KEY);
+// const targetJwtKeyString = getKeyInput(process.env.TARGET_JWT_KEY);
+
+
+//         await authenticateWithJWT(
+//             sourceAlias,
+//             process.env.SF_CLIENT_ID,
+//             process.env.SF_USERNAME,
+//             process.env.SF_LOGIN_URL,
+//             jwtKeyString
+//         );
+
+//         await authenticateWithJWT(
+//             targetAlias,
+//             process.env.TARGET_CLIENT_ID,
+//             process.env.TARGET_USERNAME,
+//             process.env.TARGET_LOGIN_URL,
+//             targetJwtKeyString
+//         );
 
 
 
