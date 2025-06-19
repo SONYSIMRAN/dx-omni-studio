@@ -9,7 +9,7 @@ const yaml = require('js-yaml');
 const storage = require('./storageHelper');
 const axios = require('axios');
 const stripAnsi = require('strip-ansi');
-const { fetchComponents } = require('./fetcher');
+// const { fetchComponents } = require('./fetcher');
 
 
 const app = express();
