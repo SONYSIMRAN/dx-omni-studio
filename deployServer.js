@@ -28,172 +28,94 @@ const allTypes = [
 
 
 
-// app.get('/components', (req, res) => {
-//     const { sourceAlias } = req.query;
-//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
-
-//     const safeTypes = [
-//         'OmniScript',
-//         'FlexCard',
-//         'DataRaptor',
-//         'IntegrationProcedure',
-//         'OmniStudioTrackingService',
-//         'VlocityUILayout',
-//         'VlocityUITemplate',
-//         'CalculationMatrix',
-//         'CalculationProcedure'
-//     ];
-
-//     // 🧹 Clean previous folders
-//     safeTypes.forEach(type => {
-//         const dirPath = path.join(__dirname, type);
-//         if (fs.existsSync(dirPath)) {
-//             fs.rmSync(dirPath, { recursive: true, force: true });
-//         }
-//     });
-
-//     // 🛠️ Build YAML config
-//     const yamlContent = {
-//         export: {},
-//         exportPacks: {
-//             autoAddDependentFields: true,
-//             autoAddDependencies: true
-//         }
-//     };
-
-//     safeTypes.forEach(type => {
-//         yamlContent.export[type] = {};
-//     });
-
-//     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
-//     const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
-//     console.log('🔧 Executing export command:', exportCmd);
-
-//     try {
-//         const result = execSync(exportCmd, {
-//             encoding: 'utf-8',
-//             stdio: 'pipe'
-//         });
-
-//         console.log('✅ Export STDOUT:\n', result);
-
-//         // 📦 Collect components
-//         const summary = {};
-//         safeTypes.forEach(type => {
-//             const typeDir = path.join(__dirname, type);
-//             if (fs.existsSync(typeDir)) {
-//                 const entries = fs.readdirSync(typeDir).filter(entry =>
-//                     fs.statSync(path.join(typeDir, entry)).isDirectory()
-//                 );
-
-//                 summary[type] = entries;
-
-//                 entries.forEach(name => {
-//                     const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
-//                     if (fs.existsSync(jsonPath)) {
-//                         const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-//                         storage.saveComponent(sourceAlias, type, name, data);
-//                     }
-//                 });
-//             }
-//         });
-
-//         summary.timestamp = new Date().toISOString();
-//         summary.sourceAlias = sourceAlias;
-
-//         storage.saveIndex(sourceAlias, summary);
-//         return res.json(summary);
-
-//     } catch (err) {
-//         console.error('❌ Export failed');
-//         console.error('Message:', err.message);
-//         console.error('STDOUT:', err.stdout?.toString?.());
-//         console.error('STDERR:', err.stderr?.toString?.());
-
-//         return res.status(500).send('Export failed:\n' +
-//             (err.stderr?.toString?.() || err.message)
-//         );
-//     }
-// });
-
-app.post('/start-component-export', async (req, res) => {
-    const { sourceAlias } = req.body;
+app.get('/components', (req, res) => {
+    const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
-    const jobId = `job-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    jobStore[jobId] = { status: 'pending', result: null };
+    const safeTypes = [
+        'OmniScript',
+        'FlexCard',
+        'DataRaptor',
+        'IntegrationProcedure',
+        'OmniStudioTrackingService',
+        'VlocityUILayout',
+        'VlocityUITemplate',
+        'CalculationMatrix',
+        'CalculationProcedure'
+    ];
 
-    // Run job in background
-    setTimeout(async () => {
-        try {
-            const tempPath = path.join(__dirname, '../temp-components', jobId);
-            const forceAppPath = path.join(tempPath, 'force-app');
-            const retrievePath = path.join(tempPath, 'retrieved-metadata');
-
-            fs.mkdirSync(tempPath, { recursive: true });
-            fs.mkdirSync(path.join(forceAppPath, 'main', 'default'), { recursive: true });
-            fs.mkdirSync(retrievePath, { recursive: true });
-
-            const sfdxProjectJson = {
-                packageDirectories: [{ path: 'force-app', default: true }],
-                namespace: '',
-                sourceApiVersion: '59.0'
-            };
-            fs.writeFileSync(path.join(tempPath, 'sfdx-project.json'), JSON.stringify(sfdxProjectJson, null, 2));
-
-            execSync(
-                `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors -projectPath ${tempPath}`,
-                { stdio: 'inherit' }
-            );
-
-            const summary = {
-                OmniScript: [], FlexCard: [], IntegrationProcedure: [], DataRaptor: [],
-                ApexClass: [], ApexTrigger: []
-            };
-
-            ['OmniScript', 'FlexCard', 'IntegrationProcedure', 'DataRaptor'].forEach(type => {
-                const typePath = path.join(tempPath, type);
-                if (fs.existsSync(typePath)) {
-                    summary[type] = fs.readdirSync(typePath).map(name => path.parse(name).name);
-                }
-            });
-
-            execSync(
-                `npx sf project retrieve start --metadata ApexClass,ApexTrigger --target-org ${sourceAlias} --output-dir "${retrievePath}"`,
-                { cwd: tempPath, stdio: 'inherit' }
-            );
-
-            const sfdxTypes = {
-                classes: 'ApexClass',
-                triggers: 'ApexTrigger',
-            };
-            for (const [dir, label] of Object.entries(sfdxTypes)) {
-                const typePath = path.join(retrievePath, dir);
-                if (fs.existsSync(typePath)) {
-                    const files = fs.readdirSync(typePath);
-                    summary[label] = [...new Set(files.map(f => f.split('.')[0]))];
-                }
-            }
-
-            storage.saveIndex(sourceAlias, summary);
-            jobStore[jobId] = { status: 'completed', result: summary };
-        } catch (err) {
-            console.error('Background job failed:', err.message);
-            jobStore[jobId] = { status: 'error', error: err.message };
+    // 🧹 Clean previous folders
+    safeTypes.forEach(type => {
+        const dirPath = path.join(__dirname, type);
+        if (fs.existsSync(dirPath)) {
+            fs.rmSync(dirPath, { recursive: true, force: true });
         }
-    }, 100); // slight delay to start in background
+    });
 
-    res.json({ jobId });
-});
+    // 🛠️ Build YAML config
+    const yamlContent = {
+        export: {},
+        exportPacks: {
+            autoAddDependentFields: true,
+            autoAddDependencies: true
+        }
+    };
 
-app.get('/component-export-status', (req, res) => {
-    const { jobId } = req.query;
-    if (!jobId || !jobStore[jobId]) {
-        return res.status(404).send('Invalid or missing jobId');
+    safeTypes.forEach(type => {
+        yamlContent.export[type] = {};
+    });
+
+    fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
+    const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+    console.log('🔧 Executing export command:', exportCmd);
+
+    try {
+        const result = execSync(exportCmd, {
+            encoding: 'utf-8',
+            stdio: 'pipe'
+        });
+
+        console.log('✅ Export STDOUT:\n', result);
+
+        // 📦 Collect components
+        const summary = {};
+        safeTypes.forEach(type => {
+            const typeDir = path.join(__dirname, type);
+            if (fs.existsSync(typeDir)) {
+                const entries = fs.readdirSync(typeDir).filter(entry =>
+                    fs.statSync(path.join(typeDir, entry)).isDirectory()
+                );
+
+                summary[type] = entries;
+
+                entries.forEach(name => {
+                    const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
+                    if (fs.existsSync(jsonPath)) {
+                        const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+                        storage.saveComponent(sourceAlias, type, name, data);
+                    }
+                });
+            }
+        });
+
+        summary.timestamp = new Date().toISOString();
+        summary.sourceAlias = sourceAlias;
+
+        storage.saveIndex(sourceAlias, summary);
+        return res.json(summary);
+
+    } catch (err) {
+        console.error('❌ Export failed');
+        console.error('Message:', err.message);
+        console.error('STDOUT:', err.stdout?.toString?.());
+        console.error('STDERR:', err.stderr?.toString?.());
+
+        return res.status(500).send('Export failed:\n' +
+            (err.stderr?.toString?.() || err.message)
+        );
     }
-
-    res.json(jobStore[jobId]);
 });
+
 
 
 app.get('/component-export-status', (req, res) => {
