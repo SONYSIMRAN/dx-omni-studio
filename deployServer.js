@@ -198,19 +198,6 @@ app.get('/components', (req, res) => {
 // });
 
 
-// app.get('/components', async (req, res) => {
-//     const { sourceAlias } = req.query;
-//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
-
-//     try {
-//         const summary = await fetchComponents(sourceAlias);
-//         res.json(summary);
-//     } catch (err) {
-//         res.status(500).send('Failed to fetch components: ' + err.message);
-//     }
-// });
-
-
 // GET: View stored components
 app.get('/stored-components', (req, res) => {
     const { sourceAlias } = req.query;
