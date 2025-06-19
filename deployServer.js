@@ -10,6 +10,7 @@ const storage = require('./storageHelper');
 const axios = require('axios');
 const stripAnsi = require('strip-ansi');
 const jobStore = {};
+const xmlBuilder = require('xmlbuilder');
 // const { fetchComponents } = require('./fetcher');
 
 
@@ -28,23 +29,114 @@ const allTypes = [
 
 
 
+// app.get('/components', (req, res) => {
+//     const { sourceAlias } = req.query;
+//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+//     const safeTypes = [
+//         'OmniScript',
+//         'FlexCard',
+//         'DataRaptor',
+//         'IntegrationProcedure',
+//         'OmniStudioTrackingService',
+//         'VlocityUILayout',
+//         'VlocityUITemplate',
+//         'CalculationMatrix',
+//         'CalculationProcedure'
+//     ];
+
+//     // 🧹 Clean previous folders
+//     safeTypes.forEach(type => {
+//         const dirPath = path.join(__dirname, type);
+//         if (fs.existsSync(dirPath)) {
+//             fs.rmSync(dirPath, { recursive: true, force: true });
+//         }
+//     });
+
+//     // 🛠️ Build YAML config
+//     const yamlContent = {
+//         export: {},
+//         exportPacks: {
+//             autoAddDependentFields: true,
+//             autoAddDependencies: true
+//         }
+//     };
+
+//     safeTypes.forEach(type => {
+//         yamlContent.export[type] = {};
+//     });
+
+//     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
+//     const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+//     console.log('🔧 Executing export command:', exportCmd);
+
+//     try {
+//         const result = execSync(exportCmd, {
+//             encoding: 'utf-8',
+//             stdio: 'pipe'
+//         });
+
+//         console.log('✅ Export STDOUT:\n', result);
+
+//         // 📦 Collect components
+//         const summary = {};
+//         safeTypes.forEach(type => {
+//             const typeDir = path.join(__dirname, type);
+//             if (fs.existsSync(typeDir)) {
+//                 const entries = fs.readdirSync(typeDir).filter(entry =>
+//                     fs.statSync(path.join(typeDir, entry)).isDirectory()
+//                 );
+
+//                 summary[type] = entries;
+
+//                 entries.forEach(name => {
+//                     const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
+//                     if (fs.existsSync(jsonPath)) {
+//                         const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+//                         storage.saveComponent(sourceAlias, type, name, data);
+//                     }
+//                 });
+//             }
+//         });
+
+//         summary.timestamp = new Date().toISOString();
+//         summary.sourceAlias = sourceAlias;
+
+//         storage.saveIndex(sourceAlias, summary);
+//         return res.json(summary);
+
+//     } catch (err) {
+//         console.error('❌ Export failed');
+//         console.error('Message:', err.message);
+//         console.error('STDOUT:', err.stdout?.toString?.());
+//         console.error('STDERR:', err.stderr?.toString?.());
+
+//         return res.status(500).send('Export failed:\n' +
+//             (err.stderr?.toString?.() || err.message)
+//         );
+//     }
+// });
+
+
 app.get('/components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
     const safeTypes = [
-        'OmniScript',
-        'FlexCard',
-        'DataRaptor',
-        'IntegrationProcedure',
-        'OmniStudioTrackingService',
-        'VlocityUILayout',
-        'VlocityUITemplate',
-        'CalculationMatrix',
-        'CalculationProcedure'
+        'OmniScript', 'FlexCard', 'DataRaptor', 'IntegrationProcedure',
+        'OmniStudioTrackingService', 'VlocityUILayout', 'VlocityUITemplate',
+        'CalculationMatrix', 'CalculationProcedure'
     ];
 
-    // 🧹 Clean previous folders
+    const regularMetadataTypes = [
+        { name: 'ApexClass', members: ['*'] },
+        { name: 'ApexTrigger', members: ['*'] },
+        { name: 'LightningComponentBundle', members: ['*'] }
+    ];
+
+    const summary = {};
+
+    // 🔹 Export OmniStudio
     safeTypes.forEach(type => {
         const dirPath = path.join(__dirname, type);
         if (fs.existsSync(dirPath)) {
@@ -52,7 +144,6 @@ app.get('/components', (req, res) => {
         }
     });
 
-    // 🛠️ Build YAML config
     const yamlContent = {
         export: {},
         exportPacks: {
@@ -60,32 +151,21 @@ app.get('/components', (req, res) => {
             autoAddDependencies: true
         }
     };
-
     safeTypes.forEach(type => {
         yamlContent.export[type] = {};
     });
-
-    fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
-    const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
-    console.log('🔧 Executing export command:', exportCmd);
+    fs.writeFileSync('exportAllOmni.yaml', require('js-yaml').dump(yamlContent));
 
     try {
-        const result = execSync(exportCmd, {
-            encoding: 'utf-8',
-            stdio: 'pipe'
-        });
+        const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+        execSync(exportCmd, { encoding: 'utf-8', stdio: 'pipe' });
 
-        console.log('✅ Export STDOUT:\n', result);
-
-        // 📦 Collect components
-        const summary = {};
         safeTypes.forEach(type => {
             const typeDir = path.join(__dirname, type);
             if (fs.existsSync(typeDir)) {
                 const entries = fs.readdirSync(typeDir).filter(entry =>
                     fs.statSync(path.join(typeDir, entry)).isDirectory()
                 );
-
                 summary[type] = entries;
 
                 entries.forEach(name => {
@@ -97,34 +177,70 @@ app.get('/components', (req, res) => {
                 });
             }
         });
-
-        summary.timestamp = new Date().toISOString();
-        summary.sourceAlias = sourceAlias;
-
-        storage.saveIndex(sourceAlias, summary);
-        return res.json(summary);
-
     } catch (err) {
-        console.error('❌ Export failed');
-        console.error('Message:', err.message);
-        console.error('STDOUT:', err.stdout?.toString?.());
-        console.error('STDERR:', err.stderr?.toString?.());
-
-        return res.status(500).send('Export failed:\n' +
-            (err.stderr?.toString?.() || err.message)
-        );
-    }
-});
-
-
-
-app.get('/component-export-status', (req, res) => {
-    const { jobId } = req.query;
-    if (!jobId || !jobStore[jobId]) {
-        return res.status(404).send('Invalid or missing jobId');
+        console.error('❌ OmniStudio export failed:', err.message);
     }
 
-    res.json(jobStore[jobId]);
+    // 🔹 Retrieve Regular Metadata (correct SFDX structure)
+    const retrieveTempDir = path.join(__dirname, 'retrieved-metadata');
+    const safeOutputDir = path.join(__dirname, 'sf-output');
+    const outputPath = safeOutputDir;
+
+    fs.rmSync(retrieveTempDir, { recursive: true, force: true });
+    fs.rmSync(safeOutputDir, { recursive: true, force: true });
+    fs.mkdirSync(path.join(retrieveTempDir, 'force-app'), { recursive: true }); // required
+    fs.mkdirSync(safeOutputDir, { recursive: true });
+
+    const sfdxProjectJson = {
+        packageDirectories: [{ path: 'force-app', default: true }],
+        namespace: '',
+        sourceApiVersion: '59.0'
+    };
+    fs.writeFileSync(
+        path.join(retrieveTempDir, 'sfdx-project.json'),
+        JSON.stringify(sfdxProjectJson, null, 2)
+    );
+
+    const packageXml = {
+        Package: {
+            types: regularMetadataTypes,
+            version: '59.0'
+        }
+    };
+    fs.writeFileSync(
+        path.join(retrieveTempDir, 'package.xml'),
+        xmlBuilder.create(packageXml).end({ pretty: true })
+    );
+
+    try {
+        const retrieveCmd = `sf project retrieve start --manifest package.xml --target-org ${sourceAlias} --output-dir ${safeOutputDir}`;
+        execSync(retrieveCmd, {
+            cwd: retrieveTempDir,
+            encoding: 'utf-8'
+        });
+
+        if (fs.existsSync(outputPath)) {
+            const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
+                .flatMap(entry => {
+                    const subDir = path.join(outputPath, entry.name);
+                    return entry.isDirectory()
+                        ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
+                        : [entry.name];
+                });
+            summary['RegularMetadata'] = regularFiles;
+        } else {
+            summary['RegularMetadata'] = ['No files retrieved or directory not created'];
+        }
+    } catch (err) {
+        console.warn('⚠️ Failed to retrieve regular metadata:', err.message);
+        summary['RegularMetadata'] = [`Failed: ${err.message}`];
+    }
+
+    // Final response
+    summary.timestamp = new Date().toISOString();
+    summary.sourceAlias = sourceAlias;
+    storage.saveIndex(sourceAlias, summary);
+    return res.json(summary);
 });
 
 
