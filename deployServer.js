@@ -27,175 +27,175 @@ const allTypes = [
 
 
 
-app.get('/components', (req, res) => {
-    const { sourceAlias } = req.query;
-    if (!sourceAlias) return res.status(400).send('sourceAlias is required');
-
-    const safeTypes = [
-        'OmniScript',
-        'FlexCard',
-        'DataRaptor',
-        'IntegrationProcedure',
-        'OmniStudioTrackingService',
-        'VlocityUILayout',
-        'VlocityUITemplate',
-        'CalculationMatrix',
-        'CalculationProcedure'
-    ];
-
-    // 🧹 Clean previous folders
-    safeTypes.forEach(type => {
-        const dirPath = path.join(__dirname, type);
-        if (fs.existsSync(dirPath)) {
-            fs.rmSync(dirPath, { recursive: true, force: true });
-        }
-    });
-
-    // 🛠️ Build YAML config
-    const yamlContent = {
-        export: {},
-        exportPacks: {
-            autoAddDependentFields: true,
-            autoAddDependencies: true
-        }
-    };
-
-    safeTypes.forEach(type => {
-        yamlContent.export[type] = {};
-    });
-
-    fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
-    const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
-    console.log('🔧 Executing export command:', exportCmd);
-
-    try {
-        const result = execSync(exportCmd, {
-            encoding: 'utf-8',
-            stdio: 'pipe'
-        });
-
-        console.log('✅ Export STDOUT:\n', result);
-
-        // 📦 Collect components
-        const summary = {};
-        safeTypes.forEach(type => {
-            const typeDir = path.join(__dirname, type);
-            if (fs.existsSync(typeDir)) {
-                const entries = fs.readdirSync(typeDir).filter(entry =>
-                    fs.statSync(path.join(typeDir, entry)).isDirectory()
-                );
-
-                summary[type] = entries;
-
-                entries.forEach(name => {
-                    const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
-                    if (fs.existsSync(jsonPath)) {
-                        const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-                        storage.saveComponent(sourceAlias, type, name, data);
-                    }
-                });
-            }
-        });
-
-        summary.timestamp = new Date().toISOString();
-        summary.sourceAlias = sourceAlias;
-
-        storage.saveIndex(sourceAlias, summary);
-        return res.json(summary);
-
-    } catch (err) {
-        console.error('❌ Export failed');
-        console.error('Message:', err.message);
-        console.error('STDOUT:', err.stdout?.toString?.());
-        console.error('STDERR:', err.stderr?.toString?.());
-
-        return res.status(500).send('Export failed:\n' +
-            (err.stderr?.toString?.() || err.message)
-        );
-    }
-});
-
-// app.get('/components', async (req, res) => {
+// app.get('/components', (req, res) => {
 //     const { sourceAlias } = req.query;
 //     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
-//     const tempPath = path.join(__dirname, '../temp-components');
-//     const forceAppPath = path.join(tempPath, 'force-app');
-//     const retrievePath = path.join(tempPath, 'retrieved-metadata');
+//     const safeTypes = [
+//         'OmniScript',
+//         'FlexCard',
+//         'DataRaptor',
+//         'IntegrationProcedure',
+//         'OmniStudioTrackingService',
+//         'VlocityUILayout',
+//         'VlocityUITemplate',
+//         'CalculationMatrix',
+//         'CalculationProcedure'
+//     ];
 
-//     fs.rmSync(tempPath, { recursive: true, force: true });
-//     fs.mkdirSync(tempPath, { recursive: true });
+//     // 🧹 Clean previous folders
+//     safeTypes.forEach(type => {
+//         const dirPath = path.join(__dirname, type);
+//         if (fs.existsSync(dirPath)) {
+//             fs.rmSync(dirPath, { recursive: true, force: true });
+//         }
+//     });
 
-//     // Create a minimal valid SFDX project
-//     const sfdxProjectJson = {
-//         packageDirectories: [{ path: 'force-app', default: true }],
-//         namespace: '',
-//         sourceApiVersion: '59.0'
+//     // 🛠️ Build YAML config
+//     const yamlContent = {
+//         export: {},
+//         exportPacks: {
+//             autoAddDependentFields: true,
+//             autoAddDependencies: true
+//         }
 //     };
-//     fs.writeFileSync(
-//         path.join(tempPath, 'sfdx-project.json'),
-//         JSON.stringify(sfdxProjectJson, null, 2)
-//     );
 
-//     fs.mkdirSync(path.join(forceAppPath, 'main', 'default'), { recursive: true });
-//     fs.mkdirSync(retrievePath, { recursive: true });
+//     safeTypes.forEach(type => {
+//         yamlContent.export[type] = {};
+//     });
 
-//     const summary = {
-//         OmniScript: [], FlexCard: [], IntegrationProcedure: [], DataRaptor: [],
-//         // ApexClass: [], ApexTrigger: [], LightningComponentBundle: [], CustomObject: []
-//         ApexClass: [], ApexTrigger: []
-//     };
+//     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
+//     const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+//     console.log('🔧 Executing export command:', exportCmd);
 
 //     try {
-//         // Export OmniStudio metadata
-//         execSync(
-//             `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors -projectPath ${tempPath}`,
-//             { stdio: 'inherit' }
-//         );
+//         const result = execSync(exportCmd, {
+//             encoding: 'utf-8',
+//             stdio: 'pipe'
+//         });
 
-//         // Extract OmniStudio component names
-//         ['OmniScript', 'FlexCard', 'IntegrationProcedure', 'DataRaptor'].forEach(type => {
-//             const typePath = path.join(tempPath, type);
-//             if (fs.existsSync(typePath)) {
-//                 summary[type] = fs.readdirSync(typePath).map(name => path.parse(name).name);
+//         console.log('✅ Export STDOUT:\n', result);
+
+//         // 📦 Collect components
+//         const summary = {};
+//         safeTypes.forEach(type => {
+//             const typeDir = path.join(__dirname, type);
+//             if (fs.existsSync(typeDir)) {
+//                 const entries = fs.readdirSync(typeDir).filter(entry =>
+//                     fs.statSync(path.join(typeDir, entry)).isDirectory()
+//                 );
+
+//                 summary[type] = entries;
+
+//                 entries.forEach(name => {
+//                     const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
+//                     if (fs.existsSync(jsonPath)) {
+//                         const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+//                         storage.saveComponent(sourceAlias, type, name, data);
+//                     }
+//                 });
 //             }
 //         });
 
-//         // Retrieve regular metadata into retrievePath
-//         // execSync(
-//         //     `npx sfdx force:source:retrieve --metadata ApexClass --metadata ApexTrigger --metadata LightningComponentBundle -o ${sourceAlias} -r "${retrievePath}"`,
-//         //     { cwd: tempPath, stdio: 'inherit' }
-//         // );
+//         summary.timestamp = new Date().toISOString();
+//         summary.sourceAlias = sourceAlias;
 
-//       execSync(
-//         `npx sf project retrieve start --metadata ApexClass,ApexTrigger,LightningComponentBundle --target-org ${sourceAlias} --output-dir "${retrievePath}"`,
-//         { cwd: tempPath, stdio: 'inherit' }
-//         );
-
-//         // Parse retrieved Apex/LWC components
-//         const sfdxTypes = {
-//             classes: 'ApexClass',
-//             triggers: 'ApexTrigger',
-//             lwc: 'LightningComponentBundle'
-//         };
-//         for (const [dir, label] of Object.entries(sfdxTypes)) {
-//             const typePath = path.join(retrievePath, dir);
-//             if (fs.existsSync(typePath)) {
-//                 const files = fs.readdirSync(typePath);
-//                 summary[label] = [...new Set(files.map(f => f.split('.')[0]))];
-//             }
-//         }
-
-//         // Replace incorrect `save()` with correct `saveIndex()`
 //         storage.saveIndex(sourceAlias, summary);
-
-//         res.json(summary);
+//         return res.json(summary);
 
 //     } catch (err) {
-//         console.error('Component fetch failed', err.message);
-//         res.status(500).send('Failed to fetch components\n' + err.message);
+//         console.error('❌ Export failed');
+//         console.error('Message:', err.message);
+//         console.error('STDOUT:', err.stdout?.toString?.());
+//         console.error('STDERR:', err.stderr?.toString?.());
+
+//         return res.status(500).send('Export failed:\n' +
+//             (err.stderr?.toString?.() || err.message)
+//         );
 //     }
 // });
+
+app.get('/components', async (req, res) => {
+    const { sourceAlias } = req.query;
+    if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+    const tempPath = path.join(__dirname, '../temp-components');
+    const forceAppPath = path.join(tempPath, 'force-app');
+    const retrievePath = path.join(tempPath, 'retrieved-metadata');
+
+    fs.rmSync(tempPath, { recursive: true, force: true });
+    fs.mkdirSync(tempPath, { recursive: true });
+
+    // Create a minimal valid SFDX project
+    const sfdxProjectJson = {
+        packageDirectories: [{ path: 'force-app', default: true }],
+        namespace: '',
+        sourceApiVersion: '59.0'
+    };
+    fs.writeFileSync(
+        path.join(tempPath, 'sfdx-project.json'),
+        JSON.stringify(sfdxProjectJson, null, 2)
+    );
+
+    fs.mkdirSync(path.join(forceAppPath, 'main', 'default'), { recursive: true });
+    fs.mkdirSync(retrievePath, { recursive: true });
+
+    const summary = {
+        OmniScript: [], FlexCard: [], IntegrationProcedure: [], DataRaptor: [],
+        // ApexClass: [], ApexTrigger: [], LightningComponentBundle: [], CustomObject: []
+        ApexClass: [], ApexTrigger: []
+    };
+
+    try {
+        // Export OmniStudio metadata
+        execSync(
+            `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors -projectPath ${tempPath}`,
+            { stdio: 'inherit' }
+        );
+
+        // Extract OmniStudio component names
+        ['OmniScript', 'FlexCard', 'IntegrationProcedure', 'DataRaptor'].forEach(type => {
+            const typePath = path.join(tempPath, type);
+            if (fs.existsSync(typePath)) {
+                summary[type] = fs.readdirSync(typePath).map(name => path.parse(name).name);
+            }
+        });
+
+        // Retrieve regular metadata into retrievePath
+        // execSync(
+        //     `npx sfdx force:source:retrieve --metadata ApexClass --metadata ApexTrigger --metadata LightningComponentBundle -o ${sourceAlias} -r "${retrievePath}"`,
+        //     { cwd: tempPath, stdio: 'inherit' }
+        // );
+
+      execSync(
+        `npx sf project retrieve start --metadata ApexClass,ApexTrigger,LightningComponentBundle --target-org ${sourceAlias} --output-dir "${retrievePath}"`,
+        { cwd: tempPath, stdio: 'inherit' }
+        );
+
+        // Parse retrieved Apex/LWC components
+        const sfdxTypes = {
+            classes: 'ApexClass',
+            triggers: 'ApexTrigger',
+            lwc: 'LightningComponentBundle'
+        };
+        for (const [dir, label] of Object.entries(sfdxTypes)) {
+            const typePath = path.join(retrievePath, dir);
+            if (fs.existsSync(typePath)) {
+                const files = fs.readdirSync(typePath);
+                summary[label] = [...new Set(files.map(f => f.split('.')[0]))];
+            }
+        }
+
+        // Replace incorrect `save()` with correct `saveIndex()`
+        storage.saveIndex(sourceAlias, summary);
+
+        res.json(summary);
+
+    } catch (err) {
+        console.error('Component fetch failed', err.message);
+        res.status(500).send('Failed to fetch components\n' + err.message);
+    }
+});
 
 
 // GET: View stored components
