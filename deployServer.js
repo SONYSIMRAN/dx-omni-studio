@@ -9,6 +9,7 @@ const yaml = require('js-yaml');
 const storage = require('./storageHelper');
 const axios = require('axios');
 const stripAnsi = require('strip-ansi');
+const jobStore = {};
 // const { fetchComponents } = require('./fetcher');
 
 
@@ -115,86 +116,93 @@ const allTypes = [
 //     }
 // });
 
-app.get('/components', async (req, res) => {
-    const { sourceAlias } = req.query;
+app.post('/start-component-export', async (req, res) => {
+    const { sourceAlias } = req.body;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
-    const tempPath = path.join(__dirname, '../temp-components');
-    const forceAppPath = path.join(tempPath, 'force-app');
-    const retrievePath = path.join(tempPath, 'retrieved-metadata');
+    const jobId = `job-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    jobStore[jobId] = { status: 'pending', result: null };
 
-    fs.rmSync(tempPath, { recursive: true, force: true });
-    fs.mkdirSync(tempPath, { recursive: true });
+    // Run job in background
+    setTimeout(async () => {
+        try {
+            const tempPath = path.join(__dirname, '../temp-components', jobId);
+            const forceAppPath = path.join(tempPath, 'force-app');
+            const retrievePath = path.join(tempPath, 'retrieved-metadata');
 
-    // Create a minimal valid SFDX project
-    const sfdxProjectJson = {
-        packageDirectories: [{ path: 'force-app', default: true }],
-        namespace: '',
-        sourceApiVersion: '59.0'
-    };
-    fs.writeFileSync(
-        path.join(tempPath, 'sfdx-project.json'),
-        JSON.stringify(sfdxProjectJson, null, 2)
-    );
+            fs.mkdirSync(tempPath, { recursive: true });
+            fs.mkdirSync(path.join(forceAppPath, 'main', 'default'), { recursive: true });
+            fs.mkdirSync(retrievePath, { recursive: true });
 
-    fs.mkdirSync(path.join(forceAppPath, 'main', 'default'), { recursive: true });
-    fs.mkdirSync(retrievePath, { recursive: true });
+            const sfdxProjectJson = {
+                packageDirectories: [{ path: 'force-app', default: true }],
+                namespace: '',
+                sourceApiVersion: '59.0'
+            };
+            fs.writeFileSync(path.join(tempPath, 'sfdx-project.json'), JSON.stringify(sfdxProjectJson, null, 2));
 
-    const summary = {
-        OmniScript: [], FlexCard: [], IntegrationProcedure: [], DataRaptor: [],
-        // ApexClass: [], ApexTrigger: [], LightningComponentBundle: [], CustomObject: []
-        ApexClass: [], ApexTrigger: []
-    };
+            execSync(
+                `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors -projectPath ${tempPath}`,
+                { stdio: 'inherit' }
+            );
 
-    try {
-        // Export OmniStudio metadata
-        execSync(
-            `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors -projectPath ${tempPath}`,
-            { stdio: 'inherit' }
-        );
+            const summary = {
+                OmniScript: [], FlexCard: [], IntegrationProcedure: [], DataRaptor: [],
+                ApexClass: [], ApexTrigger: []
+            };
 
-        // Extract OmniStudio component names
-        ['OmniScript', 'FlexCard', 'IntegrationProcedure', 'DataRaptor'].forEach(type => {
-            const typePath = path.join(tempPath, type);
-            if (fs.existsSync(typePath)) {
-                summary[type] = fs.readdirSync(typePath).map(name => path.parse(name).name);
+            ['OmniScript', 'FlexCard', 'IntegrationProcedure', 'DataRaptor'].forEach(type => {
+                const typePath = path.join(tempPath, type);
+                if (fs.existsSync(typePath)) {
+                    summary[type] = fs.readdirSync(typePath).map(name => path.parse(name).name);
+                }
+            });
+
+            execSync(
+                `npx sf project retrieve start --metadata ApexClass,ApexTrigger --target-org ${sourceAlias} --output-dir "${retrievePath}"`,
+                { cwd: tempPath, stdio: 'inherit' }
+            );
+
+            const sfdxTypes = {
+                classes: 'ApexClass',
+                triggers: 'ApexTrigger',
+            };
+            for (const [dir, label] of Object.entries(sfdxTypes)) {
+                const typePath = path.join(retrievePath, dir);
+                if (fs.existsSync(typePath)) {
+                    const files = fs.readdirSync(typePath);
+                    summary[label] = [...new Set(files.map(f => f.split('.')[0]))];
+                }
             }
-        });
 
-        // Retrieve regular metadata into retrievePath
-        // execSync(
-        //     `npx sfdx force:source:retrieve --metadata ApexClass --metadata ApexTrigger --metadata LightningComponentBundle -o ${sourceAlias} -r "${retrievePath}"`,
-        //     { cwd: tempPath, stdio: 'inherit' }
-        // );
-
-      execSync(
-        `npx sf project retrieve start --metadata ApexClass,ApexTrigger,LightningComponentBundle --target-org ${sourceAlias} --output-dir "${retrievePath}"`,
-        { cwd: tempPath, stdio: 'inherit' }
-        );
-
-        // Parse retrieved Apex/LWC components
-        const sfdxTypes = {
-            classes: 'ApexClass',
-            triggers: 'ApexTrigger',
-            lwc: 'LightningComponentBundle'
-        };
-        for (const [dir, label] of Object.entries(sfdxTypes)) {
-            const typePath = path.join(retrievePath, dir);
-            if (fs.existsSync(typePath)) {
-                const files = fs.readdirSync(typePath);
-                summary[label] = [...new Set(files.map(f => f.split('.')[0]))];
-            }
+            storage.saveIndex(sourceAlias, summary);
+            jobStore[jobId] = { status: 'completed', result: summary };
+        } catch (err) {
+            console.error('Background job failed:', err.message);
+            jobStore[jobId] = { status: 'error', error: err.message };
         }
+    }, 100); // slight delay to start in background
 
-        // Replace incorrect `save()` with correct `saveIndex()`
-        storage.saveIndex(sourceAlias, summary);
+    res.json({ jobId });
+});
 
-        res.json(summary);
-
-    } catch (err) {
-        console.error('Component fetch failed', err.message);
-        res.status(500).send('Failed to fetch components\n' + err.message);
+app.get('/component-export-status', (req, res) => {
+    const { jobId } = req.query;
+    if (!jobId || !jobStore[jobId]) {
+        return res.status(404).send('Invalid or missing jobId');
     }
+
+    res.json(jobStore[jobId]);
+});
+
+
+app.get('/component-export-status', (req, res) => {
+    const { jobId } = req.query;
+    if (!jobId || !jobStore[jobId]) {
+        return res.status(404).send('Invalid or missing jobId');
+    }
+
+    res.json(jobStore[jobId]);
 });
 
 
