@@ -115,99 +115,100 @@ const allTypes = [
 //     }
 // });
 
-// app.get('/components', async (req, res) => {
-//     const { sourceAlias } = req.query;
-//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
-
-//     const tempPath = path.join(__dirname, '../temp-components');
-//     const forceAppPath = path.join(tempPath, 'force-app');
-//     const retrievePath = path.join(tempPath, 'retrieved-metadata');
-
-//     fs.rmSync(tempPath, { recursive: true, force: true });
-//     fs.mkdirSync(tempPath, { recursive: true });
-
-//     // Create a minimal valid SFDX project
-//     const sfdxProjectJson = {
-//         packageDirectories: [{ path: 'force-app', default: true }],
-//         namespace: '',
-//         sourceApiVersion: '59.0'
-//     };
-//     fs.writeFileSync(
-//         path.join(tempPath, 'sfdx-project.json'),
-//         JSON.stringify(sfdxProjectJson, null, 2)
-//     );
-
-//     fs.mkdirSync(path.join(forceAppPath, 'main', 'default'), { recursive: true });
-//     fs.mkdirSync(retrievePath, { recursive: true });
-
-//     const summary = {
-//         OmniScript: [], FlexCard: [], IntegrationProcedure: [], DataRaptor: [],
-//         ApexClass: [], ApexTrigger: [], LightningComponentBundle: [], CustomObject: []
-//     };
-
-//     try {
-//         // Export OmniStudio metadata
-//         execSync(
-//             `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors -projectPath ${tempPath}`,
-//             { stdio: 'inherit' }
-//         );
-
-//         // Extract OmniStudio component names
-//         ['OmniScript', 'FlexCard', 'IntegrationProcedure', 'DataRaptor'].forEach(type => {
-//             const typePath = path.join(tempPath, type);
-//             if (fs.existsSync(typePath)) {
-//                 summary[type] = fs.readdirSync(typePath).map(name => path.parse(name).name);
-//             }
-//         });
-
-//         // Retrieve regular metadata into retrievePath
-//         // execSync(
-//         //     `npx sfdx force:source:retrieve --metadata ApexClass --metadata ApexTrigger --metadata LightningComponentBundle -o ${sourceAlias} -r "${retrievePath}"`,
-//         //     { cwd: tempPath, stdio: 'inherit' }
-//         // );
-
-//       execSync(
-//         `npx sf project retrieve start --metadata ApexClass,ApexTrigger,LightningComponentBundle --target-org ${sourceAlias} --output-dir "${retrievePath}"`,
-//         { cwd: tempPath, stdio: 'inherit' }
-//         );
-
-//         // Parse retrieved Apex/LWC components
-//         const sfdxTypes = {
-//             classes: 'ApexClass',
-//             triggers: 'ApexTrigger',
-//             lwc: 'LightningComponentBundle'
-//         };
-//         for (const [dir, label] of Object.entries(sfdxTypes)) {
-//             const typePath = path.join(retrievePath, dir);
-//             if (fs.existsSync(typePath)) {
-//                 const files = fs.readdirSync(typePath);
-//                 summary[label] = [...new Set(files.map(f => f.split('.')[0]))];
-//             }
-//         }
-
-//         // Replace incorrect `save()` with correct `saveIndex()`
-//         storage.saveIndex(sourceAlias, summary);
-
-//         res.json(summary);
-
-//     } catch (err) {
-//         console.error('Component fetch failed', err.message);
-//         res.status(500).send('Failed to fetch components\n' + err.message);
-//     }
-// });
-
-
 app.get('/components', async (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
+    const tempPath = path.join(__dirname, '../temp-components');
+    const forceAppPath = path.join(tempPath, 'force-app');
+    const retrievePath = path.join(tempPath, 'retrieved-metadata');
+
+    fs.rmSync(tempPath, { recursive: true, force: true });
+    fs.mkdirSync(tempPath, { recursive: true });
+
+    // Create a minimal valid SFDX project
+    const sfdxProjectJson = {
+        packageDirectories: [{ path: 'force-app', default: true }],
+        namespace: '',
+        sourceApiVersion: '59.0'
+    };
+    fs.writeFileSync(
+        path.join(tempPath, 'sfdx-project.json'),
+        JSON.stringify(sfdxProjectJson, null, 2)
+    );
+
+    fs.mkdirSync(path.join(forceAppPath, 'main', 'default'), { recursive: true });
+    fs.mkdirSync(retrievePath, { recursive: true });
+
+    const summary = {
+        OmniScript: [], FlexCard: [], IntegrationProcedure: [], DataRaptor: [],
+        // ApexClass: [], ApexTrigger: [], LightningComponentBundle: [], CustomObject: []
+        ApexClass: [], ApexTrigger: []
+    };
+
     try {
-        const summary = await fetchComponents(sourceAlias);
+        // Export OmniStudio metadata
+        execSync(
+            `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors -projectPath ${tempPath}`,
+            { stdio: 'inherit' }
+        );
+
+        // Extract OmniStudio component names
+        ['OmniScript', 'FlexCard', 'IntegrationProcedure', 'DataRaptor'].forEach(type => {
+            const typePath = path.join(tempPath, type);
+            if (fs.existsSync(typePath)) {
+                summary[type] = fs.readdirSync(typePath).map(name => path.parse(name).name);
+            }
+        });
+
+        // Retrieve regular metadata into retrievePath
+        // execSync(
+        //     `npx sfdx force:source:retrieve --metadata ApexClass --metadata ApexTrigger --metadata LightningComponentBundle -o ${sourceAlias} -r "${retrievePath}"`,
+        //     { cwd: tempPath, stdio: 'inherit' }
+        // );
+
+      execSync(
+        `npx sf project retrieve start --metadata ApexClass,ApexTrigger,LightningComponentBundle --target-org ${sourceAlias} --output-dir "${retrievePath}"`,
+        { cwd: tempPath, stdio: 'inherit' }
+        );
+
+        // Parse retrieved Apex/LWC components
+        const sfdxTypes = {
+            classes: 'ApexClass',
+            triggers: 'ApexTrigger',
+            lwc: 'LightningComponentBundle'
+        };
+        for (const [dir, label] of Object.entries(sfdxTypes)) {
+            const typePath = path.join(retrievePath, dir);
+            if (fs.existsSync(typePath)) {
+                const files = fs.readdirSync(typePath);
+                summary[label] = [...new Set(files.map(f => f.split('.')[0]))];
+            }
+        }
+
+        // Replace incorrect `save()` with correct `saveIndex()`
+        storage.saveIndex(sourceAlias, summary);
+
         res.json(summary);
+
     } catch (err) {
-        res.status(500).send('Failed to fetch components: ' + err.message);
+        console.error('Component fetch failed', err.message);
+        res.status(500).send('Failed to fetch components\n' + err.message);
     }
 });
+
+
+// app.get('/components', async (req, res) => {
+//     const { sourceAlias } = req.query;
+//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+//     try {
+//         const summary = await fetchComponents(sourceAlias);
+//         res.json(summary);
+//     } catch (err) {
+//         res.status(500).send('Failed to fetch components: ' + err.message);
+//     }
+// });
 
 
 // GET: View stored components
