@@ -233,7 +233,7 @@ app.get('/components', (req, res) => {
         // }
 
         if (fs.existsSync(outputPath)) {
-    const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
+        const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
         .flatMap(entry => {
             const subDir = path.join(outputPath, entry.name);
             return entry.isDirectory()
@@ -267,6 +267,13 @@ app.get('/components', (req, res) => {
     });
 
     summary['RegularMetadata'] = categorized;
+        Object.entries(categorized).forEach(([metaType, components]) => {
+        components.forEach(name => {
+        const regularKeyPath = path.join('RegularMetadata', metaType);
+        storage.saveComponent(sourceAlias, regularKeyPath, name, { name, type: metaType });
+
+        });
+    });
         } else {
             summary['RegularMetadata'] = {
                 ApexClass: [],
