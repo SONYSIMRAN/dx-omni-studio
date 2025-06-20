@@ -45,7 +45,7 @@ const allTypes = [
 //         'CalculationProcedure'
 //     ];
 
-//     // 🧹 Clean previous folders
+//     //Clean previous folders
 //     safeTypes.forEach(type => {
 //         const dirPath = path.join(__dirname, type);
 //         if (fs.existsSync(dirPath)) {
@@ -53,7 +53,7 @@ const allTypes = [
 //         }
 //     });
 
-//     // 🛠️ Build YAML config
+//     // Build YAML config
 //     const yamlContent = {
 //         export: {},
 //         exportPacks: {
@@ -68,7 +68,7 @@ const allTypes = [
 
 //     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
 //     const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
-//     console.log('🔧 Executing export command:', exportCmd);
+//     console.log('Executing export command:', exportCmd);
 
 //     try {
 //         const result = execSync(exportCmd, {
@@ -76,9 +76,9 @@ const allTypes = [
 //             stdio: 'pipe'
 //         });
 
-//         console.log('✅ Export STDOUT:\n', result);
+//         console.log('Export STDOUT:\n', result);
 
-//         // 📦 Collect components
+//         // Collect components
 //         const summary = {};
 //         safeTypes.forEach(type => {
 //             const typeDir = path.join(__dirname, type);
@@ -106,7 +106,7 @@ const allTypes = [
 //         return res.json(summary);
 
 //     } catch (err) {
-//         console.error('❌ Export failed');
+//         console.error('Export failed');
 //         console.error('Message:', err.message);
 //         console.error('STDOUT:', err.stdout?.toString?.());
 //         console.error('STDERR:', err.stderr?.toString?.());
@@ -178,7 +178,7 @@ app.get('/components', (req, res) => {
             }
         });
     } catch (err) {
-        console.error('❌ OmniStudio export failed:', err.message);
+        console.error('OmniStudio export failed:', err.message);
     }
 
     // 🔹 Retrieve Regular Metadata (correct SFDX structure)
@@ -283,7 +283,7 @@ app.get('/components', (req, res) => {
         }
 
     } catch (err) {
-        console.warn('⚠️ Failed to retrieve regular metadata:', err.message);
+        console.warn('Failed to retrieve regular metadata:', err.message);
         summary['RegularMetadata'] = [`Failed: ${err.message}`];
     }
 
@@ -372,7 +372,7 @@ app.post('/deploy', async (req, res) => {
     const yamlPath = path.join(tempDir, 'deploySelected.yaml');
     fs.writeFileSync(yamlPath, yaml.dump(deployYaml));
 
-    // ✅ Import strip-ansi dynamically (ESM compatibility)
+    // Import strip-ansi dynamically (ESM compatibility)
     const stripAnsi = (await import('strip-ansi')).default;
     const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
 
@@ -1097,8 +1097,6 @@ async function triggerGitlabPipeline() {
         throw err;
     }
 }
-
-
 
 
 // Start server
