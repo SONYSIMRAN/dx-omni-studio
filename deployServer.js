@@ -219,18 +219,62 @@ app.get('/components', (req, res) => {
             encoding: 'utf-8'
         });
 
+        // if (fs.existsSync(outputPath)) {
+        //     const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
+        //         .flatMap(entry => {
+        //             const subDir = path.join(outputPath, entry.name);
+        //             return entry.isDirectory()
+        //                 ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
+        //                 : [entry.name];
+        //         });
+        //     summary['RegularMetadata'] = regularFiles;
+        // } else {
+        //     summary['RegularMetadata'] = ['No files retrieved or directory not created'];
+        // }
+
         if (fs.existsSync(outputPath)) {
-            const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
-                .flatMap(entry => {
-                    const subDir = path.join(outputPath, entry.name);
-                    return entry.isDirectory()
-                        ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
-                        : [entry.name];
-                });
-            summary['RegularMetadata'] = regularFiles;
-        } else {
-            summary['RegularMetadata'] = ['No files retrieved or directory not created'];
+    const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
+        .flatMap(entry => {
+            const subDir = path.join(outputPath, entry.name);
+            return entry.isDirectory()
+                ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
+                : [entry.name];
+        });
+
+    const categorized = {
+        ApexClass: [],
+        ApexTrigger: [],
+        LightningComponentBundle: []
+    };
+
+    regularFiles.forEach(filePath => {
+        if (filePath.startsWith('classes/') && filePath.endsWith('.cls')) {
+            const name = path.basename(filePath, '.cls');
+            if (!categorized.ApexClass.includes(name)) {
+                categorized.ApexClass.push(name);
+            }
+        } else if (filePath.startsWith('triggers/') && filePath.endsWith('.trigger')) {
+            const name = path.basename(filePath, '.trigger');
+            if (!categorized.ApexTrigger.includes(name)) {
+                categorized.ApexTrigger.push(name);
+            }
+        } else if (filePath.startsWith('lwc/')) {
+            const name = filePath.split('/')[1];
+            if (!categorized.LightningComponentBundle.includes(name)) {
+                categorized.LightningComponentBundle.push(name);
+            }
         }
+    });
+
+    summary['RegularMetadata'] = categorized;
+        } else {
+            summary['RegularMetadata'] = {
+                ApexClass: [],
+                ApexTrigger: [],
+                LightningComponentBundle: []
+            };
+        }
+
     } catch (err) {
         console.warn('⚠️ Failed to retrieve regular metadata:', err.message);
         summary['RegularMetadata'] = [`Failed: ${err.message}`];
