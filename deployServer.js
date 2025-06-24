@@ -1043,6 +1043,8 @@ const fsExtra = require('fs-extra');
 
 
 app.post('/deploy-and-git', async (req, res) => {
+    console.log('🔐 Using JWT key:', process.env.SF_JWT_KEY);
+
     const {
         sourceAlias,
         targetAlias,
@@ -1060,9 +1062,24 @@ app.post('/deploy-and-git', async (req, res) => {
         const deployYamlPath = path.join(__dirname, 'deploySelected.yaml');
         const tempDir = './vlocity_temp';
 
-        await authenticateWithJWT(sourceAlias, process.env.SF_CLIENT_ID, process.env.SF_USERNAME, process.env.SF_LOGIN_URL, process.env.SF_JWT_KEY);
-        await authenticateWithJWT(targetAlias, process.env.TARGET_CLIENT_ID, process.env.TARGET_USERNAME, process.env.TARGET_LOGIN_URL, process.env.TARGET_JWT_KEY);
+        // Step 1: Authenticate to both orgs
+        await authenticateWithJWT(
+            sourceAlias,
+            process.env.SF_CLIENT_ID,
+            process.env.SF_USERNAME,
+            process.env.SF_LOGIN_URL,
+            process.env.SF_JWT_KEY
+        );
 
+        await authenticateWithJWT(
+            targetAlias,
+            process.env.TARGET_CLIENT_ID,
+            process.env.TARGET_USERNAME,
+            process.env.TARGET_LOGIN_URL,
+            process.env.TARGET_JWT_KEY
+        );
+
+        // Step 2: Create clean export YAML file with null-safe component names
         const exportYaml = {
             export: {},
             exportPacks: {
@@ -1071,66 +1088,73 @@ app.post('/deploy-and-git', async (req, res) => {
             }
         };
 
-        Object.entries(selectedComponents).forEach(([type, names]) => {
+        for (const [type, names] of Object.entries(selectedComponents)) {
+            if (!Array.isArray(names) || names.length === 0) continue;
+
+            const validNames = names.filter(name => name && typeof name === 'string' && name.trim());
+            if (validNames.length === 0) continue;
+
             exportYaml.export[type] = {};
-            names.forEach(name => {
+            validNames.forEach(name => {
                 exportYaml.export[type][name] = {};
             });
-        });
+        }
+
+        // Ensure at least one type is exported
+        if (Object.keys(exportYaml.export).length === 0) {
+            return res.status(400).json({ status: 'error', message: 'No valid components to export' });
+        }
 
         fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml));
-        const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportDeployGit.yaml --ignoreAllErrors`;
+        console.log('🧾 Export YAML written:', exportYamlPath);
+
+        // Step 3: Export components
+        const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --ignoreAllErrors`;
+        console.log('▶ Export Command:', exportCmd);
         execSync(exportCmd, { stdio: 'inherit' });
 
+        // Step 4: Copy exported components to temp directory
         fs.rmSync(tempDir, { recursive: true, force: true });
         fs.mkdirSync(tempDir, { recursive: true });
 
         const deployYaml = { export: {} };
-        for (const [type, names] of Object.entries(selectedComponents)) {
-            deployYaml.export[type] = { queries: names.map(name => `${type}/${name}`) };
 
-            for (const name of names) {
+        for (const [type, names] of Object.entries(exportYaml.export)) {
+            const validNames = Object.keys(names);
+            deployYaml.export[type] = {
+                queries: validNames.map(name => `${type}/${name}`)
+            };
+
+            validNames.forEach(name => {
                 const srcDir = path.join(__dirname, type, name);
                 const destDir = path.join(tempDir, type, name);
-
                 if (fs.existsSync(srcDir)) {
                     fs.mkdirSync(destDir, { recursive: true });
                     fs.readdirSync(srcDir).forEach(file => {
                         fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
                     });
-
-                    const dataPackPath = path.join(srcDir, `${name}_DataPack.json`);
-                    if (fs.existsSync(dataPackPath)) {
-                        const content = fs.readFileSync(dataPackPath, 'utf-8');
-                        const hash = crypto.createHash('sha256').update(content).digest('hex');
-
-                        fs.writeFileSync(
-                            path.join(destDir, 'metadata.json'),
-                            JSON.stringify({
-                                name,
-                                type,
-                                versionHash: hash,
-                                generatedAt: new Date().toISOString()
-                            }, null, 2)
-                        );
-                    }
                 }
-            }
+            });
         }
 
         fs.writeFileSync(deployYamlPath, yaml.dump(deployYaml));
 
+        // Step 5: Deploy to target org
         const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
+        console.log('🚀 Deploy Command:', deployCmd);
         const stripAnsi = (await import('strip-ansi')).default;
         const deployOutput = execSync(deployCmd, { cwd: tempDir, encoding: 'utf-8' });
         let cleanOutput = stripAnsi(deployOutput);
 
-        cleanOutput = cleanOutput.split('\n').filter(line =>
-            !line.includes('Puppeteer') &&
-            !line.includes('@omnistudio/flexcard-compiler') &&
-            !line.toLowerCase().includes('unauthorized') &&
-            !line.toLowerCase().includes('failed to get package')
-        ).join('\n');
+        cleanOutput = cleanOutput
+            .split('\n')
+            .filter(line =>
+                !line.includes('Puppeteer') &&
+                !line.includes('@omnistudio/flexcard-compiler') &&
+                !line.toLowerCase().includes('unauthorized') &&
+                !line.toLowerCase().includes('failed to get package')
+            )
+            .join('\n');
 
         const deployedComponents = [];
         let elapsedTime = '';
@@ -1149,6 +1173,7 @@ app.post('/deploy-and-git', async (req, res) => {
             }
         });
 
+        // Step 6: Git operations
         const repoDir = path.join(__dirname, 'git-export');
         const GITLAB_REPO_URL = process.env.GITLAB_REPO_URL;
 
@@ -1159,53 +1184,13 @@ app.post('/deploy-and-git', async (req, res) => {
         const git = simpleGit(repoDir);
         await git.addConfig('user.email', process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com');
         await git.addConfig('user.name', process.env.GIT_COMMIT_NAME || 'Omni Deployer');
+
         await git.checkout(gitBranch);
         await git.add('./*');
+        await git.commit(commitMessage);
+        await git.push('origin', gitBranch);
 
-        const diffSummary = await git.diffSummary();
-        let tagName = '';
-
-        if (diffSummary.files.length === 0) {
-            console.log('No file changes detected, skipping Git commit.');
-        } else {
-            const timestamp = new Date().toISOString();
-            const fullMessage = `[Deploy] ${sourceAlias} → ${targetAlias} | ${timestamp}`;
-            tagName = `v${timestamp.replace(/[:.]/g, '-')}`;
-            await git.commit(fullMessage);
-            await git.push('origin', gitBranch);
-            await git.addTag(tagName);
-            await git.pushTags();
-        }
-
-        // Save deploy-history.json
-        const historyFile = path.join(repoDir, 'deploy-history.json');
-        let history = [];
-        if (fs.existsSync(historyFile)) {
-            history = JSON.parse(fs.readFileSync(historyFile, 'utf-8'));
-        }
-
-        history.push({
-            timestamp: new Date().toISOString(),
-            sourceAlias,
-            targetAlias,
-            components: selectedComponents,
-            gitTag: tagName || 'not-tagged'
-        });
-
-        fs.writeFileSync(historyFile, JSON.stringify(history, null, 2));
-
-        //Deploy SFDX Metadata
-        const sfdxPath = path.join(repoDir, 'force-app');
-        if (fs.existsSync(sfdxPath)) {
-            try {
-                const sfdxDeployCmd = `sfdx force:source:deploy -p force-app --targetusername ${targetAlias} --json`;
-                const sfdxOutput = execSync(sfdxDeployCmd, { cwd: repoDir, encoding: 'utf-8' });
-                console.log('SFDX Deploy Output:', sfdxOutput);
-            } catch (sfdxErr) {
-                console.warn('SFDX deploy failed:', sfdxErr.message);
-            }
-        }
-
+        // Step 7: Trigger GitLab pipeline
         const pipelineData = await triggerGitlabPipeline();
 
         return res.status(200).json({
@@ -1225,7 +1210,7 @@ app.post('/deploy-and-git', async (req, res) => {
         });
 
     } catch (err) {
-        console.error('deploy-and-git error:', err.message || err);
+        console.error('❌ deploy-and-git error:', err.message || err);
         return res.status(500).json({
             status: 'error',
             message: err.message || 'Unexpected error during deploy-and-git'
@@ -1234,13 +1219,194 @@ app.post('/deploy-and-git', async (req, res) => {
 });
 
 
-function getKeyInput(value) {
-    if (value.trim().startsWith('-----BEGIN')) {
-        return value; // it's a raw key string
-    } else {
-        return fs.readFileSync(path.resolve(__dirname, value), 'utf-8'); // it's a path
-    }
-}
+
+// function getKeyInput(value) {
+//     if (value.trim().startsWith('-----BEGIN')) {
+//         return value; // it's a raw key string
+//     } else {
+//         return fs.readFileSync(path.resolve(__dirname, value), 'utf-8'); // it's a path
+//     }
+// }
+
+// app.post('/deploy-and-git', async (req, res) => {
+//     const {
+//         sourceAlias,
+//         targetAlias,
+//         selectedComponents,
+//         gitBranch = 'main',
+//         commitMessage = 'Deploy and Git Commit'
+//     } = req.body;
+
+//     if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
+//         return res.status(400).json({ status: 'error', message: 'Missing required fields' });
+//     }
+
+//     try {
+//         const exportYamlPath = path.join(__dirname, 'exportDeployGit.yaml');
+//         const deployYamlPath = path.join(__dirname, 'deploySelected.yaml');
+//         const tempDir = './vlocity_temp';
+
+//         await authenticateWithJWT(sourceAlias, process.env.SF_CLIENT_ID, process.env.SF_USERNAME, process.env.SF_LOGIN_URL, path.resolve(__dirname, process.env.SF_JWT_KEY));
+        
+//         await authenticateWithJWT(targetAlias, process.env.TARGET_CLIENT_ID, process.env.TARGET_USERNAME, process.env.TARGET_LOGIN_URL, path.resolve(__dirname, process.env.TARGET_JWT_KEY));
+
+//         const exportYaml = {
+//             export: {},
+//             exportPacks: {
+//                 autoAddDependencies: true,
+//                 autoAddDependentFields: true
+//             }
+//         };
+
+//         Object.entries(selectedComponents).forEach(([type, names]) => {
+//             exportYaml.export[type] = {};
+//             names.forEach(name => {
+//                 exportYaml.export[type][name] = {};
+//             });
+//         });
+
+//         fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml));
+//         execSync(`npx vlocity -sfdx.username ${sourceAlias} packExport -job exportDeployGit.yaml --ignoreAllErrors`, { stdio: 'inherit' });
+
+//         fs.rmSync(tempDir, { recursive: true, force: true });
+//         fs.mkdirSync(tempDir, { recursive: true });
+
+//         const deployYaml = { export: {} };
+//         for (const [type, names] of Object.entries(selectedComponents)) {
+//             deployYaml.export[type] = { queries: names.map(name => `${type}/${name}`) };
+
+//             for (const name of names) {
+//                 const srcDir = path.join(__dirname, type, name);
+//                 const destDir = path.join(tempDir, type, name);
+
+//                 if (fs.existsSync(srcDir)) {
+//                     fs.mkdirSync(destDir, { recursive: true });
+//                     fs.readdirSync(srcDir).forEach(file => {
+//                         fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+//                     });
+
+//                     const dataPackPath = path.join(srcDir, `${name}_DataPack.json`);
+//                     if (fs.existsSync(dataPackPath)) {
+//                         const content = fs.readFileSync(dataPackPath, 'utf-8');
+//                         const hash = crypto.createHash('sha256').update(content).digest('hex');
+
+//                         fs.writeFileSync(
+//                             path.join(destDir, 'metadata.json'),
+//                             JSON.stringify({
+//                                 name,
+//                                 type,
+//                                 versionHash: hash,
+//                                 generatedAt: new Date().toISOString()
+//                             }, null, 2)
+//                         );
+//                     }
+//                 }
+//             }
+//         }
+
+//         fs.writeFileSync(deployYamlPath, yaml.dump(deployYaml));
+//         const stripAnsi = (await import('strip-ansi')).default;
+//         const deployOutput = execSync(`npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`, { cwd: tempDir, encoding: 'utf-8' });
+//         let cleanOutput = stripAnsi(deployOutput).split('\n').filter(line =>
+//             !line.includes('Puppeteer') &&
+//             !line.includes('@omnistudio/flexcard-compiler') &&
+//             !line.toLowerCase().includes('unauthorized') &&
+//             !line.toLowerCase().includes('failed to get package')
+//         ).join('\n');
+
+//         const deployedComponents = [];
+//         let elapsedTime = '';
+//         let warnings = [];
+
+//         cleanOutput.split('\n').forEach(line => {
+//             if (line.includes('Adding to Deploy >>')) {
+//                 const part = line.split('>>')[1]?.trim();
+//                 if (part) deployedComponents.push(part);
+//             }
+//             if (line.includes('Elapsed Time')) {
+//                 elapsedTime = line.split('>>')[1]?.trim() || '';
+//             }
+//             if (line.toLowerCase().includes('error')) {
+//                 warnings.push(line.trim());
+//             }
+//         });
+
+//         const repoDir = path.join(__dirname, 'git-export');
+//         const GITLAB_REPO_URL = process.env.GITLAB_REPO_URL;
+
+//         fsExtra.removeSync(repoDir);
+//         await simpleGit().clone(GITLAB_REPO_URL, repoDir);
+//         await fsExtra.copy(tempDir, path.join(repoDir, 'components'), { overwrite: true });
+
+//         const git = simpleGit(repoDir);
+//         await git.addConfig('user.email', process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com');
+//         await git.addConfig('user.name', process.env.GIT_COMMIT_NAME || 'Omni Deployer');
+//         await git.checkout(gitBranch);
+//         await git.add('./*');
+
+//         const diffSummary = await git.diffSummary();
+//         let tagName = '';
+
+//         if (diffSummary.files.length > 0) {
+//             const timestamp = new Date().toISOString();
+//             const fullMessage = `[Deploy] ${sourceAlias} → ${targetAlias} | ${timestamp}`;
+//             tagName = `v${timestamp.replace(/[:.]/g, '-')}`;
+//             await git.commit(fullMessage);
+//             await git.push('origin', gitBranch);
+//             await git.addTag(tagName);
+//             await git.pushTags();
+//         }
+
+//         const historyFile = path.join(repoDir, 'deploy-history.json');
+//         let history = [];
+//         if (fs.existsSync(historyFile)) {
+//             history = JSON.parse(fs.readFileSync(historyFile, 'utf-8'));
+//         }
+//         history.push({
+//             timestamp: new Date().toISOString(),
+//             sourceAlias,
+//             targetAlias,
+//             components: selectedComponents,
+//             gitTag: tagName || 'not-tagged'
+//         });
+//         fs.writeFileSync(historyFile, JSON.stringify(history, null, 2));
+
+//         const sfdxPath = path.join(repoDir, 'force-app');
+//         if (fs.existsSync(sfdxPath)) {
+//             try {
+//                 const sfdxDeployCmd = `sfdx force:source:deploy -p force-app --targetusername ${targetAlias} --json`;
+//                 const sfdxOutput = execSync(sfdxDeployCmd, { cwd: repoDir, encoding: 'utf-8' });
+//                 console.log('SFDX Deploy Output:', sfdxOutput);
+//             } catch (sfdxErr) {
+//                 console.warn('SFDX deploy failed:', sfdxErr.message);
+//             }
+//         }
+
+//         const pipelineData = await triggerGitlabPipeline();
+
+//         return res.status(200).json({
+//             status: 'success',
+//             message: 'Deployment and Git commit successful.',
+//             deployedComponents,
+//             elapsedTime,
+//             warnings,
+//             details: cleanOutput,
+//             pipeline: {
+//                 id: pipelineData.id,
+//                 status: pipelineData.status,
+//                 url: pipelineData.web_url,
+//                 ref: pipelineData.ref,
+//                 created_at: pipelineData.created_at
+//             }
+//         });
+//     } catch (err) {
+//         console.error('deploy-and-git error:', err.message || err);
+//         return res.status(500).json({
+//             status: 'error',
+//             message: err.message || 'Unexpected error during deploy-and-git'
+//         });
+//     }
+// });
 
 
 
