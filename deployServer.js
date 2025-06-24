@@ -1043,7 +1043,7 @@ const fsExtra = require('fs-extra');
 
 
 app.post('/deploy-and-git', async (req, res) => {
-    console.log('🔐 Using JWT key:', process.env.SF_JWT_KEY);
+    console.log('Using JWT key:', process.env.SF_JWT_KEY);
 
     const {
         sourceAlias,
@@ -1106,7 +1106,7 @@ app.post('/deploy-and-git', async (req, res) => {
         }
 
         fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml));
-        console.log('🧾 Export YAML written:', exportYamlPath);
+        console.log('Export YAML written:', exportYamlPath);
 
         // Step 3: Export components
         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --ignoreAllErrors`;
@@ -1141,7 +1141,7 @@ app.post('/deploy-and-git', async (req, res) => {
 
         // Step 5: Deploy to target org
         const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
-        console.log('🚀 Deploy Command:', deployCmd);
+        console.log('Deploy Command:', deployCmd);
         const stripAnsi = (await import('strip-ansi')).default;
         const deployOutput = execSync(deployCmd, { cwd: tempDir, encoding: 'utf-8' });
         let cleanOutput = stripAnsi(deployOutput);
@@ -1210,7 +1210,7 @@ app.post('/deploy-and-git', async (req, res) => {
         });
 
     } catch (err) {
-        console.error('❌ deploy-and-git error:', err.message || err);
+        console.error('deploy-and-git error:', err.message || err);
         return res.status(500).json({
             status: 'error',
             message: err.message || 'Unexpected error during deploy-and-git'
