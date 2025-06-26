@@ -1372,7 +1372,12 @@ app.post('/deploy-and-git', async (req, res) => {
         const sfdxTemp = './temp-sfdx';
         const gitExportDir = './git-export';
 
-        // ✅ Authenticate to source org
+        // 🧼 Clean directories
+        fsExtra.removeSync(tempDir);
+        fsExtra.removeSync(sfdxTemp);
+        fsExtra.removeSync(gitExportDir);
+
+        // ✅ Authenticate source org
         await authenticateWithJWT(
             sourceAlias,
             process.env.SF_CLIENT_ID,
@@ -1396,12 +1401,12 @@ app.post('/deploy-and-git', async (req, res) => {
         }
 
         fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml));
-        execSync(`npx vlocity -sfdx.username ${sourceAlias} packExport -job exportDeployGit.yaml --ignoreAllErrors`);
+        execSync(`npx vlocity -sfdx.username ${sourceAlias} packExport -job exportDeployGit.yaml --output ${tempDir} --ignoreAllErrors`, {
+            stdio: 'inherit'
+        });
 
-        // ✅ STEP 2: Retrieve Regular Metadata using SFDX CLI
+        // ✅ STEP 2: Retrieve Salesforce Metadata
         if (selectedComponents.RegularMetadata) {
-            fs.rmSync(sfdxTemp, { recursive: true, force: true });
-
             // Set up DX project structure
             const projectPath = path.join(sfdxTemp, 'force-app', 'main', 'default');
             fs.mkdirSync(projectPath, { recursive: true });
@@ -1422,16 +1427,15 @@ app.post('/deploy-and-git', async (req, res) => {
             }
 
             const metadataString = metadataItems.join(',');
-            const retrieveOutputDir = 'retrieve-temp';
-            const retrieveCmd = `sf project retrieve start --metadata ${metadataString} --target-org ${sourceAlias} --output-dir ${retrieveOutputDir}`;
+            const retrieveCmd = `sf project retrieve start --metadata ${metadataString} --target-org ${sourceAlias} --output-dir retrieve-temp`;
 
             execSync(retrieveCmd, {
                 cwd: sfdxTemp,
                 stdio: 'inherit'
             });
 
-            // ✅ Copy retrieved DX metadata structure to Git export folder
-            const retrievedDefault = path.join(sfdxTemp, retrieveOutputDir, 'main', 'default');
+            // Copy retrieved metadata to Git directory structure
+            const retrievedDefault = path.join(sfdxTemp, 'retrieve-temp', 'main', 'default');
             const regularTarget = path.join(gitExportDir, 'components', 'regular', 'force-app', 'main', 'default');
             fs.mkdirSync(regularTarget, { recursive: true });
 
@@ -1440,16 +1444,18 @@ app.post('/deploy-and-git', async (req, res) => {
             }
         }
 
-        // ✅ STEP 3: Export to Git
-        fsExtra.removeSync(gitExportDir);
-        await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
+        // ✅ STEP 3: Clone Git repository
+        const repoUrl = process.env.GITLAB_REPO_URL?.trim();
+        if (!repoUrl) {
+            return res.status(400).json({ status: 'error', message: 'Missing GITLAB_REPO_URL' });
+        }
 
-        // ➕ Copy OmniStudio to Git
+        await simpleGit().clone(repoUrl, gitExportDir);
+
+        // ✅ STEP 4: Copy OmniStudio to Git
         await fsExtra.copy(tempDir, path.join(gitExportDir, 'components'), { overwrite: true });
 
-        // ➕ Regular metadata already copied to: components/regular/force-app/main/default
-
-        // ✅ Git commit + push
+        // ✅ STEP 5: Commit + Push
         const git = simpleGit(gitExportDir);
         await git.addConfig('user.email', process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com');
         await git.addConfig('user.name', process.env.GIT_COMMIT_NAME || 'Omni Deployer');
@@ -1459,7 +1465,7 @@ app.post('/deploy-and-git', async (req, res) => {
         await git.commit(commitMessage);
         await git.push('origin', gitBranch);
 
-        // ✅ Optional GitLab pipeline trigger
+        // ✅ STEP 6: Trigger GitLab pipeline (optional)
         const pipelineData = await triggerGitlabPipeline();
 
         return res.status(200).json({
