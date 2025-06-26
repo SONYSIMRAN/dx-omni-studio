@@ -1452,6 +1452,9 @@ app.post('/deploy-and-git', async (req, res) => {
 
         await simpleGit().clone(repoUrl, gitExportDir);
 
+        console.log('🔗 Git Repo URL:', repoUrl);
+
+
         // ✅ STEP 4: Copy OmniStudio to Git
         await fsExtra.copy(tempDir, path.join(gitExportDir, 'components'), { overwrite: true });
 
