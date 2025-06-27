@@ -1403,7 +1403,6 @@ app.post('/deploy-and-git', async (req, res) => {
 
 
 //** Roll Back Via Commit Id */
-
 app.post('/rollback', async (req, res) => {
     const { branch, commitId } = req.body;
 
@@ -1433,6 +1432,11 @@ app.post('/rollback', async (req, res) => {
         //Step 3: Checkout to the correct branch
         await git.checkout(branch);
         console.log(`Checked out to branch: ${branch}`);
+
+            // ✅ Configure Git identity for revert commit
+        await git.addConfig('user.email', 'dx-bot@tgs.com');
+        await git.addConfig('user.name', 'TGS DX Bot');
+        console.log('Configured Git user identity');
 
         //Step 4: Ensure commit ID exists (short or full match)
         const log = await git.log();
