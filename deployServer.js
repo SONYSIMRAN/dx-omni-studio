@@ -11,6 +11,8 @@ const axios = require('axios');
 const stripAnsi = require('strip-ansi');
 const jobStore = {};
 const xmlBuilder = require('xmlbuilder');
+const gitExportDir = './git-export';
+const repoUrl = process.env.GITLAB_REPO_URL;
 // const { fetchComponents } = require('./fetcher');
 
 
@@ -1037,295 +1039,6 @@ async function triggerGitlabPipeline() {
     }
 }
 
-
-// *******************
-// app.post('/deploy-and-git', async (req, res) => {
-//     const {
-//         sourceAlias,
-//         selectedComponents,
-//         gitBranch = 'main',
-//         commitMessage = 'Exported OmniStudio metadata to Git'
-//     } = req.body;
-
-//     if (!sourceAlias || typeof selectedComponents !== 'object') {
-//         return res.status(400).json({ status: 'error', message: 'Missing required fields' });
-//     }
-
-//     try {
-//         const exportYamlPath = path.join(__dirname, 'exportDeployGit.yaml');
-//         const tempDir = './vlocity_temp';
-
-//         // Step 1: Authenticate to source org
-//         await authenticateWithJWT(
-//             sourceAlias,
-//             process.env.SF_CLIENT_ID,
-//             process.env.SF_USERNAME,
-//             process.env.SF_LOGIN_URL,
-//             process.env.SF_JWT_KEY
-//         );
-
-//         // Step 2: Create YAML for selected components
-//         const exportYaml = {
-//             export: {},
-//             exportPacks: {
-//                 autoAddDependencies: true,
-//                 autoAddDependentFields: true
-//             }
-//         };
-
-//         for (const [type, names] of Object.entries(selectedComponents)) {
-//             exportYaml.export[type] = {};
-
-//             // Case 1: Simple array of names
-//             if (Array.isArray(names)) {
-//                 names.forEach(name => {
-//                     exportYaml.export[type][name] = {};
-//                 });
-
-//             // Case 2: Nested object for regular metadata
-//             } else if (typeof names === 'object' && names !== null) {
-//                 for (const [subType, subNames] of Object.entries(names)) {
-//                     if (!exportYaml.export[type][subType]) {
-//                         exportYaml.export[type][subType] = {};
-//                     }
-
-//                     if (Array.isArray(subNames)) {
-//                         subNames.forEach(name => {
-//                             exportYaml.export[type][subType][name] = {};
-//                         });
-//                     }
-//                 }
-//             }
-//         }
-
-//         fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml));
-
-//         // Step 3: Export from source org
-//         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportDeployGit.yaml --ignoreAllErrors`;
-//         console.log('▶ Export Command:', exportCmd);
-//         execSync(exportCmd, { stdio: 'inherit' });
-
-//         // Step 4: Copy exported components to temp folder
-//         fs.rmSync(tempDir, { recursive: true, force: true });
-//         fs.mkdirSync(tempDir, { recursive: true });
-
-//         for (const [type, names] of Object.entries(selectedComponents)) {
-//             if (Array.isArray(names)) {
-//                 names.forEach(name => {
-//                     const srcDir = path.join(__dirname, type, name);
-//                     const destDir = path.join(tempDir, type, name);
-//                     if (fs.existsSync(srcDir)) {
-//                         fs.mkdirSync(destDir, { recursive: true });
-//                         fs.readdirSync(srcDir).forEach(file => {
-//                             fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
-//                         });
-//                     }
-//                 });
-//             } else if (typeof names === 'object' && names !== null) {
-//                 for (const [subType, subNames] of Object.entries(names)) {
-//                     if (Array.isArray(subNames)) {
-//                         subNames.forEach(name => {
-//                             const srcDir = path.join(__dirname, subType, name);
-//                             const destDir = path.join(tempDir, subType, name);
-//                             if (fs.existsSync(srcDir)) {
-//                                 fs.mkdirSync(destDir, { recursive: true });
-//                                 fs.readdirSync(srcDir).forEach(file => {
-//                                     fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
-//                                 });
-//                             }
-//                         });
-//                     }
-//                 }
-//             }
-//         }
-
-//         // Step 5: Git commit and push
-//         const repoDir = path.join(__dirname, 'git-export');
-//         const GITLAB_REPO_URL = process.env.GITLAB_REPO_URL;
-
-//         fsExtra.removeSync(repoDir);
-//         await simpleGit().clone(GITLAB_REPO_URL, repoDir);
-//         await fsExtra.copy(tempDir, path.join(repoDir, 'components'), { overwrite: true });
-
-//         const git = simpleGit(repoDir);
-//         await git.addConfig('user.email', process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com');
-//         await git.addConfig('user.name', process.env.GIT_COMMIT_NAME || 'Omni Deployer');
-//         await git.checkout(gitBranch);
-//         await git.add('./*');
-//         await git.commit(commitMessage);
-//         await git.push('origin', gitBranch);
-
-//         // Step 6: Trigger GitLab pipeline
-//         const pipelineData = await triggerGitlabPipeline();
-
-//         return res.status(200).json({
-//             status: 'success',
-//             message: 'Git export and pipeline triggered successfully.',
-//             pipeline: {
-//                 id: pipelineData.id,
-//                 status: pipelineData.status,
-//                 url: pipelineData.web_url,
-//                 ref: pipelineData.ref,
-//                 created_at: pipelineData.created_at
-//             }
-//         });
-
-//     } catch (err) {
-//         console.error('deploy-and-git error:', err.message || err);
-//         return res.status(500).json({
-//             status: 'error',
-//             message: err.message || 'Unexpected error during deploy-and-git'
-//         });
-//     }
-// });
-
-
-
-
-// app.post('/deploy-and-git', async (req, res) => {
-//     const {
-//         sourceAlias,
-//         selectedComponents,
-//         gitBranch = 'main',
-//         commitMessage = 'Exported OmniStudio metadata to Git'
-//     } = req.body;
-
-//     if (!sourceAlias || typeof selectedComponents !== 'object') {
-//         return res.status(400).json({ status: 'error', message: 'Missing required fields' });
-//     }
-
-//     try {
-//         const exportYamlPath = path.join(__dirname, 'exportDeployGit.yaml');
-//         const tempDir = './vlocity_temp';
-//         const sfdxTemp = './sfdx-temp';
-//         const gitExportDir = './git-export';
-
-//         // Step 1: Authenticate
-//         await authenticateWithJWT(
-//             sourceAlias,
-//             process.env.SF_CLIENT_ID,
-//             process.env.SF_USERNAME,
-//             process.env.SF_LOGIN_URL,
-//             process.env.SF_JWT_KEY
-//         );
-
-//         // Step 2: Create YAML for OmniStudio components
-//         const exportYaml = {
-//             export: {},
-//             exportPacks: {
-//                 autoAddDependencies: true,
-//                 autoAddDependentFields: true
-//             }
-//         };
-
-//         for (const [type, names] of Object.entries(selectedComponents)) {
-//             if (type === 'RegularMetadata') continue;
-//             exportYaml.export[type] = {};
-//             names.forEach(name => {
-//                 exportYaml.export[type][name] = {};
-//             });
-//         }
-
-//         fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml));
-
-//         // Step 3: Cleanup and prepare folders
-//         fs.rmSync(tempDir, { recursive: true, force: true });
-//         fs.rmSync(sfdxTemp, { recursive: true, force: true });
-//         fs.rmSync(gitExportDir, { recursive: true, force: true });
-
-//         fs.mkdirSync(tempDir, { recursive: true });
-
-//         // Step 4: OmniStudio Export
-//         if (Object.keys(exportYaml.export).length > 0) {
-//             const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportDeployGit.yaml --ignoreAllErrors`;
-//             console.log('▶ Omni Export:', exportCmd);
-//             execSync(exportCmd, { stdio: 'inherit' });
-//         }
-
-//         // Step 5: Retrieve SFDX Metadata
-//         if (selectedComponents.RegularMetadata) {
-//             const forceAppDefault = path.join(sfdxTemp, 'force-app', 'main', 'default');
-//             fsExtra.mkdirpSync(forceAppDefault);
-
-//             fs.writeFileSync(path.join(sfdxTemp, 'sfdx-project.json'), JSON.stringify({
-//                 packageDirectories: [{ path: 'force-app', default: true }],
-//                 namespace: '',
-//                 sourceApiVersion: '59.0'
-//             }, null, 2));
-
-//             const metadataArg = Object.entries(selectedComponents.RegularMetadata)
-//                 .flatMap(([type, names]) => names.map(name => `${type}:${name}`))
-//                 .join(',');
-
-//             const retrieveCmd = `sf project retrieve start --metadata ${metadataArg} --target-org ${sourceAlias} --output-dir retrieve-temp`;
-//             console.log('▶ SFDX Retrieve:', retrieveCmd);
-//             execSync(retrieveCmd, { cwd: sfdxTemp, stdio: 'inherit' });
-//         }
-
-//         // Step 6: Git clone
-//         await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
-
-//         // Step 7: Copy OmniStudio to Git under /components
-//         const omniTarget = path.join(gitExportDir, 'components');
-//         if (fs.existsSync(tempDir)) {
-//             fs.readdirSync(tempDir).forEach(folder => {
-//                 const src = path.join(tempDir, folder);
-//                 const dest = path.join(omniTarget, folder);
-//                 fsExtra.copySync(src, dest, { overwrite: true });
-//             });
-//         }
-
-//         // Step 8: Copy SFDX metadata to /components/sfdx/force-app/main/default
-//         const retrievedPath = path.join(sfdxTemp, 'retrieve-temp');
-//         const sfdxDefaultTarget = path.join(gitExportDir, 'components', 'sfdx', 'force-app', 'main', 'default');
-//         fsExtra.mkdirpSync(sfdxDefaultTarget);
-
-//         if (fs.existsSync(retrievedPath)) {
-//             fsExtra.copySync(retrievedPath, sfdxDefaultTarget, { overwrite: true });
-//         }
-
-//         // Step 9: Add sfdx-project.json to /components/sfdx
-//         fs.writeFileSync(path.join(gitExportDir, 'components', 'sfdx', 'sfdx-project.json'), JSON.stringify({
-//             packageDirectories: [{ path: 'force-app', default: true }],
-//             namespace: '',
-//             sourceApiVersion: '59.0'
-//         }, null, 2));
-
-//         // Step 10: Git commit and push
-//         const git = simpleGit(gitExportDir);
-//         await git.addConfig('user.email', process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com');
-//         await git.addConfig('user.name', process.env.GIT_COMMIT_NAME || 'Omni Deployer');
-//         await git.checkout(gitBranch);
-//         await git.add('./*');
-//         await git.commit(commitMessage);
-//         await git.push('origin', gitBranch);
-
-//         // Step 11: Trigger pipeline
-//         const pipelineData = await triggerGitlabPipeline();
-
-//         return res.status(200).json({
-//             status: 'success',
-//             message: 'OmniStudio + SFDX metadata exported and Git pipeline triggered!',
-//             pipeline: {
-//                 id: pipelineData.id,
-//                 status: pipelineData.status,
-//                 url: pipelineData.web_url,
-//                 ref: pipelineData.ref,
-//                 created_at: pipelineData.created_at
-//             }
-//         });
-
-//     } catch (err) {
-//         console.error('❌ deploy-and-git error:', err.message || err);
-//         return res.status(500).json({
-//             status: 'error',
-//             message: err.message || 'Unexpected error during deploy-and-git'
-//         });
-//     }
-// });
-
-
-
 //**** Correct */
 // app.post('/deploy-and-git', async (req, res) => {
 //     const {
@@ -1501,9 +1214,9 @@ async function triggerGitlabPipeline() {
 //     }
 // });
 
-// const app = express();
-app.use(express.json({ limit: '10mb' }));
+//** Deploying omni studio and sfdx fixed version*/
 
+app.use(express.json({ limit: '10mb' }));
 
 app.use((req, res, next) => {
     console.log('🔍 Incoming Headers:', req.headers);
@@ -1688,6 +1401,70 @@ app.post('/deploy-and-git', async (req, res) => {
 });
 
 
+
+//** Roll Back Via Commit Id */
+
+app.post('/rollback', async (req, res) => {
+    const { branch, commitId } = req.body;
+
+    console.log('Incoming Headers:', req.headers);
+    console.log('Incoming Body:', req.body);
+
+    if (!branch || !commitId) {
+        return res.status(400).json({
+            status: 'error',
+            message: 'Missing required fields: branch and commitId'
+        });
+    }
+
+    try {
+        // Step 1: Clean up previous clone if exists
+        if (fs.existsSync(gitExportDir)) {
+            fs.rmSync(gitExportDir, { recursive: true, force: true });
+            console.log('Cleaned previous git-export directory');
+        }
+
+        // Step 2: Clone fresh repo from GitLab
+        console.log(`Cloning Git repo from ${repoUrl}`);
+        await simpleGit().clone(repoUrl, gitExportDir);
+
+        const git = simpleGit(gitExportDir);
+
+        //Step 3: Checkout to the correct branch
+        await git.checkout(branch);
+        console.log(`Checked out to branch: ${branch}`);
+
+        //Step 4: Ensure commit ID exists (short or full match)
+        const log = await git.log();
+        const matchedCommit = log.all.find(c => c.hash.startsWith(commitId));
+
+        if (!matchedCommit) {
+            return res.status(400).json({
+                status: 'error',
+                message: `Commit ${commitId} not found in Git log.`
+            });
+        }
+
+        //Step 5: Revert the commit
+        console.log(`Reverting commit ${commitId}`);
+        await git.raw(['revert', '--no-edit', commitId]);
+
+        //Step 6: Push the new revert commit to remote
+        await git.push('origin', branch);
+
+        return res.status(200).json({
+            status: 'success',
+            message: `Rollback of commit ${commitId} completed and pushed to ${branch}.`
+        });
+
+    } catch (err) {
+        console.error('Rollback failed:', err.message || err);
+        return res.status(500).json({
+            status: 'error',
+            message: err.message || 'Unexpected error during rollback'
+        });
+    }
+});
 
 
 // Start server
