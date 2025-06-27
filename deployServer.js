@@ -1467,6 +1467,50 @@ app.post('/rollback', async (req, res) => {
 });
 
 
+//** Get Commits */
+app.get('/commits', async (req, res) => {
+    const branch = req.query.branch || 'main';
+    const gitExportDir = './git-export';
+    const repoUrl = process.env.GITLAB_REPO_URL;
+
+    try {
+        // Clean previous clone (optional for freshness)
+        if (fs.existsSync(gitExportDir)) {
+            fs.rmSync(gitExportDir, { recursive: true, force: true });
+        }
+
+        console.log('Cloning Git repo...');
+        await simpleGit().clone(repoUrl, gitExportDir);
+
+        const git = simpleGit(gitExportDir);
+        await git.checkout(branch);
+
+        const log = await git.log({ n: 20 });
+
+        const commits = log.all.map(commit => ({
+            hash: commit.hash,
+            shortHash: commit.hash.substring(0, 8),
+            message: commit.message,
+            author: commit.author_name,
+            date: commit.date
+        }));
+
+        return res.status(200).json({
+            status: 'success',
+            commits
+        });
+
+    } catch (err) {
+        console.error('Error fetching commits:', err.message || err);
+        return res.status(500).json({
+            status: 'error',
+            message: err.message || 'Failed to fetch commits'
+        });
+    }
+});
+
+
+
 // Start server
 app.listen(3000, () => {
     console.log('Deployment API running at http://localhost:3000');
