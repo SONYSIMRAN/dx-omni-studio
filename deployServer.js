@@ -835,213 +835,6 @@ const simpleGit = require('simple-git');
 const fsExtra = require('fs-extra');
 
 
-// app.post('/deploy-and-git', async (req, res) => {
-//     console.log('Using JWT key:', process.env.SF_JWT_KEY);
-//     // const stripAnsi = (await import('strip-ansi')).default;
-
-//     const {
-//         sourceAlias,
-//         targetAlias,
-//         selectedComponents,
-//         gitBranch = 'main',
-//         commitMessage = 'Deploy and Git Commit'
-//     } = req.body;
-
-//     if (!sourceAlias || !targetAlias || typeof selectedComponents !== 'object') {
-//         return res.status(400).json({ status: 'error', message: 'Missing required fields' });
-//     }
-
-//     try {
-//         const exportYamlPath = path.join(__dirname, 'exportDeployGit.yaml');
-//         const deployYamlPath = path.join(__dirname, 'deploySelected.yaml');
-//         const tempDir = './vlocity_temp';
-
-//         // Step 1: Authenticate via JWT for source and target orgs
-//         await authenticateWithJWT(
-//             sourceAlias,
-//             process.env.SF_CLIENT_ID,
-//             process.env.SF_USERNAME,
-//             process.env.SF_LOGIN_URL,
-//             process.env.SF_JWT_KEY
-//         );
-
-//         await authenticateWithJWT(
-//             targetAlias,
-//             process.env.TARGET_CLIENT_ID,
-//             process.env.TARGET_USERNAME,
-//             process.env.TARGET_LOGIN_URL,
-//             process.env.TARGET_JWT_KEY
-//         );
-
-
-
-//         // const jwtKeyString = fs.readFileSync(path.resolve(__dirname, process.env.SF_JWT_KEY), 'utf-8');
-//         // const targetJwtKeyString = fs.readFileSync(path.resolve(__dirname, process.env.TARGET_JWT_KEY), 'utf-8');
-
-// //         const jwtKeyString = getKeyInput(process.env.SF_JWT_KEY);
-// // const targetJwtKeyString = getKeyInput(process.env.TARGET_JWT_KEY);
-
-
-// //         await authenticateWithJWT(
-// //             sourceAlias,
-// //             process.env.SF_CLIENT_ID,
-// //             process.env.SF_USERNAME,
-// //             process.env.SF_LOGIN_URL,
-// //             jwtKeyString
-// //         );
-
-// //         await authenticateWithJWT(
-// //             targetAlias,
-// //             process.env.TARGET_CLIENT_ID,
-// //             process.env.TARGET_USERNAME,
-// //             process.env.TARGET_LOGIN_URL,
-// //             targetJwtKeyString
-// //         );
-
-
-
-//         // Step 2: Create export YAML file
-//         const exportYaml = {
-//             export: {},
-//             exportPacks: {
-//                 autoAddDependencies: true,
-//                 autoAddDependentFields: true
-//             }
-//         };
-
-//         Object.entries(selectedComponents).forEach(([type, names]) => {
-//             exportYaml.export[type] = {};
-//             names.forEach(name => {
-//                 exportYaml.export[type][name] = {};
-//             });
-//         });
-
-//         fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml));
-
-//         // Step 3: Export selected components
-//         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportDeployGit.yaml --ignoreAllErrors`;
-//         console.log('▶ Export:', exportCmd);
-//         execSync(exportCmd, { stdio: 'inherit' });
-
-//         // Step 4: Prepare deployment directory
-//         fs.rmSync(tempDir, { recursive: true, force: true });
-//         fs.mkdirSync(tempDir, { recursive: true });
-
-//         const deployYaml = { export: {} };
-//         for (const [type, names] of Object.entries(selectedComponents)) {
-//             deployYaml.export[type] = {
-//                 queries: names.map(name => `${type}/${name}`)
-//             };
-
-//             for (const name of names) {
-//                 const srcDir = path.join(__dirname, type, name);
-//                 const destDir = path.join(tempDir, type, name);
-
-//                 if (fs.existsSync(srcDir)) {
-//                     fs.mkdirSync(destDir, { recursive: true });
-//                     fs.readdirSync(srcDir).forEach(file => {
-//                         fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
-//                     });
-//                 }
-//             }
-//         }
-
-//         fs.writeFileSync(deployYamlPath, yaml.dump(deployYaml));
-
-//         // Step 5: Deploy to target org
-//         const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job deploySelected.yaml --force --ignoreAllErrors --nojob`;
-//         console.log('Deploy:', deployCmd);
-//         const stripAnsi = (await import('strip-ansi')).default;
-//         // execSync(deployCmd, { cwd: tempDir, stdio: 'inherit' });
-
-//         const deployOutput = execSync(deployCmd, { cwd: tempDir, encoding: 'utf-8' });
-//         let cleanOutput = stripAnsi(deployOutput);
-
-//         // 🔍 Filter out noise
-//         cleanOutput = cleanOutput
-//             .split('\n')
-//             .filter(line =>
-//                 !line.includes('Puppeteer') &&
-//                 !line.includes('@omnistudio/flexcard-compiler') &&
-//                 !line.toLowerCase().includes('unauthorized') &&
-//                 !line.toLowerCase().includes('failed to get package')
-//             )
-//             .join('\n');
-
-//         const deployedComponents = [];
-//         let elapsedTime = '';
-//         let warnings = [];
-
-//         cleanOutput.split('\n').forEach(line => {
-//             if (line.includes('Adding to Deploy >>')) {
-//                 const part = line.split('>>')[1]?.trim();
-//                 if (part) deployedComponents.push(part);
-//             }
-//             if (line.includes('Elapsed Time')) {
-//                 elapsedTime = line.split('>>')[1]?.trim() || '';
-//             }
-//             if (line.toLowerCase().includes('error')) {
-//                 warnings.push(line.trim());
-//             }
-//         });
-
-
-//         // Step 6: Git operations
-//         const repoDir = path.join(__dirname, 'git-export');
-//         const GITLAB_REPO_URL = process.env.GITLAB_REPO_URL;
-
-//         fsExtra.removeSync(repoDir);
-//         await simpleGit().clone(GITLAB_REPO_URL, repoDir);
-
-//         await fsExtra.copy(tempDir, path.join(repoDir, 'components'), { overwrite: true });
-
-//         const git = simpleGit(repoDir);
-
-//         // Set Git user identity
-//         await git.addConfig('user.email', process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com');
-//         await git.addConfig('user.name', process.env.GIT_COMMIT_NAME || 'Omni Deployer');
-
-//         await git.checkout(gitBranch);
-//         await git.add('./*');
-//         await git.commit(commitMessage);
-//         await git.push('origin', gitBranch);
-
-//            // 7Trigger GitLab CI pipeline
-//         const pipelineData = await triggerGitlabPipeline();
-
-//         // return res.status(200).json({
-//         //     status: 'success',
-//         //     message: 'Deployment and Git commit successful.',
-//         //     pipelineId: pipelineData.id,
-//         //     pipelineStatus: pipelineData.status,
-//         //     pipelineUrl: pipelineData.web_url
-//         // });
-//         return res.status(200).json({
-//             status: 'success',
-//             message: 'Deployment and Git commit successful.',
-//             deployedComponents,
-//             elapsedTime,
-//             warnings,
-//             details: cleanOutput,
-//             pipeline: {
-//                 id: pipelineData.id,
-//                 status: pipelineData.status,
-//                 url: pipelineData.web_url,
-//                 ref: pipelineData.ref,
-//                 created_at: pipelineData.created_at
-//             }
-//         });
-
-//     } catch (err) {
-//         console.error('deploy-and-git error:', err.message || err);
-//         return res.status(500).json({
-//             status: 'error',
-//             message: err.message || 'Unexpected error during deploy-and-git'
-//         });
-//     }
-// });
-
-
 
                 // app.post('/deploy-and-git', async (req, res) => {
                 //     console.log('Using JWT key:', process.env.SF_JWT_KEY);
@@ -1282,32 +1075,66 @@ async function triggerGitlabPipeline() {
 
 //         for (const [type, names] of Object.entries(selectedComponents)) {
 //             exportYaml.export[type] = {};
-//             names.forEach(name => {
-//                 exportYaml.export[type][name] = {};
-//             });
+
+//             // Case 1: Simple array of names
+//             if (Array.isArray(names)) {
+//                 names.forEach(name => {
+//                     exportYaml.export[type][name] = {};
+//                 });
+
+//             // Case 2: Nested object for regular metadata
+//             } else if (typeof names === 'object' && names !== null) {
+//                 for (const [subType, subNames] of Object.entries(names)) {
+//                     if (!exportYaml.export[type][subType]) {
+//                         exportYaml.export[type][subType] = {};
+//                     }
+
+//                     if (Array.isArray(subNames)) {
+//                         subNames.forEach(name => {
+//                             exportYaml.export[type][subType][name] = {};
+//                         });
+//                     }
+//                 }
+//             }
 //         }
 
 //         fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml));
 
-//         // Step 3: Export components from source org
+//         // Step 3: Export from source org
 //         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportDeployGit.yaml --ignoreAllErrors`;
 //         console.log('▶ Export Command:', exportCmd);
 //         execSync(exportCmd, { stdio: 'inherit' });
 
-//         // Step 4: Copy components to temp dir
+//         // Step 4: Copy exported components to temp folder
 //         fs.rmSync(tempDir, { recursive: true, force: true });
 //         fs.mkdirSync(tempDir, { recursive: true });
 
-//         for (const [type, names] of Object.entries(exportYaml.export)) {
-//             for (const name of Object.keys(names)) {
-//                 const srcDir = path.join(__dirname, type, name);
-//                 const destDir = path.join(tempDir, type, name);
-
-//                 if (fs.existsSync(srcDir)) {
-//                     fs.mkdirSync(destDir, { recursive: true });
-//                     fs.readdirSync(srcDir).forEach(file => {
-//                         fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
-//                     });
+//         for (const [type, names] of Object.entries(selectedComponents)) {
+//             if (Array.isArray(names)) {
+//                 names.forEach(name => {
+//                     const srcDir = path.join(__dirname, type, name);
+//                     const destDir = path.join(tempDir, type, name);
+//                     if (fs.existsSync(srcDir)) {
+//                         fs.mkdirSync(destDir, { recursive: true });
+//                         fs.readdirSync(srcDir).forEach(file => {
+//                             fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+//                         });
+//                     }
+//                 });
+//             } else if (typeof names === 'object' && names !== null) {
+//                 for (const [subType, subNames] of Object.entries(names)) {
+//                     if (Array.isArray(subNames)) {
+//                         subNames.forEach(name => {
+//                             const srcDir = path.join(__dirname, subType, name);
+//                             const destDir = path.join(tempDir, subType, name);
+//                             if (fs.existsSync(srcDir)) {
+//                                 fs.mkdirSync(destDir, { recursive: true });
+//                                 fs.readdirSync(srcDir).forEach(file => {
+//                                     fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+//                                 });
+//                             }
+//                         });
+//                     }
 //                 }
 //             }
 //         }
@@ -1328,7 +1155,7 @@ async function triggerGitlabPipeline() {
 //         await git.commit(commitMessage);
 //         await git.push('origin', gitBranch);
 
-//         // Step 6: Trigger GitLab CI
+//         // Step 6: Trigger GitLab pipeline
 //         const pipelineData = await triggerGitlabPipeline();
 
 //         return res.status(200).json({
@@ -1354,30 +1181,170 @@ async function triggerGitlabPipeline() {
 
 
 
+
+// app.post('/deploy-and-git', async (req, res) => {
+//     const {
+//         sourceAlias,
+//         selectedComponents,
+//         gitBranch = 'main',
+//         commitMessage = 'Exported OmniStudio metadata to Git'
+//     } = req.body;
+
+//     if (!sourceAlias || typeof selectedComponents !== 'object') {
+//         return res.status(400).json({ status: 'error', message: 'Missing required fields' });
+//     }
+
+//     try {
+//         const exportYamlPath = path.join(__dirname, 'exportDeployGit.yaml');
+//         const tempDir = './vlocity_temp';
+//         const sfdxTemp = './sfdx-temp';
+//         const gitExportDir = './git-export';
+
+//         // Step 1: Authenticate
+//         await authenticateWithJWT(
+//             sourceAlias,
+//             process.env.SF_CLIENT_ID,
+//             process.env.SF_USERNAME,
+//             process.env.SF_LOGIN_URL,
+//             process.env.SF_JWT_KEY
+//         );
+
+//         // Step 2: Create YAML for OmniStudio components
+//         const exportYaml = {
+//             export: {},
+//             exportPacks: {
+//                 autoAddDependencies: true,
+//                 autoAddDependentFields: true
+//             }
+//         };
+
+//         for (const [type, names] of Object.entries(selectedComponents)) {
+//             if (type === 'RegularMetadata') continue;
+//             exportYaml.export[type] = {};
+//             names.forEach(name => {
+//                 exportYaml.export[type][name] = {};
+//             });
+//         }
+
+//         fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml));
+
+//         // Step 3: Cleanup and prepare folders
+//         fs.rmSync(tempDir, { recursive: true, force: true });
+//         fs.rmSync(sfdxTemp, { recursive: true, force: true });
+//         fs.rmSync(gitExportDir, { recursive: true, force: true });
+
+//         fs.mkdirSync(tempDir, { recursive: true });
+
+//         // Step 4: OmniStudio Export
+//         if (Object.keys(exportYaml.export).length > 0) {
+//             const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportDeployGit.yaml --ignoreAllErrors`;
+//             console.log('▶ Omni Export:', exportCmd);
+//             execSync(exportCmd, { stdio: 'inherit' });
+//         }
+
+//         // Step 5: Retrieve SFDX Metadata
+//         if (selectedComponents.RegularMetadata) {
+//             const forceAppDefault = path.join(sfdxTemp, 'force-app', 'main', 'default');
+//             fsExtra.mkdirpSync(forceAppDefault);
+
+//             fs.writeFileSync(path.join(sfdxTemp, 'sfdx-project.json'), JSON.stringify({
+//                 packageDirectories: [{ path: 'force-app', default: true }],
+//                 namespace: '',
+//                 sourceApiVersion: '59.0'
+//             }, null, 2));
+
+//             const metadataArg = Object.entries(selectedComponents.RegularMetadata)
+//                 .flatMap(([type, names]) => names.map(name => `${type}:${name}`))
+//                 .join(',');
+
+//             const retrieveCmd = `sf project retrieve start --metadata ${metadataArg} --target-org ${sourceAlias} --output-dir retrieve-temp`;
+//             console.log('▶ SFDX Retrieve:', retrieveCmd);
+//             execSync(retrieveCmd, { cwd: sfdxTemp, stdio: 'inherit' });
+//         }
+
+//         // Step 6: Git clone
+//         await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
+
+//         // Step 7: Copy OmniStudio to Git under /components
+//         const omniTarget = path.join(gitExportDir, 'components');
+//         if (fs.existsSync(tempDir)) {
+//             fs.readdirSync(tempDir).forEach(folder => {
+//                 const src = path.join(tempDir, folder);
+//                 const dest = path.join(omniTarget, folder);
+//                 fsExtra.copySync(src, dest, { overwrite: true });
+//             });
+//         }
+
+//         // Step 8: Copy SFDX metadata to /components/sfdx/force-app/main/default
+//         const retrievedPath = path.join(sfdxTemp, 'retrieve-temp');
+//         const sfdxDefaultTarget = path.join(gitExportDir, 'components', 'sfdx', 'force-app', 'main', 'default');
+//         fsExtra.mkdirpSync(sfdxDefaultTarget);
+
+//         if (fs.existsSync(retrievedPath)) {
+//             fsExtra.copySync(retrievedPath, sfdxDefaultTarget, { overwrite: true });
+//         }
+
+//         // Step 9: Add sfdx-project.json to /components/sfdx
+//         fs.writeFileSync(path.join(gitExportDir, 'components', 'sfdx', 'sfdx-project.json'), JSON.stringify({
+//             packageDirectories: [{ path: 'force-app', default: true }],
+//             namespace: '',
+//             sourceApiVersion: '59.0'
+//         }, null, 2));
+
+//         // Step 10: Git commit and push
+//         const git = simpleGit(gitExportDir);
+//         await git.addConfig('user.email', process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com');
+//         await git.addConfig('user.name', process.env.GIT_COMMIT_NAME || 'Omni Deployer');
+//         await git.checkout(gitBranch);
+//         await git.add('./*');
+//         await git.commit(commitMessage);
+//         await git.push('origin', gitBranch);
+
+//         // Step 11: Trigger pipeline
+//         const pipelineData = await triggerGitlabPipeline();
+
+//         return res.status(200).json({
+//             status: 'success',
+//             message: 'OmniStudio + SFDX metadata exported and Git pipeline triggered!',
+//             pipeline: {
+//                 id: pipelineData.id,
+//                 status: pipelineData.status,
+//                 url: pipelineData.web_url,
+//                 ref: pipelineData.ref,
+//                 created_at: pipelineData.created_at
+//             }
+//         });
+
+//     } catch (err) {
+//         console.error('❌ deploy-and-git error:', err.message || err);
+//         return res.status(500).json({
+//             status: 'error',
+//             message: err.message || 'Unexpected error during deploy-and-git'
+//         });
+//     }
+// });
+
+
+
+
 app.post('/deploy-and-git', async (req, res) => {
     const {
         sourceAlias,
         selectedComponents,
         gitBranch = 'main',
-        commitMessage = 'Exported OmniStudio and Metadata to Git'
+        commitMessage = 'Exported OmniStudio metadata to Git'
     } = req.body;
 
     if (!sourceAlias || typeof selectedComponents !== 'object') {
         return res.status(400).json({ status: 'error', message: 'Missing required fields' });
     }
 
+    const tempDir = './vlocity_temp';
+    const sfdxTemp = './sfdx-temp';
+    const gitExportDir = './git-export';
+    const exportYamlPath = path.join(tempDir, 'exportDeployGit.yaml');
+
     try {
-        const exportYamlPath = path.join(__dirname, 'exportDeployGit.yaml');
-        const tempDir = './vlocity_temp';
-        const sfdxTemp = './temp-sfdx';
-        const gitExportDir = './git-export';
-
-        // 🧼 Clean directories
-        fsExtra.removeSync(tempDir);
-        fsExtra.removeSync(sfdxTemp);
-        fsExtra.removeSync(gitExportDir);
-
-        // ✅ Authenticate source org
         await authenticateWithJWT(
             sourceAlias,
             process.env.SF_CLIENT_ID,
@@ -1386,10 +1353,13 @@ app.post('/deploy-and-git', async (req, res) => {
             process.env.SF_JWT_KEY
         );
 
-        // ✅ STEP 1: Export OmniStudio using Vlocity CLI
+        // Step 2: Create YAML
         const exportYaml = {
             export: {},
-            exportPacks: { autoAddDependencies: true }
+            exportPacks: {
+                autoAddDependencies: true,
+                autoAddDependentFields: true
+            }
         };
 
         for (const [type, names] of Object.entries(selectedComponents)) {
@@ -1400,80 +1370,119 @@ app.post('/deploy-and-git', async (req, res) => {
             });
         }
 
-        fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml));
-        execSync(`npx vlocity -sfdx.username ${sourceAlias} packExport -job exportDeployGit.yaml --output ${tempDir} --ignoreAllErrors`, {
-            stdio: 'inherit'
-        });
+        // Step 3: Clean dirs
+        [tempDir, sfdxTemp, gitExportDir].forEach(dir => fs.rmSync(dir, { recursive: true, force: true }));
+        fs.mkdirSync(tempDir, { recursive: true });
 
-        // ✅ STEP 2: Retrieve Salesforce Metadata
+        // Step 4: Write YAML
+        const yamlContent = yaml.dump(exportYaml);
+        fs.writeFileSync(exportYamlPath, yamlContent, 'utf8');
+
+        // Step 5: Vlocity Export
+        if (Object.keys(exportYaml.export).length > 0) {
+            const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job ${exportYamlPath} --projectPath ${__dirname} --ignoreAllErrors`;
+            console.log('Running Vlocity Export:', exportCmd);
+            execSync(exportCmd, { cwd: __dirname, stdio: 'inherit' });
+
+            // Move only selected OmniStudio components
+            for (const [type, names] of Object.entries(selectedComponents)) {
+                if (type === 'RegularMetadata') continue;
+
+                const srcBase = path.join(__dirname, type);
+                const destBase = path.join(tempDir, type);
+
+                if (!fs.existsSync(srcBase)) {
+                    console.log(`Folder missing for type: ${type}`);
+                    continue;
+                }
+
+                fsExtra.mkdirpSync(destBase);
+
+                for (const name of names) {
+                    const srcPath = path.join(srcBase, name);
+                    const destPath = path.join(destBase, name);
+
+                    if (fs.existsSync(srcPath)) {
+                        console.log(`Copying ${type}/${name}`);
+                        fsExtra.copySync(srcPath, destPath, { overwrite: true });
+                    } else {
+                        console.warn(`Component missing: ${type}/${name}`);
+                    }
+                }
+            }
+        }
+
+        // Step 6: Retrieve SFDX Metadata
         if (selectedComponents.RegularMetadata) {
-            // Set up DX project structure
-            const projectPath = path.join(sfdxTemp, 'force-app', 'main', 'default');
-            fs.mkdirSync(projectPath, { recursive: true });
+            const forceAppPath = path.join(sfdxTemp, 'force-app', 'main', 'default');
+            fsExtra.mkdirpSync(forceAppPath);
 
-            const sfdxProjectJson = {
+            fs.writeFileSync(path.join(sfdxTemp, 'sfdx-project.json'), JSON.stringify({
                 packageDirectories: [{ path: 'force-app', default: true }],
                 namespace: '',
                 sourceApiVersion: '59.0'
-            };
-            fs.writeFileSync(
-                path.join(sfdxTemp, 'sfdx-project.json'),
-                JSON.stringify(sfdxProjectJson, null, 2)
-            );
+            }, null, 2));
 
-            const metadataItems = [];
-            for (const [metaType, names] of Object.entries(selectedComponents.RegularMetadata)) {
-                names.forEach(name => metadataItems.push(`${metaType}:${name}`));
-            }
+            const metadataArg = Object.entries(selectedComponents.RegularMetadata)
+                .flatMap(([type, names]) => names.map(name => `${type}:${name}`))
+                .join(',');
 
-            const metadataString = metadataItems.join(',');
-            const retrieveCmd = `sf project retrieve start --metadata ${metadataString} --target-org ${sourceAlias} --output-dir retrieve-temp`;
+            const retrieveCmd = `sf project retrieve start --metadata ${metadataArg} --target-org ${sourceAlias} --output-dir retrieve-temp`;
+            console.log('SFDX Retrieve:', retrieveCmd);
+            execSync(retrieveCmd, { cwd: sfdxTemp, stdio: 'inherit' });
+        }
 
-            execSync(retrieveCmd, {
-                cwd: sfdxTemp,
-                stdio: 'inherit'
+        // Step 7: Clone Git repo
+        await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
+        console.log('Git repo cloned to:', gitExportDir);
+
+        // Step 8: Copy OmniStudio to Git
+        const omniTarget = path.join(gitExportDir, 'components');
+        fsExtra.mkdirpSync(omniTarget);
+
+        if (fs.existsSync(tempDir)) {
+            fs.readdirSync(tempDir).forEach(typeFolder => {
+                const src = path.join(tempDir, typeFolder);
+                const dest = path.join(omniTarget, typeFolder);
+                if (fs.statSync(src).isDirectory()) {
+                    console.log(`Copying folder: ${typeFolder}`);
+                    fsExtra.copySync(src, dest, { overwrite: true });
+                }
             });
-
-            // Copy retrieved metadata to Git directory structure
-            const retrievedDefault = path.join(sfdxTemp, 'retrieve-temp', 'main', 'default');
-            const regularTarget = path.join(gitExportDir, 'components', 'regular', 'force-app', 'main', 'default');
-            fs.mkdirSync(regularTarget, { recursive: true });
-
-            if (fs.existsSync(retrievedDefault)) {
-                await fsExtra.copy(retrievedDefault, regularTarget, { overwrite: true });
-            }
         }
 
-        // ✅ STEP 3: Clone Git repository
-        const repoUrl = process.env.GITLAB_REPO_URL?.trim();
-        if (!repoUrl) {
-            return res.status(400).json({ status: 'error', message: 'Missing GITLAB_REPO_URL' });
+        // Step 9: Copy retrieved SFDX to Git
+        const retrievedPath = path.join(sfdxTemp, 'retrieve-temp');
+        const sfdxDefaultTarget = path.join(gitExportDir, 'components', 'sfdx', 'force-app', 'main', 'default');
+        fsExtra.mkdirpSync(sfdxDefaultTarget);
+
+        if (fs.existsSync(retrievedPath)) {
+            fsExtra.copySync(retrievedPath, sfdxDefaultTarget, { overwrite: true });
         }
 
-        await simpleGit().clone(repoUrl, gitExportDir);
+        // Step 10: Write sfdx-project.json to Git
+        fs.writeFileSync(path.join(gitExportDir, 'components', 'sfdx', 'sfdx-project.json'), JSON.stringify({
+            packageDirectories: [{ path: 'force-app', default: true }],
+            namespace: '',
+            sourceApiVersion: '59.0'
+        }, null, 2));
 
-        console.log('🔗 Git Repo URL:', repoUrl);
-
-
-        // ✅ STEP 4: Copy OmniStudio to Git
-        await fsExtra.copy(tempDir, path.join(gitExportDir, 'components'), { overwrite: true });
-
-        // ✅ STEP 5: Commit + Push
+        // Step 11: Git Commit + Push
         const git = simpleGit(gitExportDir);
         await git.addConfig('user.email', process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com');
         await git.addConfig('user.name', process.env.GIT_COMMIT_NAME || 'Omni Deployer');
-
         await git.checkout(gitBranch);
+
         await git.add('./*');
         await git.commit(commitMessage);
         await git.push('origin', gitBranch);
 
-        // ✅ STEP 6: Trigger GitLab pipeline (optional)
+        // Step 12: Trigger GitLab pipeline
         const pipelineData = await triggerGitlabPipeline();
 
         return res.status(200).json({
             status: 'success',
-            message: 'Git export and pipeline triggered successfully.',
+            message: 'Selected OmniStudio + SFDX metadata exported to Git!',
             pipeline: {
                 id: pipelineData.id,
                 status: pipelineData.status,
@@ -1484,14 +1493,13 @@ app.post('/deploy-and-git', async (req, res) => {
         });
 
     } catch (err) {
-        console.error('❌ deploy-and-git error:', err.message || err);
+        console.error('deploy-and-git error:', err.message || err);
         return res.status(500).json({
             status: 'error',
             message: err.message || 'Unexpected error during deploy-and-git'
         });
     }
 });
-
 
 
 
