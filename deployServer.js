@@ -1400,8 +1400,6 @@ app.post('/deploy-and-git', async (req, res) => {
     }
 });
 
-
-
 //** Roll Back Via Commit Id */
 app.post('/rollback', async (req, res) => {
     const { branch, commitId } = req.body;
@@ -1433,7 +1431,7 @@ app.post('/rollback', async (req, res) => {
         await git.checkout(branch);
         console.log(`Checked out to branch: ${branch}`);
 
-            // ✅ Configure Git identity for revert commit
+            // Configure Git identity for revert commit
         await git.addConfig('user.email', 'dx-bot@tgs.com');
         await git.addConfig('user.name', 'TGS DX Bot');
         console.log('Configured Git user identity');
@@ -1471,23 +1469,82 @@ app.post('/rollback', async (req, res) => {
 });
 
 
-//** Get Commits */
+//** Get Commits  correct older code*/
+// app.get('/commits', async (req, res) => {
+//     const branch = req.query.branch || 'main';
+//     const gitExportDir = './git-export';
+//     const repoUrl = process.env.GITLAB_REPO_URL;
+
+//     try {
+//         // Clean previous clone (optional for freshness)
+//         if (fs.existsSync(gitExportDir)) {
+//             fs.rmSync(gitExportDir, { recursive: true, force: true });
+//         }
+
+//         console.log('Cloning Git repo...');
+//         await simpleGit().clone(repoUrl, gitExportDir);
+
+//         const git = simpleGit(gitExportDir);
+//         await git.checkout(branch);
+
+//         const log = await git.log({ n: 20 });
+
+//         const commits = log.all.map(commit => ({
+//             hash: commit.hash,
+//             shortHash: commit.hash.substring(0, 8),
+//             message: commit.message,
+//             author: commit.author_name,
+//             date: commit.date
+//         }));
+
+//         return res.status(200).json({
+//             status: 'success',
+//             commits
+//         });
+
+//     } catch (err) {
+//         console.error('Error fetching commits:', err.message || err);
+//         return res.status(500).json({
+//             status: 'error',
+//             message: err.message || 'Failed to fetch commits'
+//         });
+//     }
+// });
+
+
 app.get('/commits', async (req, res) => {
-    const branch = req.query.branch || 'main';
+    const branch = req.query.branch;
     const gitExportDir = './git-export';
     const repoUrl = process.env.GITLAB_REPO_URL;
 
+    if (!branch) {
+        return res.status(400).json({ status: 'error', message: 'Missing branch param' });
+    }
+
     try {
-        // Clean previous clone (optional for freshness)
         if (fs.existsSync(gitExportDir)) {
             fs.rmSync(gitExportDir, { recursive: true, force: true });
         }
 
-        console.log('Cloning Git repo...');
         await simpleGit().clone(repoUrl, gitExportDir);
-
         const git = simpleGit(gitExportDir);
-        await git.checkout(branch);
+        await git.fetch();
+
+        const branches = await git.branch(['-a']);
+        const isLocal = Object.keys(branches.branches).includes(branch);
+        const remoteBranchName = `remotes/origin/${branch}`;
+        const isRemote = Object.keys(branches.branches).includes(remoteBranchName);
+
+        if (isLocal) {
+            await git.checkout(branch);
+        } else if (isRemote) {
+            await git.checkoutBranch(branch, remoteBranchName);
+        } else {
+            return res.status(404).json({
+                status: 'error',
+                message: `Branch '${branch}' not found in local or remote`
+            });
+        }
 
         const log = await git.log({ n: 20 });
 
@@ -1501,6 +1558,7 @@ app.get('/commits', async (req, res) => {
 
         return res.status(200).json({
             status: 'success',
+            branch,
             commits
         });
 
@@ -1509,6 +1567,52 @@ app.get('/commits', async (req, res) => {
         return res.status(500).json({
             status: 'error',
             message: err.message || 'Failed to fetch commits'
+        });
+    }
+});
+
+
+
+//** Get Branches List */
+app.get('/branches', async (req, res) => {
+    const gitExportDir = './git-export';
+    const repoUrl = process.env.GITLAB_REPO_URL;
+
+    try {
+        // Clean previous clone
+        if (fs.existsSync(gitExportDir)) {
+            fs.rmSync(gitExportDir, { recursive: true, force: true });
+        }
+
+        await simpleGit().clone(repoUrl, gitExportDir);
+        const git = simpleGit(gitExportDir);
+        await git.fetch();
+
+        const branches = await git.branch(['-a']);
+
+        const uniqueBranchNames = new Set();
+
+        Object.keys(branches.branches).forEach(branchName => {
+            if (branchName.startsWith('remotes/origin/')) {
+                const clean = branchName.replace('remotes/origin/', '');
+                if (clean !== 'HEAD') uniqueBranchNames.add(clean);
+            } else {
+                uniqueBranchNames.add(branchName);
+            }
+        });
+
+        const sortedBranches = Array.from(uniqueBranchNames).sort();
+
+        return res.status(200).json({
+            status: 'success',
+            branches: sortedBranches
+        });
+
+    } catch (err) {
+        console.error('Failed to fetch branches:', err.message || err);
+        return res.status(500).json({
+            status: 'error',
+            message: err.message || 'Unable to get branches'
         });
     }
 });
