@@ -11,8 +11,14 @@ const axios = require('axios');
 const stripAnsi = require('strip-ansi');
 const jobStore = {};
 const xmlBuilder = require('xmlbuilder');
+const crypto = require('crypto');
 const gitExportDir = './git-export';
-const repoUrl = process.env.GITLAB_REPO_URL;
+const {
+    saveComponentWithMetadata,
+    fetchOmniComponentDates,
+    getComponentStatus
+} = require('./storageHelper');
+const STORAGE_DIR = path.join(__dirname, 'storage');
 // const { fetchComponents } = require('./fetcher');
 
 
@@ -30,24 +36,27 @@ const allTypes = [
 ];
 
 
+/**working /comp */
 
 // app.get('/components', (req, res) => {
 //     const { sourceAlias } = req.query;
 //     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
 //     const safeTypes = [
-//         'OmniScript',
-//         'FlexCard',
-//         'DataRaptor',
-//         'IntegrationProcedure',
-//         'OmniStudioTrackingService',
-//         'VlocityUILayout',
-//         'VlocityUITemplate',
-//         'CalculationMatrix',
-//         'CalculationProcedure'
+//         'OmniScript', 'FlexCard', 'DataRaptor', 'IntegrationProcedure',
+//         'OmniStudioTrackingService', 'VlocityUILayout', 'VlocityUITemplate',
+//         'CalculationMatrix', 'CalculationProcedure'
 //     ];
 
-//     //Clean previous folders
+//     const regularMetadataTypes = [
+//         { name: 'ApexClass', members: ['*'] },
+//         { name: 'ApexTrigger', members: ['*'] },
+//         { name: 'LightningComponentBundle', members: ['*'] }
+//     ];
+
+//     const summary = {};
+
+//     // 🔹 Export OmniStudio
 //     safeTypes.forEach(type => {
 //         const dirPath = path.join(__dirname, type);
 //         if (fs.existsSync(dirPath)) {
@@ -55,7 +64,6 @@ const allTypes = [
 //         }
 //     });
 
-//     // Build YAML config
 //     const yamlContent = {
 //         export: {},
 //         exportPacks: {
@@ -63,64 +71,554 @@ const allTypes = [
 //             autoAddDependencies: true
 //         }
 //     };
-
 //     safeTypes.forEach(type => {
 //         yamlContent.export[type] = {};
 //     });
-
-//     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
-//     const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
-//     console.log('Executing export command:', exportCmd);
+//     fs.writeFileSync('exportAllOmni.yaml', require('js-yaml').dump(yamlContent));
 
 //     try {
-//         const result = execSync(exportCmd, {
-//             encoding: 'utf-8',
-//             stdio: 'pipe'
-//         });
+//         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+//         execSync(exportCmd, { encoding: 'utf-8', stdio: 'pipe' });
 
-//         console.log('Export STDOUT:\n', result);
-
-//         // Collect components
-//         const summary = {};
 //         safeTypes.forEach(type => {
 //             const typeDir = path.join(__dirname, type);
 //             if (fs.existsSync(typeDir)) {
 //                 const entries = fs.readdirSync(typeDir).filter(entry =>
 //                     fs.statSync(path.join(typeDir, entry)).isDirectory()
 //                 );
-
 //                 summary[type] = entries;
 
 //                 entries.forEach(name => {
 //                     const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
 //                     if (fs.existsSync(jsonPath)) {
 //                         const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-//                         storage.saveComponent(sourceAlias, type, name, data);
+//                         // storage.saveComponent(sourceAlias, type, name, data);
+//                         saveComponentWithMetadata(sourceAlias, type, name, data);
 //                     }
 //                 });
 //             }
 //         });
+//     } catch (err) {
+//         console.error('OmniStudio export failed:', err.message);
+//     }
 
-//         summary.timestamp = new Date().toISOString();
-//         summary.sourceAlias = sourceAlias;
+//     // 🔹 Retrieve Regular Metadata (correct SFDX structure)
+//     const retrieveTempDir = path.join(__dirname, 'retrieved-metadata');
+//     const safeOutputDir = path.join(__dirname, 'sf-output');
+//     const outputPath = safeOutputDir;
 
-//         storage.saveIndex(sourceAlias, summary);
-//         return res.json(summary);
+//     fs.rmSync(retrieveTempDir, { recursive: true, force: true });
+//     fs.rmSync(safeOutputDir, { recursive: true, force: true });
+//     fs.mkdirSync(path.join(retrieveTempDir, 'force-app'), { recursive: true }); // required
+//     fs.mkdirSync(safeOutputDir, { recursive: true });
+
+//     const sfdxProjectJson = {
+//         packageDirectories: [{ path: 'force-app', default: true }],
+//         namespace: '',
+//         sourceApiVersion: '59.0'
+//     };
+//     fs.writeFileSync(
+//         path.join(retrieveTempDir, 'sfdx-project.json'),
+//         JSON.stringify(sfdxProjectJson, null, 2)
+//     );
+
+//     const packageXml = {
+//         Package: {
+//             types: regularMetadataTypes,
+//             version: '59.0'
+//         }
+//     };
+//     fs.writeFileSync(
+//         path.join(retrieveTempDir, 'package.xml'),
+//         xmlBuilder.create(packageXml).end({ pretty: true })
+//     );
+
+//     try {
+//         const retrieveCmd = `sf project retrieve start --manifest package.xml --target-org ${sourceAlias} --output-dir ${safeOutputDir}`;
+//         execSync(retrieveCmd, {
+//             cwd: retrieveTempDir,
+//             encoding: 'utf-8'
+
+//         });
+
+//         // if (fs.existsSync(outputPath)) {
+//         //     const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
+//         //         .flatMap(entry => {
+//         //             const subDir = path.join(outputPath, entry.name);
+//         //             return entry.isDirectory()
+//         //                 ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
+//         //                 : [entry.name];
+//         //         });
+//         //     summary['RegularMetadata'] = regularFiles;
+//         // } else {
+//         //     summary['RegularMetadata'] = ['No files retrieved or directory not created'];
+//         // }
+
+//         if (fs.existsSync(outputPath)) {
+//         const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
+//         .flatMap(entry => {
+//             const subDir = path.join(outputPath, entry.name);
+//             return entry.isDirectory()
+//                 ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
+//                 : [entry.name];
+//         });
+
+//     const categorized = {
+//         ApexClass: [],
+//         ApexTrigger: [],
+//         LightningComponentBundle: []
+//     };
+
+//     regularFiles.forEach(filePath => {
+//         if (filePath.startsWith('classes/') && filePath.endsWith('.cls')) {
+//             const name = path.basename(filePath, '.cls');
+//             if (!categorized.ApexClass.includes(name)) {
+//                 categorized.ApexClass.push(name);
+//             }
+//         } else if (filePath.startsWith('triggers/') && filePath.endsWith('.trigger')) {
+//             const name = path.basename(filePath, '.trigger');
+//             if (!categorized.ApexTrigger.includes(name)) {
+//                 categorized.ApexTrigger.push(name);
+//             }
+//         } else if (filePath.startsWith('lwc/')) {
+//             const name = filePath.split('/')[1];
+//             if (!categorized.LightningComponentBundle.includes(name)) {
+//                 categorized.LightningComponentBundle.push(name);
+//             }
+//         }
+//     });
+
+//     summary['RegularMetadata'] = categorized;
+//         Object.entries(categorized).forEach(([metaType, components]) => {
+//         components.forEach(name => {
+//         const regularKeyPath = path.join('RegularMetadata', metaType);
+//         // storage.saveComponent(sourceAlias, regularKeyPath, name, { name, type: metaType });
+//         saveComponentWithMetadata(sourceAlias, regularKeyPath, name, { name, type: metaType });
+
+//         });
+//     });
+//         } else {
+//             summary['RegularMetadata'] = {
+//                 ApexClass: [],
+//                 ApexTrigger: [],
+//                 LightningComponentBundle: []
+//             };
+//         }
 
 //     } catch (err) {
-//         console.error('Export failed');
-//         console.error('Message:', err.message);
-//         console.error('STDOUT:', err.stdout?.toString?.());
-//         console.error('STDERR:', err.stderr?.toString?.());
-
-//         return res.status(500).send('Export failed:\n' +
-//             (err.stderr?.toString?.() || err.message)
-//         );
+//         console.warn('Failed to retrieve regular metadata:', err.message);
+//         summary['RegularMetadata'] = [`Failed: ${err.message}`];
 //     }
+
+//     // Final response
+//     summary.timestamp = new Date().toISOString();
+//     summary.sourceAlias = sourceAlias;
+//     storage.saveIndex(sourceAlias, summary);
+//     return res.json(summary);
 // });
 
 
-app.get('/components', (req, res) => {
+/**working /comp for regular */
+// app.get('/components', async (req, res) => {
+//     const { sourceAlias } = req.query;
+//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+//     const safeTypes = [
+//         'OmniScript', 'FlexCard', 'DataRaptor', 'IntegrationProcedure',
+//         'OmniStudioTrackingService', 'VlocityUILayout', 'VlocityUITemplate',
+//         'CalculationMatrix', 'CalculationProcedure'
+//     ];
+
+//     const regularMetadataTypes = [
+//         { name: 'ApexClass', members: ['*'] },
+//         { name: 'ApexTrigger', members: ['*'] },
+//         { name: 'LightningComponentBundle', members: ['*'] }
+//     ];
+
+//     const summary = {};
+
+//     // 🔹 Export OmniStudio
+//     safeTypes.forEach(type => {
+//         const dirPath = path.join(__dirname, type);
+//         if (fs.existsSync(dirPath)) {
+//             fs.rmSync(dirPath, { recursive: true, force: true });
+//         }
+//     });
+
+//     const yamlContent = {
+//         export: {},
+//         exportPacks: {
+//             autoAddDependentFields: true,
+//             autoAddDependencies: true
+//         }
+//     };
+//     safeTypes.forEach(type => {
+//         yamlContent.export[type] = {};
+//     });
+//     fs.writeFileSync('exportAllOmni.yaml', require('js-yaml').dump(yamlContent));
+
+//     try {
+//         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+//         execSync(exportCmd, { encoding: 'utf-8', stdio: 'pipe' });
+
+//         safeTypes.forEach(type => {
+//             const typeDir = path.join(__dirname, type);
+//             if (fs.existsSync(typeDir)) {
+//                 const entries = fs.readdirSync(typeDir).filter(entry =>
+//                     fs.statSync(path.join(typeDir, entry)).isDirectory()
+//                 );
+//                 summary[type] = entries;
+
+//                 entries.forEach(name => {
+//                     const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
+//                     if (fs.existsSync(jsonPath)) {
+//                         const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+//                         saveComponentWithMetadata(sourceAlias, type, name, data);
+//                     }
+//                 });
+//             }
+//         });
+//     } catch (err) {
+//         console.error('OmniStudio export failed:', err.message);
+//     }
+
+//     // 🔹 Retrieve Regular Metadata
+//     const retrieveTempDir = path.join(__dirname, 'retrieved-metadata');
+//     const outputPath = path.join(__dirname, 'sf-output');
+
+//     fs.rmSync(retrieveTempDir, { recursive: true, force: true });
+//     fs.rmSync(outputPath, { recursive: true, force: true });
+//     fs.mkdirSync(path.join(retrieveTempDir, 'force-app'), { recursive: true });
+//     fs.mkdirSync(outputPath, { recursive: true });
+
+//     const sfdxProjectJson = {
+//         packageDirectories: [{ path: 'force-app', default: true }],
+//         namespace: '',
+//         sourceApiVersion: '59.0'
+//     };
+//     fs.writeFileSync(
+//         path.join(retrieveTempDir, 'sfdx-project.json'),
+//         JSON.stringify(sfdxProjectJson, null, 2)
+//     );
+
+//     const packageXml = {
+//         Package: {
+//             types: regularMetadataTypes,
+//             version: '59.0'
+//         }
+//     };
+//     fs.writeFileSync(
+//         path.join(retrieveTempDir, 'package.xml'),
+//         xmlBuilder.create(packageXml).end({ pretty: true })
+//     );
+
+//     const categorized = {
+//         ApexClass: [],
+//         ApexTrigger: [],
+//         LightningComponentBundle: []
+//     };
+
+//     try {
+//         const retrieveCmd = `sf project retrieve start --manifest package.xml --target-org ${sourceAlias} --output-dir ${outputPath}`;
+//         execSync(retrieveCmd, {
+//             cwd: retrieveTempDir,
+//             encoding: 'utf-8'
+//         });
+
+//         if (fs.existsSync(outputPath)) {
+//             const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
+//                 .flatMap(entry => {
+//                     const subDir = path.join(outputPath, entry.name);
+//                     return entry.isDirectory()
+//                         ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
+//                         : [entry.name];
+//                 });
+
+//             regularFiles.forEach(filePath => {
+//                 if (filePath.startsWith('classes/') && filePath.endsWith('.cls')) {
+//                     const name = path.basename(filePath, '.cls');
+//                     if (!categorized.ApexClass.includes(name)) {
+//                         categorized.ApexClass.push(name);
+//                     }
+//                 } else if (filePath.startsWith('triggers/') && filePath.endsWith('.trigger')) {
+//                     const name = path.basename(filePath, '.trigger');
+//                     if (!categorized.ApexTrigger.includes(name)) {
+//                         categorized.ApexTrigger.push(name);
+//                     }
+//                 } else if (filePath.startsWith('lwc/')) {
+//                     const name = filePath.split('/')[1];
+//                     if (!categorized.LightningComponentBundle.includes(name)) {
+//                         categorized.LightningComponentBundle.push(name);
+//                     }
+//                 }
+//             });
+
+//             // 🔑 Get auth token to fetch CreatedDate/ModifiedDate
+//             const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf-8' }));
+//             const { accessToken, instanceUrl } = authInfo.result;
+
+//             const allTimestamps = {};
+//             for (const [metaType, components] of Object.entries(categorized)) {
+//                 if (components.length > 0) {
+//                     const ts = await fetchMetadataDatesFromSalesforce(instanceUrl, accessToken, metaType, components);
+//                     allTimestamps[metaType] = ts;
+//                 }
+//             }
+
+//             // 💾 Save metadata and structure summary
+//             summary['RegularMetadata'] = {};
+//             Object.entries(categorized).forEach(([metaType, components]) => {
+//                 summary['RegularMetadata'][metaType] = components.map(name => {
+//                     const dateInfo = (allTimestamps[metaType] && allTimestamps[metaType][name]) || {};
+//                     saveComponentWithMetadata(sourceAlias, path.join('RegularMetadata', metaType), name, {
+//                         name,
+//                         type: metaType,
+//                         ...dateInfo
+//                     });
+//                     return {
+//                         name,
+//                         type: metaType,
+//                         ...dateInfo
+//                     };
+//                 });
+//             });
+
+//         } else {
+//             summary['RegularMetadata'] = {
+//                 ApexClass: [],
+//                 ApexTrigger: [],
+//                 LightningComponentBundle: []
+//             };
+//         }
+//     } catch (err) {
+//         console.warn('Failed to retrieve regular metadata:', err.message);
+//         summary['RegularMetadata'] = [`Failed: ${err.message}`];
+//     }
+
+//     // Final response
+//     summary.timestamp = new Date().toISOString();
+//     summary.sourceAlias = sourceAlias;
+//     storage.saveIndex(sourceAlias, summary);
+//     return res.json(summary);
+// });
+
+
+
+
+/**working /comp for regular latest code */
+// app.get('/components', async (req, res) => {
+//     const { sourceAlias } = req.query;
+//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+//     const safeTypes = [
+//         'OmniScript', 'FlexCard', 'DataRaptor', 'IntegrationProcedure',
+//         'OmniStudioTrackingService', 'VlocityUILayout', 'VlocityUITemplate',
+//         'CalculationMatrix', 'CalculationProcedure'
+//     ];
+
+//     const regularMetadataTypes = [
+//         { name: 'ApexClass', members: ['*'] },
+//         { name: 'ApexTrigger', members: ['*'] },
+//         { name: 'LightningComponentBundle', members: ['*'] }
+//     ];
+
+//     const summary = {};
+
+//     // 🔹 Export OmniStudio
+//     safeTypes.forEach(type => {
+//         const dirPath = path.join(__dirname, type);
+//         if (fs.existsSync(dirPath)) {
+//             fs.rmSync(dirPath, { recursive: true, force: true });
+//         }
+//     });
+
+//     const yamlContent = {
+//         export: {},
+//         exportPacks: {
+//             autoAddDependentFields: true,
+//             autoAddDependencies: true
+//         }
+//     };
+//     safeTypes.forEach(type => {
+//         yamlContent.export[type] = {};
+//     });
+//     fs.writeFileSync('exportAllOmni.yaml', require('js-yaml').dump(yamlContent));
+
+//     try {
+//         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+//         execSync(exportCmd, { encoding: 'utf-8', stdio: 'pipe' });
+
+//         safeTypes.forEach(type => {
+//             const typeDir = path.join(__dirname, type);
+//             if (fs.existsSync(typeDir)) {
+//                 const entries = fs.readdirSync(typeDir).filter(entry =>
+//                     fs.statSync(path.join(typeDir, entry)).isDirectory()
+//                 );
+//                 summary[type] = entries;
+
+//                 entries.forEach(name => {
+//                     const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
+//                     if (fs.existsSync(jsonPath)) {
+//                         const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+//                         storage.saveComponentWithMetadata(sourceAlias, type, name, data);
+//                     }
+//                 });
+//             }
+//         });
+//     } catch (err) {
+//         console.error('OmniStudio export failed:', err.message);
+//     }
+
+//     // 🔐 Get auth token to fetch CreatedDate/ModifiedDate
+//     let accessToken, instanceUrl;
+//     try {
+//         const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf-8' }));
+//         accessToken = authInfo.result.accessToken;
+//         instanceUrl = authInfo.result.instanceUrl;
+//     } catch (err) {
+//         console.error('Auth error:', err.message);
+//     }
+
+//     // 📅 Fetch OmniStudio timestamps
+//     try {
+//         for (const type of safeTypes) {
+//             if (summary[type] && summary[type].length > 0) {
+//                 const omniTimestamps = await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type]);
+//                 summary[type] = summary[type].map(name => {
+//                     const dateInfo = omniTimestamps[name] || {};
+//                     storage.saveComponentWithMetadata(sourceAlias, type, name, {
+//                         name,
+//                         type,
+//                         ...dateInfo
+//                     });
+//                     return {
+//                         name,
+//                         type,
+//                         ...dateInfo
+//                     };
+//                 });
+//             }
+//         }
+//     } catch (err) {
+//         console.warn('Failed to fetch OmniStudio component dates:', err.message);
+//     }
+
+//     // 🔹 Retrieve Regular Metadata
+//     const retrieveTempDir = path.join(__dirname, 'retrieved-metadata');
+//     const outputPath = path.join(__dirname, 'sf-output');
+
+//     fs.rmSync(retrieveTempDir, { recursive: true, force: true });
+//     fs.rmSync(outputPath, { recursive: true, force: true });
+//     fs.mkdirSync(path.join(retrieveTempDir, 'force-app'), { recursive: true });
+//     fs.mkdirSync(outputPath, { recursive: true });
+
+//     const sfdxProjectJson = {
+//         packageDirectories: [{ path: 'force-app', default: true }],
+//         namespace: '',
+//         sourceApiVersion: '59.0'
+//     };
+//     fs.writeFileSync(
+//         path.join(retrieveTempDir, 'sfdx-project.json'),
+//         JSON.stringify(sfdxProjectJson, null, 2)
+//     );
+
+//     const packageXml = {
+//         Package: {
+//             types: regularMetadataTypes,
+//             version: '59.0'
+//         }
+//     };
+//     fs.writeFileSync(
+//         path.join(retrieveTempDir, 'package.xml'),
+//         xmlBuilder.create(packageXml).end({ pretty: true })
+//     );
+
+//     const categorized = {
+//         ApexClass: [],
+//         ApexTrigger: [],
+//         LightningComponentBundle: []
+//     };
+
+//     try {
+//         const retrieveCmd = `sf project retrieve start --manifest package.xml --target-org ${sourceAlias} --output-dir ${outputPath}`;
+//         execSync(retrieveCmd, {
+//             cwd: retrieveTempDir,
+//             encoding: 'utf-8'
+//         });
+
+//         if (fs.existsSync(outputPath)) {
+//             const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
+//                 .flatMap(entry => {
+//                     const subDir = path.join(outputPath, entry.name);
+//                     return entry.isDirectory()
+//                         ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
+//                         : [entry.name];
+//                 });
+
+//             regularFiles.forEach(filePath => {
+//                 if (filePath.startsWith('classes/') && filePath.endsWith('.cls')) {
+//                     const name = path.basename(filePath, '.cls');
+//                     if (!categorized.ApexClass.includes(name)) {
+//                         categorized.ApexClass.push(name);
+//                     }
+//                 } else if (filePath.startsWith('triggers/') && filePath.endsWith('.trigger')) {
+//                     const name = path.basename(filePath, '.trigger');
+//                     if (!categorized.ApexTrigger.includes(name)) {
+//                         categorized.ApexTrigger.push(name);
+//                     }
+//                 } else if (filePath.startsWith('lwc/')) {
+//                     const name = filePath.split('/')[1];
+//                     if (!categorized.LightningComponentBundle.includes(name)) {
+//                         categorized.LightningComponentBundle.push(name);
+//                     }
+//                 }
+//             });
+
+//             const allTimestamps = {};
+//             for (const [metaType, components] of Object.entries(categorized)) {
+//                 if (components.length > 0) {
+//                     const ts = await storage.fetchMetadataDatesFromSalesforce(instanceUrl, accessToken, metaType, components);
+//                     allTimestamps[metaType] = ts;
+//                 }
+//             }
+
+//             summary['RegularMetadata'] = {};
+//             Object.entries(categorized).forEach(([metaType, components]) => {
+//                 summary['RegularMetadata'][metaType] = components.map(name => {
+//                     const dateInfo = (allTimestamps[metaType] && allTimestamps[metaType][name]) || {};
+//                     storage.saveComponentWithMetadata(sourceAlias, path.join('RegularMetadata', metaType), name, {
+//                         name,
+//                         type: metaType,
+//                         ...dateInfo
+//                     });
+//                     return {
+//                         name,
+//                         type: metaType,
+//                         ...dateInfo
+//                     };
+//                 });
+//             });
+
+//         } else {
+//             summary['RegularMetadata'] = {
+//                 ApexClass: [],
+//                 ApexTrigger: [],
+//                 LightningComponentBundle: []
+//             };
+//         }
+//     } catch (err) {
+//         console.warn('Failed to retrieve regular metadata:', err.message);
+//         summary['RegularMetadata'] = [`Failed: ${err.message}`];
+//     }
+
+//     // Final response
+//     summary.timestamp = new Date().toISOString();
+//     summary.sourceAlias = sourceAlias;
+//     storage.saveIndex(sourceAlias, summary);
+//     return res.json(summary);
+// });
+
+app.get('/components', async (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
@@ -137,8 +635,9 @@ app.get('/components', (req, res) => {
     ];
 
     const summary = {};
+    const omniScriptKeyMap = {}; // Map: 'Type_Subtype_Language' → 'Name'
 
-    // 🔹 Export OmniStudio
+    // Clean existing folders
     safeTypes.forEach(type => {
         const dirPath = path.join(__dirname, type);
         if (fs.existsSync(dirPath)) {
@@ -146,6 +645,7 @@ app.get('/components', (req, res) => {
         }
     });
 
+    // YAML config
     const yamlContent = {
         export: {},
         exportPacks: {
@@ -153,45 +653,108 @@ app.get('/components', (req, res) => {
             autoAddDependencies: true
         }
     };
-    safeTypes.forEach(type => {
-        yamlContent.export[type] = {};
-    });
+    safeTypes.forEach(type => yamlContent.export[type] = {});
     fs.writeFileSync('exportAllOmni.yaml', require('js-yaml').dump(yamlContent));
 
     try {
         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
         execSync(exportCmd, { encoding: 'utf-8', stdio: 'pipe' });
 
-        safeTypes.forEach(type => {
+        for (const type of safeTypes) {
             const typeDir = path.join(__dirname, type);
-            if (fs.existsSync(typeDir)) {
-                const entries = fs.readdirSync(typeDir).filter(entry =>
-                    fs.statSync(path.join(typeDir, entry)).isDirectory()
-                );
-                summary[type] = entries;
+            if (!fs.existsSync(typeDir)) continue;
 
-                entries.forEach(name => {
-                    const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
-                    if (fs.existsSync(jsonPath)) {
-                        const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-                        storage.saveComponent(sourceAlias, type, name, data);
+            const entries = fs.readdirSync(typeDir).filter(entry =>
+                fs.statSync(path.join(typeDir, entry)).isDirectory()
+            );
+            summary[type] = entries;
+
+            for (const name of entries) {
+                const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
+                if (!fs.existsSync(jsonPath)) continue;
+
+                const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+                storage.saveComponentWithMetadata(sourceAlias, type, name, data);
+
+                // Debug only a sample
+                // if (name === 'Case_Create_English') {
+                //     console.log(`Raw JSON dump for '${name}':`);
+                //     console.dir(data, { depth: null });
+                // }
+
+                if (type === 'OmniScript') {
+                    const isOmni = data?.OmniProcessType === 'OmniScript';
+                    const omniName = data?.Name;
+                    const lang = data?.Language;
+                    const subType = data?.SubType;
+                    const omniType = data?.Type;
+
+                    if (isOmni && omniName && lang && subType && omniType) {
+                        const key = `${omniType}_${subType}_${lang}`;
+                        omniScriptKeyMap[key] = omniName;
+
+                        console.log('OmniScript Extracted:', {
+                            cliFolder: name,
+                            key,
+                            nameInSF: omniName,
+                            language: lang
+                        });
+                    } else {
+                        console.warn(`Missing OmniScript fields for ${name}:`, {
+                            isOmni, omniName, lang, subType, omniType
+                        });
                     }
-                });
+                }
             }
-        });
+        }
     } catch (err) {
         console.error('OmniStudio export failed:', err.message);
     }
 
-    // 🔹 Retrieve Regular Metadata (correct SFDX structure)
-    const retrieveTempDir = path.join(__dirname, 'retrieved-metadata');
-    const safeOutputDir = path.join(__dirname, 'sf-output');
-    const outputPath = safeOutputDir;
+    // Auth
+    let accessToken, instanceUrl;
+    try {
+        const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf-8' }));
+        accessToken = authInfo.result.accessToken;
+        instanceUrl = authInfo.result.instanceUrl;
+    } catch (err) {
+        console.error('Auth error:', err.message);
+    }
 
+    // Fetch Omni component timestamps
+    try {
+        for (const type of safeTypes) {
+            if (summary[type] && summary[type].length > 0) {
+                const timestampMap = (type === 'OmniScript')
+                    ? await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type], omniScriptKeyMap)
+                    : await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type]);
+
+                summary[type] = summary[type].map(name => {
+                    const dateInfo = timestampMap[name] || {};
+                    storage.saveComponentWithMetadata(sourceAlias, type, name, {
+                        name,
+                        type,
+                        ...dateInfo
+                    });
+                    return {
+                        name,
+                        type,
+                        ...dateInfo
+                    };
+                });
+            }
+        }
+    } catch (err) {
+        console.warn('Failed to fetch OmniStudio component dates:', err.message);
+    }
+
+    // Regular metadata (unchanged)
+    const retrieveTempDir = path.join(__dirname, 'retrieved-metadata');
+    const outputPath = path.join(__dirname, 'sf-output');
     fs.rmSync(retrieveTempDir, { recursive: true, force: true });
-    fs.rmSync(safeOutputDir, { recursive: true, force: true });
-    fs.mkdirSync(path.join(retrieveTempDir, 'force-app'), { recursive: true }); // required
-    fs.mkdirSync(safeOutputDir, { recursive: true });
+    fs.rmSync(outputPath, { recursive: true, force: true });
+    fs.mkdirSync(path.join(retrieveTempDir, 'force-app'), { recursive: true });
+    fs.mkdirSync(outputPath, { recursive: true });
 
     const sfdxProjectJson = {
         packageDirectories: [{ path: 'force-app', default: true }],
@@ -214,88 +777,73 @@ app.get('/components', (req, res) => {
         xmlBuilder.create(packageXml).end({ pretty: true })
     );
 
-    try {
-        const retrieveCmd = `sf project retrieve start --manifest package.xml --target-org ${sourceAlias} --output-dir ${safeOutputDir}`;
-        execSync(retrieveCmd, {
-            cwd: retrieveTempDir,
-            encoding: 'utf-8'
-
-        });
-
-        // if (fs.existsSync(outputPath)) {
-        //     const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
-        //         .flatMap(entry => {
-        //             const subDir = path.join(outputPath, entry.name);
-        //             return entry.isDirectory()
-        //                 ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
-        //                 : [entry.name];
-        //         });
-        //     summary['RegularMetadata'] = regularFiles;
-        // } else {
-        //     summary['RegularMetadata'] = ['No files retrieved or directory not created'];
-        // }
-
-        if (fs.existsSync(outputPath)) {
-        const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
-        .flatMap(entry => {
-            const subDir = path.join(outputPath, entry.name);
-            return entry.isDirectory()
-                ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
-                : [entry.name];
-        });
-
     const categorized = {
         ApexClass: [],
         ApexTrigger: [],
         LightningComponentBundle: []
     };
 
-    regularFiles.forEach(filePath => {
-        if (filePath.startsWith('classes/') && filePath.endsWith('.cls')) {
-            const name = path.basename(filePath, '.cls');
-            if (!categorized.ApexClass.includes(name)) {
+    try {
+        const retrieveCmd = `sf project retrieve start --manifest package.xml --target-org ${sourceAlias} --output-dir ${outputPath}`;
+        execSync(retrieveCmd, { cwd: retrieveTempDir, encoding: 'utf-8' });
+
+        const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
+            .flatMap(entry => {
+                const subDir = path.join(outputPath, entry.name);
+                return entry.isDirectory()
+                    ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
+                    : [entry.name];
+            });
+
+        regularFiles.forEach(filePath => {
+            if (filePath.startsWith('classes/') && filePath.endsWith('.cls')) {
+                const name = path.basename(filePath, '.cls');
                 categorized.ApexClass.push(name);
-            }
-        } else if (filePath.startsWith('triggers/') && filePath.endsWith('.trigger')) {
-            const name = path.basename(filePath, '.trigger');
-            if (!categorized.ApexTrigger.includes(name)) {
+            } else if (filePath.startsWith('triggers/') && filePath.endsWith('.trigger')) {
+                const name = path.basename(filePath, '.trigger');
                 categorized.ApexTrigger.push(name);
-            }
-        } else if (filePath.startsWith('lwc/')) {
-            const name = filePath.split('/')[1];
-            if (!categorized.LightningComponentBundle.includes(name)) {
+            } else if (filePath.startsWith('lwc/')) {
+                const name = filePath.split('/')[1];
                 categorized.LightningComponentBundle.push(name);
             }
-        }
-    });
-
-    summary['RegularMetadata'] = categorized;
-        Object.entries(categorized).forEach(([metaType, components]) => {
-        components.forEach(name => {
-        const regularKeyPath = path.join('RegularMetadata', metaType);
-        storage.saveComponent(sourceAlias, regularKeyPath, name, { name, type: metaType });
-
         });
-    });
-        } else {
-            summary['RegularMetadata'] = {
-                ApexClass: [],
-                ApexTrigger: [],
-                LightningComponentBundle: []
-            };
+
+        const allTimestamps = {};
+        for (const [metaType, components] of Object.entries(categorized)) {
+            if (components.length > 0) {
+                const ts = await storage.fetchMetadataDatesFromSalesforce(instanceUrl, accessToken, metaType, components);
+                allTimestamps[metaType] = ts;
+            }
         }
+
+        summary['RegularMetadata'] = {};
+        Object.entries(categorized).forEach(([metaType, components]) => {
+            summary['RegularMetadata'][metaType] = components.map(name => {
+                const dateInfo = (allTimestamps[metaType] && allTimestamps[metaType][name]) || {};
+                storage.saveComponentWithMetadata(sourceAlias, path.join('RegularMetadata', metaType), name, {
+                    name,
+                    type: metaType,
+                    ...dateInfo
+                });
+                return {
+                    name,
+                    type: metaType,
+                    ...dateInfo
+                };
+            });
+        });
 
     } catch (err) {
         console.warn('Failed to retrieve regular metadata:', err.message);
         summary['RegularMetadata'] = [`Failed: ${err.message}`];
     }
 
-    // Final response
     summary.timestamp = new Date().toISOString();
     summary.sourceAlias = sourceAlias;
     storage.saveIndex(sourceAlias, summary);
     return res.json(summary);
 });
+
 
 
 // GET: View stored components
@@ -307,6 +855,8 @@ app.get('/stored-components', (req, res) => {
     if (!index) return res.status(404).send('No stored components found');
     res.json(index);
 });
+
+
 
 
 app.post('/deploy', async (req, res) => {
