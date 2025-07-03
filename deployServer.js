@@ -729,21 +729,36 @@ app.get('/components', async (req, res) => {
                     ? await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type], omniScriptKeyMap)
                     : await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type]);
 
+                // summary[type] = summary[type].map(name => {
+                //     const dateInfo = timestampMap[name] || {};
+                //     storage.saveComponentWithMetadata(sourceAlias, type, name, {
+                //         name,
+                //         type,
+                //         ...dateInfo
+                //     });
+                //     return {
+                //         name,
+                //         type,
+                //         ...dateInfo
+                //     };
+                // });
+
                 summary[type] = summary[type].map(name => {
-                    const dateInfo = timestampMap[name] || {};
-                    storage.saveComponentWithMetadata(sourceAlias, type, name, {
-                        name,
-                        type,
-                        ...dateInfo
-                    });
-                    return {
-                        name,
-                        type,
-                        ...dateInfo
-                    };
-                });
-            }
-        }
+                const raw = timestampMap[name] || {};
+                const formatted = {
+                    name,
+                    type,
+                    createdDate: raw.createdDate,
+                    lastModifiedDate: raw.lastModifiedDate,
+                    createdDateFormatted: formatUserDate(raw.createdDate),
+                    lastModifiedDateFormatted: formatUserDate(raw.lastModifiedDate)
+                };
+                storage.saveComponentWithMetadata(sourceAlias, type, name, formatted);
+                return formatted;
+                            });
+
+                        }
+                    }
     } catch (err) {
         console.warn('Failed to fetch OmniStudio component dates:', err.message);
     }
