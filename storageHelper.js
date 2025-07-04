@@ -148,8 +148,10 @@ async function fetchMetadataDatesFromSalesforce(instanceUrl, accessToken, metaTy
             response.data.records.forEach(record => {
                 const nameKey = metaType === 'LightningComponentBundle' ? record.DeveloperName : record.Name;
                 timestamps[nameKey] = {
-                    createdDate: record.CreatedDate,
-                    lastModifiedDate: record.LastModifiedDate
+                    // createdDate: record.CreatedDate,
+                    // lastModifiedDate: record.LastModifiedDate
+                    createdDate: formatDate(record.CreatedDate),
+                    lastModifiedDate: formatDate(record.LastModifiedDate)
                 };
             });
         }
