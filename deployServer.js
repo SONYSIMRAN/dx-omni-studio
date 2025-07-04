@@ -862,14 +862,32 @@ app.get('/components', async (req, res) => {
 
 
 // GET: View stored components
+// app.get('/stored-components', (req, res) => {
+//     const { sourceAlias } = req.query;
+//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+//     const index = storage.getIndex(sourceAlias);
+//     if (!index) return res.status(404).send('No stored components found');
+//     res.json(index);
+// });
+
+
+// GET: View stored components (with timestamps)
 app.get('/stored-components', (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
-    const index = storage.getIndex(sourceAlias);
-    if (!index) return res.status(404).send('No stored components found');
-    res.json(index);
+    try {
+        const index = storage.getIndex(sourceAlias);
+        if (!index) return res.status(404).send('No stored components found');
+
+        return res.json(index);  // ✅ includes timestamps per your new logic
+    } catch (err) {
+        console.error('Error in /stored-components:', err);
+        return res.status(500).send('Internal server error');
+    }
 });
+
 
 
 
