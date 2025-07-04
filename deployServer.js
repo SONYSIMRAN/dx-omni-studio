@@ -16,6 +16,7 @@ const gitExportDir = './git-export';
 const {
     saveComponentWithMetadata,
     fetchOmniComponentDates,
+    formatDate,
     getComponentStatus
 } = require('./storageHelper');
 const STORAGE_DIR = path.join(__dirname, 'storage');
@@ -750,8 +751,8 @@ app.get('/components', async (req, res) => {
                     type,
                     createdDate: raw.createdDate,
                     lastModifiedDate: raw.lastModifiedDate,
-                    createdDateFormatted: formatUserDate(raw.createdDate),
-                    lastModifiedDateFormatted: formatUserDate(raw.lastModifiedDate)
+                    createdDateFormatted: formatDate(raw.createdDate),
+                    lastModifiedDateFormatted: formatDate(raw.lastModifiedDate)
                 };
                 storage.saveComponentWithMetadata(sourceAlias, type, name, formatted);
                 return formatted;

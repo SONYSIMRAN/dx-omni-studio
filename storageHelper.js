@@ -412,6 +412,7 @@ module.exports = {
     saveComponentWithMetadata,
     getComponentStatus,
     fetchMetadataDatesFromSalesforce,
+    formatDate,
     fetchOmniComponentDates
     //  getOmniStudioComponentDates,
     //  resolveOmniSObjectName,
