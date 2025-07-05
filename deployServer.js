@@ -876,172 +876,172 @@ app.post('/detect-dependencies', (req, res) => {
 // });
 
 
-app.get('/refresh-components', (req, res) => {
-    const { sourceAlias } = req.query;
-    if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+// app.get('/refresh-components', (req, res) => {
+//     const { sourceAlias } = req.query;
+//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
-    console.log(` Refreshing metadata from ${sourceAlias}...`);
+//     console.log(` Refreshing metadata from ${sourceAlias}...`);
 
-    const safeTypes = [
-        'OmniScript', 'FlexCard', 'DataRaptor', 'IntegrationProcedure',
-        'OmniStudioTrackingService', 'VlocityUILayout', 'VlocityUITemplate',
-        'CalculationMatrix', 'CalculationProcedure'
-    ];
+//     const safeTypes = [
+//         'OmniScript', 'FlexCard', 'DataRaptor', 'IntegrationProcedure',
+//         'OmniStudioTrackingService', 'VlocityUILayout', 'VlocityUITemplate',
+//         'CalculationMatrix', 'CalculationProcedure'
+//     ];
 
-    const regularMetadataTypes = [
-        { name: 'ApexClass', members: ['*'] },
-        { name: 'ApexTrigger', members: ['*'] },
-        { name: 'LightningComponentBundle', members: ['*'] }
-    ];
+//     const regularMetadataTypes = [
+//         { name: 'ApexClass', members: ['*'] },
+//         { name: 'ApexTrigger', members: ['*'] },
+//         { name: 'LightningComponentBundle', members: ['*'] }
+//     ];
 
-    const summary = {};
+//     const summary = {};
 
-    // Clean Omni folders
-    safeTypes.forEach(type => {
-        const dirPath = path.join(__dirname, type);
-        if (fs.existsSync(dirPath)) {
-            fs.rmSync(dirPath, { recursive: true, force: true });
-        }
-    });
+//     // Clean Omni folders
+//     safeTypes.forEach(type => {
+//         const dirPath = path.join(__dirname, type);
+//         if (fs.existsSync(dirPath)) {
+//             fs.rmSync(dirPath, { recursive: true, force: true });
+//         }
+//     });
 
-    // Step 1: Export Omni metadata
-    const yamlContent = {
-        export: {},
-        exportPacks: {
-            autoAddDependentFields: true,
-            autoAddDependencies: true
-        }
-    };
-    safeTypes.forEach(type => {
-        yamlContent.export[type] = {};
-    });
+//     // Step 1: Export Omni metadata
+//     const yamlContent = {
+//         export: {},
+//         exportPacks: {
+//             autoAddDependentFields: true,
+//             autoAddDependencies: true
+//         }
+//     };
+//     safeTypes.forEach(type => {
+//         yamlContent.export[type] = {};
+//     });
 
-    fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
-    const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
-    console.log('Executing:', exportCmd);
+//     fs.writeFileSync('exportAllOmni.yaml', yaml.dump(yamlContent));
+//     const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+//     console.log('Executing:', exportCmd);
 
-    try {
-        const result = execSync(exportCmd, { encoding: 'utf-8' });
-        console.log('Export complete');
+//     try {
+//         const result = execSync(exportCmd, { encoding: 'utf-8' });
+//         console.log('Export complete');
 
-        // Collect Omni metadata
-        safeTypes.forEach(type => {
-            const typeDir = path.join(__dirname, type);
-            if (fs.existsSync(typeDir)) {
-                const entries = fs.readdirSync(typeDir).filter(entry =>
-                    fs.statSync(path.join(typeDir, entry)).isDirectory()
-                );
-                summary[type] = entries;
+//         // Collect Omni metadata
+//         safeTypes.forEach(type => {
+//             const typeDir = path.join(__dirname, type);
+//             if (fs.existsSync(typeDir)) {
+//                 const entries = fs.readdirSync(typeDir).filter(entry =>
+//                     fs.statSync(path.join(typeDir, entry)).isDirectory()
+//                 );
+//                 summary[type] = entries;
 
-                entries.forEach(name => {
-                    const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
-                    if (fs.existsSync(jsonPath)) {
-                        const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-                        storage.saveComponent(sourceAlias, type, name, data);
-                    }
-                });
-            }
-        });
-    } catch (err) {
-        console.error('Refresh OmniStudio export failed:', err.message);
-    }
+//                 entries.forEach(name => {
+//                     const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
+//                     if (fs.existsSync(jsonPath)) {
+//                         const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+//                         storage.saveComponent(sourceAlias, type, name, data);
+//                     }
+//                 });
+//             }
+//         });
+//     } catch (err) {
+//         console.error('Refresh OmniStudio export failed:', err.message);
+//     }
 
-    // Step 2: Retrieve Regular Metadata
-    try {
-        const retrieveTempDir = path.join(__dirname, 'retrieved-metadata');
-        const safeOutputDir = path.join(__dirname, 'sf-output');
-        const outputPath = safeOutputDir;
+//     // Step 2: Retrieve Regular Metadata
+//     try {
+//         const retrieveTempDir = path.join(__dirname, 'retrieved-metadata');
+//         const safeOutputDir = path.join(__dirname, 'sf-output');
+//         const outputPath = safeOutputDir;
 
-        fs.rmSync(retrieveTempDir, { recursive: true, force: true });
-        fs.rmSync(safeOutputDir, { recursive: true, force: true });
-        fs.mkdirSync(path.join(retrieveTempDir, 'force-app'), { recursive: true });
-        fs.mkdirSync(safeOutputDir, { recursive: true });
+//         fs.rmSync(retrieveTempDir, { recursive: true, force: true });
+//         fs.rmSync(safeOutputDir, { recursive: true, force: true });
+//         fs.mkdirSync(path.join(retrieveTempDir, 'force-app'), { recursive: true });
+//         fs.mkdirSync(safeOutputDir, { recursive: true });
 
-        const sfdxProjectJson = {
-            packageDirectories: [{ path: 'force-app', default: true }],
-            namespace: '',
-            sourceApiVersion: '59.0'
-        };
-        fs.writeFileSync(
-            path.join(retrieveTempDir, 'sfdx-project.json'),
-            JSON.stringify(sfdxProjectJson, null, 2)
-        );
+//         const sfdxProjectJson = {
+//             packageDirectories: [{ path: 'force-app', default: true }],
+//             namespace: '',
+//             sourceApiVersion: '59.0'
+//         };
+//         fs.writeFileSync(
+//             path.join(retrieveTempDir, 'sfdx-project.json'),
+//             JSON.stringify(sfdxProjectJson, null, 2)
+//         );
 
-        const packageXml = {
-            Package: {
-                types: regularMetadataTypes,
-                version: '59.0'
-            }
-        };
-        fs.writeFileSync(
-            path.join(retrieveTempDir, 'package.xml'),
-            xmlBuilder.create(packageXml).end({ pretty: true })
-        );
+//         const packageXml = {
+//             Package: {
+//                 types: regularMetadataTypes,
+//                 version: '59.0'
+//             }
+//         };
+//         fs.writeFileSync(
+//             path.join(retrieveTempDir, 'package.xml'),
+//             xmlBuilder.create(packageXml).end({ pretty: true })
+//         );
 
-        const retrieveCmd = `sf project retrieve start --manifest package.xml --target-org ${sourceAlias} --output-dir ${safeOutputDir}`;
-        execSync(retrieveCmd, {
-            cwd: retrieveTempDir,
-            encoding: 'utf-8'
-        });
+//         const retrieveCmd = `sf project retrieve start --manifest package.xml --target-org ${sourceAlias} --output-dir ${safeOutputDir}`;
+//         execSync(retrieveCmd, {
+//             cwd: retrieveTempDir,
+//             encoding: 'utf-8'
+//         });
 
-        if (fs.existsSync(outputPath)) {
-            const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
-                .flatMap(entry => {
-                    const subDir = path.join(outputPath, entry.name);
-                    return entry.isDirectory()
-                        ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
-                        : [entry.name];
-                });
+//         if (fs.existsSync(outputPath)) {
+//             const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
+//                 .flatMap(entry => {
+//                     const subDir = path.join(outputPath, entry.name);
+//                     return entry.isDirectory()
+//                         ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
+//                         : [entry.name];
+//                 });
 
-            const categorized = {
-                ApexClass: [],
-                ApexTrigger: [],
-                LightningComponentBundle: []
-            };
+//             const categorized = {
+//                 ApexClass: [],
+//                 ApexTrigger: [],
+//                 LightningComponentBundle: []
+//             };
 
-            regularFiles.forEach(filePath => {
-                if (filePath.startsWith('classes/') && filePath.endsWith('.cls')) {
-                    const name = path.basename(filePath, '.cls');
-                    if (!categorized.ApexClass.includes(name)) {
-                        categorized.ApexClass.push(name);
-                    }
-                } else if (filePath.startsWith('triggers/') && filePath.endsWith('.trigger')) {
-                    const name = path.basename(filePath, '.trigger');
-                    if (!categorized.ApexTrigger.includes(name)) {
-                        categorized.ApexTrigger.push(name);
-                    }
-                } else if (filePath.startsWith('lwc/')) {
-                    const name = filePath.split('/')[1];
-                    if (!categorized.LightningComponentBundle.includes(name)) {
-                        categorized.LightningComponentBundle.push(name);
-                    }
-                }
-            });
+//             regularFiles.forEach(filePath => {
+//                 if (filePath.startsWith('classes/') && filePath.endsWith('.cls')) {
+//                     const name = path.basename(filePath, '.cls');
+//                     if (!categorized.ApexClass.includes(name)) {
+//                         categorized.ApexClass.push(name);
+//                     }
+//                 } else if (filePath.startsWith('triggers/') && filePath.endsWith('.trigger')) {
+//                     const name = path.basename(filePath, '.trigger');
+//                     if (!categorized.ApexTrigger.includes(name)) {
+//                         categorized.ApexTrigger.push(name);
+//                     }
+//                 } else if (filePath.startsWith('lwc/')) {
+//                     const name = filePath.split('/')[1];
+//                     if (!categorized.LightningComponentBundle.includes(name)) {
+//                         categorized.LightningComponentBundle.push(name);
+//                     }
+//                 }
+//             });
 
-            summary['RegularMetadata'] = categorized;
-            Object.entries(categorized).forEach(([metaType, components]) => {
-                components.forEach(name => {
-                    const regularKeyPath = path.join('RegularMetadata', metaType);
-                    storage.saveComponent(sourceAlias, regularKeyPath, name, { name, type: metaType });
-                });
-            });
-        } else {
-            summary['RegularMetadata'] = {
-                ApexClass: [],
-                ApexTrigger: [],
-                LightningComponentBundle: []
-            };
-        }
-    } catch (err) {
-        console.warn('Failed to retrieve regular metadata:', err.message);
-        summary['RegularMetadata'] = [`Failed: ${err.message}`];
-    }
+//             summary['RegularMetadata'] = categorized;
+//             Object.entries(categorized).forEach(([metaType, components]) => {
+//                 components.forEach(name => {
+//                     const regularKeyPath = path.join('RegularMetadata', metaType);
+//                     storage.saveComponent(sourceAlias, regularKeyPath, name, { name, type: metaType });
+//                 });
+//             });
+//         } else {
+//             summary['RegularMetadata'] = {
+//                 ApexClass: [],
+//                 ApexTrigger: [],
+//                 LightningComponentBundle: []
+//             };
+//         }
+//     } catch (err) {
+//         console.warn('Failed to retrieve regular metadata:', err.message);
+//         summary['RegularMetadata'] = [`Failed: ${err.message}`];
+//     }
 
-    summary.timestamp = new Date().toISOString();
-    summary.sourceAlias = sourceAlias;
-    storage.saveIndex(sourceAlias, summary);
-    return res.json(summary);
-});
+//     summary.timestamp = new Date().toISOString();
+//     summary.sourceAlias = sourceAlias;
+//     storage.saveIndex(sourceAlias, summary);
+//     return res.json(summary);
+// });
 
 
 // POST: Trigger GitLab pipeline
@@ -2613,6 +2613,30 @@ app.get('/stored-components', (req, res) => {
     } catch (err) {
         console.error('Error in /stored-components:', err);
         return res.status(500).send('Internal server error');
+    }
+});
+
+app.get('/refresh-components', async (req, res) => {
+    const { sourceAlias } = req.query;
+    if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+    try {
+        // Step 1: Trigger the full refresh (fetch + filter + save)
+        const refreshResponse = await axios.get(`http://localhost:3000/components`, {
+            params: { sourceAlias }
+        });
+
+        console.log(`Refresh complete for ${sourceAlias}. Proceeding to load stored components.`);
+
+        // Step 2: Now load filtered (only changed/new) components
+        const storedResponse = await axios.get(`http://localhost:3000/stored-components`, {
+            params: { sourceAlias }
+        });
+
+        return res.json(storedResponse.data);
+    } catch (err) {
+        console.error('Error in /refresh-components:', err.message);
+        return res.status(500).json({ error: 'Refresh failed', details: err.message });
     }
 });
 
