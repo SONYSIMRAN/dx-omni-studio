@@ -406,6 +406,25 @@ function formatDate(dateStr) {
 }
 
 
+function enrichWithDeploymentStatus(index, latestReleaseTimestamp) {
+    if (!index || !latestReleaseTimestamp) return index;
+
+    const latest = new Date(latestReleaseTimestamp);
+
+    for (const type of Object.keys(index)) {
+        index[type].forEach(component => {
+            const modDateStr = component.lastModifiedDate;
+            const modDate = modDateStr ? new Date(modDateStr) : null;
+
+            component.wasPreviouslyDeployed = true;
+            component.modifiedAfterDeployment = modDate ? modDate > latest : false;
+        });
+    }
+
+    return index;
+}
+
+
 // ---------- Export ----------
 module.exports = {
     saveComponent,
@@ -415,7 +434,8 @@ module.exports = {
     getComponentStatus,
     fetchMetadataDatesFromSalesforce,
     formatDate,
-    fetchOmniComponentDates
+    fetchOmniComponentDates,
+    enrichWithDeploymentStatus
     //  getOmniStudioComponentDates,
     //  resolveOmniSObjectName,
     // fetchOmniComponentDates
