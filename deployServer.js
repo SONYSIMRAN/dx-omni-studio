@@ -2289,6 +2289,22 @@ app.get('/components', async (req, res) => {
     const summary = {};
     const omniScriptKeyMap = {};
 
+    // CLEAN STORAGE COMPONENT FOLDERS
+    const storagePath = path.join(__dirname, 'storage', sourceAlias);
+    for (const type of safeTypes) {
+        const folder = path.join(storagePath, type);
+        if (fs.existsSync(folder)) {
+            fs.rmSync(folder, { recursive: true, force: true });
+        }
+    }
+    const regTypes = ['ApexClass', 'ApexTrigger', 'LightningComponentBundle'];
+    for (const regType of regTypes) {
+        const folder = path.join(storagePath, 'RegularMetadata', regType);
+        if (fs.existsSync(folder)) {
+            fs.rmSync(folder, { recursive: true, force: true });
+        }
+    }
+
     // Read latest release info
     const releasesDir = path.join(__dirname, 'storage', sourceAlias, 'releases');
     let latestReleaseTime = null;
