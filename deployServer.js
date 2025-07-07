@@ -1868,8 +1868,8 @@ app.post('/deploy-and-git', async (req, res) => {
     const {
         sourceAlias,
         selectedComponents,
-        gitBranch = 'main',
-        commitMessage = 'Deploying new set of OmniStudio + Apex',
+        gitBranch,
+        commitMessage,
         releaseName
     } = req.body;
 
@@ -2022,7 +2022,8 @@ app.post('/deploy-and-git', async (req, res) => {
             deployedAtFormatted,
             deployedBy,
             sourceAlias,
-            components: flattenedComponents
+            components: flattenedComponents,
+            gitBranch
         };
 
         fs.writeFileSync(path.join(releaseFolder, 'release.json'), JSON.stringify(releaseMetadata, null, 2));
@@ -2656,6 +2657,102 @@ app.get('/refresh-components', async (req, res) => {
     }
 });
 
+app.get('/releases', (req, res) => {
+    const { sourceAlias, branch } = req.query;
+    if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+    const releasesDir = path.join(__dirname, 'storage', sourceAlias, 'releases');
+    if (!fs.existsSync(releasesDir)) {
+        return res.status(404).json({ message: 'No releases found' });
+    }
+
+    try {
+        const allReleases = fs.readdirSync(releasesDir)
+            .filter(f => f.endsWith('.json'))
+            .map(file => {
+                const filePath = path.join(releasesDir, file);
+                const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+                return {
+                    ...content,
+                    gitBranch: content.gitBranch || 'main'
+                };
+            });
+
+        const filteredReleases = branch
+            ? allReleases.filter(r => r.gitBranch === branch)
+            : allReleases;
+
+        // Group by gitBranch
+        const grouped = {};
+        for (const rel of filteredReleases) {
+            if (!grouped[rel.gitBranch]) grouped[rel.gitBranch] = [];
+            grouped[rel.gitBranch].push({
+                releaseId: rel.releaseId,
+                releaseName: rel.releaseName || '',
+                deployedAt: rel.deployedAt,
+                deployedAtFormatted: rel.deployedAtFormatted,
+                deployedBy: rel.deployedBy,
+                components: rel.components
+            });
+        }
+
+        // Sort each group by newest first
+        for (const b in grouped) {
+            grouped[b].sort((a, b) => new Date(b.deployedAt) - new Date(a.deployedAt));
+        }
+
+        return res.json({
+            status: 'success',
+            sourceAlias,
+            filterBranch: branch || null,
+            branches: Object.keys(grouped),
+            releases: grouped
+        });
+    } catch (err) {
+        console.error('Error reading releases:', err);
+        return res.status(500).json({ status: 'error', message: 'Failed to read releases' });
+    }
+});
+
+
+app.post('/redeploy-release', async (req, res) => {
+    const { sourceAlias, releaseId, gitBranch = 'main' } = req.body;
+    if (!sourceAlias || !releaseId) {
+        return res.status(400).json({ status: 'error', message: 'Missing sourceAlias or releaseId' });
+    }
+
+    const releaseFile = path.join(__dirname, 'storage', sourceAlias, 'releases', `${releaseId}.json`);
+    if (!fs.existsSync(releaseFile)) {
+        return res.status(404).json({ status: 'error', message: `Release ${releaseId} not found` });
+    }
+
+    try {
+        const releaseData = JSON.parse(fs.readFileSync(releaseFile, 'utf-8'));
+        const selectedComponents = releaseData.components;
+        const commitMessage = `Re-deploying previous release: ${releaseData.releaseName || releaseId}`;
+        const releaseName = releaseData.releaseName;
+
+        // Reuse the deploy-and-git logic via local call
+        const deployRes = await axios.post(`http://localhost:3000/deploy-and-git`, {
+            sourceAlias,
+            selectedComponents,
+            gitBranch,
+            commitMessage,
+            releaseName
+        });
+
+        return res.status(200).json({
+            status: 'success',
+            redeployedFrom: releaseId,
+            newRelease: deployRes.data.release,
+            pipeline: deployRes.data.pipeline
+        });
+
+    } catch (err) {
+        console.error('Re-deploy failed:', err.message || err);
+        return res.status(500).json({ status: 'error', message: err.message || 'Redeploy failed' });
+    }
+});
 
 
 // Start server
