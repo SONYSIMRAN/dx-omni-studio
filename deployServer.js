@@ -3367,7 +3367,9 @@ app.post('/analyze-class', async (req, res) => {
     fs.writeFileSync(filePath, code);
 
     const analysis = await new Promise((resolve) => {
-      const cmd = `sfdx scanner:run --engine pmd --target ${filePath} --format json`;
+    //   const cmd = `sfdx scanner:run --engine pmd --target ${filePath} --format json`;
+      const cmd = `sfdx scanner:run --target ${filePath} --format json`;
+
       exec(cmd, { timeout: 60000 }, (err, stdout, stderr) => {
         fs.unlinkSync(filePath); // Cleanup
 
