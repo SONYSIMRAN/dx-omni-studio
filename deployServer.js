@@ -3335,6 +3335,118 @@ app.get('/components', async (req, res) => {
     return res.json(summary);
 });
 
+// app.post('/analyze-class', async (req, res) => {
+//   let { className, sourceAlias } = req.body;
+
+//   if (!className || !sourceAlias) {
+//     return res.status(400).json({ status: 'error', message: 'Missing className or sourceAlias' });
+//   }
+
+//   className = className.replace(/\.cls$/i, ''); // Strip ".cls" if passed
+
+//   try {
+//     // Authenticate
+//     const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf8' }));
+//     const accessToken = authInfo.result.accessToken;
+//     const instanceUrl = authInfo.result.instanceUrl;
+
+//     // Fetch class body
+//     const queryUrl = `${instanceUrl}/services/data/v59.0/tooling/query?q=${encodeURIComponent(`SELECT Body FROM ApexClass WHERE Name = '${className}'`)}`;
+//     const headers = { Authorization: `Bearer ${accessToken}` };
+//     const response = await axios.get(queryUrl, { headers });
+
+//     if (!response.data.records || response.data.records.length === 0) {
+//       return res.status(404).json({ status: 'error', message: `Apex class ${className} not found in org.` });
+//     }
+
+//     const code = response.data.records[0].Body;
+//     const timestamp = Date.now();
+//     const filePath = `./temp/${timestamp}_${className}.cls`;
+
+//     fs.mkdirSync('./temp', { recursive: true });
+//     fs.writeFileSync(filePath, code);
+
+//     const analysis = await new Promise((resolve) => {
+//     //   const cmd = `sfdx scanner:run --engine pmd --target ${filePath} --format json`;
+//       const cmd = `sfdx scanner:run --target ${filePath} --format json`;
+
+//       exec(cmd, { timeout: 60000 }, (err, stdout, stderr) => {
+//         fs.unlinkSync(filePath); // Cleanup
+
+//         if (err || !stdout) {
+//           console.error(`Scanner failed for ${className}:`, stderr || err.message);
+//           return resolve({ fileName: className, error: stderr || err.message });
+//         }
+
+//         try {
+//           const parsed = JSON.parse(stdout);
+//           parsed.forEach(result => {
+//             const violations = result.violations || [];
+//             let high = 0, medium = 0, low = 0;
+//             violations.forEach(v => {
+//               const sev = parseInt(v.severity, 10);
+//               if (sev === 1) high++;
+//               else if (sev === 2) medium++;
+//               else low++;
+//             });
+//             const deduction = high * 10 + medium * 5 + low;
+//             result.score = Math.max(0, 100 - deduction);
+//           });
+
+//           const scores = parsed.map(r => r.score).filter(s => typeof s === 'number');
+//           const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 100;
+
+//           let grade = 'D';
+//           if (avgScore >= 90) grade = 'A';
+//           else if (avgScore >= 75) grade = 'B';
+//           else if (avgScore >= 60) grade = 'C';
+
+//           const violations = parsed.flatMap(r => r.violations || []);
+
+//           // Custom Metrics
+//           const metrics = {
+//             coverage: className.toLowerCase().includes('test') || violations.some(v =>
+//               v.ruleName.toLowerCase().includes('test')) ? 100 : 0,
+
+//             automation: violations.some(v => v.ruleName === 'ApexUnitTestClassShouldHaveAsserts') ? 50 : 100,
+
+//             performance: Math.max(0, 100 - violations.filter(v =>
+//               ['AvoidSoqlInLoops', 'AvoidDmlStatementsInLoops', 'AvoidDeeplyNestedIfStmts'].includes(v.ruleName)).length * 10),
+
+//             dependency: Math.max(0, 100 - violations.filter(v =>
+//               ['ApexPublicMethodUnused', 'ExcessiveImports', 'TooManyFields'].includes(v.ruleName)).length * 10)
+//           };
+
+//           resolve({
+//             status: 'success',
+//             className,
+//             grade,
+//             score: avgScore,
+//             metrics,
+//             violations,
+//             results: parsed
+//           });
+
+//         } catch (e) {
+//           console.error('Failed to parse scanner output:', stdout);
+//           resolve({ fileName: className, error: 'Failed to parse scanner output' });
+//         }
+//       });
+//     });
+
+//     return res.json(analysis);
+
+//   } catch (err) {
+//     console.error('Analyzer error:', err.message || err);
+//     return res.status(500).json({
+//       status: 'error',
+//       message: err.message || 'Failed to analyze Apex class'
+//     });
+//   }
+// });
+
+
+
 app.post('/analyze-class', async (req, res) => {
   let { className, sourceAlias } = req.body;
 
@@ -3342,105 +3454,41 @@ app.post('/analyze-class', async (req, res) => {
     return res.status(400).json({ status: 'error', message: 'Missing className or sourceAlias' });
   }
 
-  className = className.replace(/\.cls$/i, ''); // Strip ".cls" if passed
+  className = className.replace(/\.cls$/i, '');
 
   try {
-    // Authenticate
+    // Authenticate and get org info
     const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf8' }));
     const accessToken = authInfo.result.accessToken;
     const instanceUrl = authInfo.result.instanceUrl;
 
-    // Fetch class body
-    const queryUrl = `${instanceUrl}/services/data/v59.0/tooling/query?q=${encodeURIComponent(`SELECT Body FROM ApexClass WHERE Name = '${className}'`)}`;
+    // Fetch Apex class body
+    const query = `SELECT Body FROM ApexClass WHERE Name = '${className}'`;
+    const queryUrl = `${instanceUrl}/services/data/v59.0/tooling/query?q=${encodeURIComponent(query)}`;
     const headers = { Authorization: `Bearer ${accessToken}` };
     const response = await axios.get(queryUrl, { headers });
 
     if (!response.data.records || response.data.records.length === 0) {
-      return res.status(404).json({ status: 'error', message: `Apex class ${className} not found in org.` });
+      return res.status(404).json({ status: 'error', message: `Apex class ${className} not found.` });
     }
 
     const code = response.data.records[0].Body;
-    const timestamp = Date.now();
-    const filePath = `./temp/${timestamp}_${className}.cls`;
 
-    fs.mkdirSync('./temp', { recursive: true });
-    fs.writeFileSync(filePath, code);
-
-    const analysis = await new Promise((resolve) => {
-    //   const cmd = `sfdx scanner:run --engine pmd --target ${filePath} --format json`;
-      const cmd = `sfdx scanner:run --target ${filePath} --format json`;
-
-      exec(cmd, { timeout: 60000 }, (err, stdout, stderr) => {
-        fs.unlinkSync(filePath); // Cleanup
-
-        if (err || !stdout) {
-          console.error(`Scanner failed for ${className}:`, stderr || err.message);
-          return resolve({ fileName: className, error: stderr || err.message });
-        }
-
-        try {
-          const parsed = JSON.parse(stdout);
-          parsed.forEach(result => {
-            const violations = result.violations || [];
-            let high = 0, medium = 0, low = 0;
-            violations.forEach(v => {
-              const sev = parseInt(v.severity, 10);
-              if (sev === 1) high++;
-              else if (sev === 2) medium++;
-              else low++;
-            });
-            const deduction = high * 10 + medium * 5 + low;
-            result.score = Math.max(0, 100 - deduction);
-          });
-
-          const scores = parsed.map(r => r.score).filter(s => typeof s === 'number');
-          const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 100;
-
-          let grade = 'D';
-          if (avgScore >= 90) grade = 'A';
-          else if (avgScore >= 75) grade = 'B';
-          else if (avgScore >= 60) grade = 'C';
-
-          const violations = parsed.flatMap(r => r.violations || []);
-
-          // Custom Metrics
-          const metrics = {
-            coverage: className.toLowerCase().includes('test') || violations.some(v =>
-              v.ruleName.toLowerCase().includes('test')) ? 100 : 0,
-
-            automation: violations.some(v => v.ruleName === 'ApexUnitTestClassShouldHaveAsserts') ? 50 : 100,
-
-            performance: Math.max(0, 100 - violations.filter(v =>
-              ['AvoidSoqlInLoops', 'AvoidDmlStatementsInLoops', 'AvoidDeeplyNestedIfStmts'].includes(v.ruleName)).length * 10),
-
-            dependency: Math.max(0, 100 - violations.filter(v =>
-              ['ApexPublicMethodUnused', 'ExcessiveImports', 'TooManyFields'].includes(v.ruleName)).length * 10)
-          };
-
-          resolve({
-            status: 'success',
-            className,
-            grade,
-            score: avgScore,
-            metrics,
-            violations,
-            results: parsed
-          });
-
-        } catch (e) {
-          console.error('Failed to parse scanner output:', stdout);
-          resolve({ fileName: className, error: 'Failed to parse scanner output' });
-        }
-      });
+    // Return the code and metadata
+    return res.json({
+      status: 'success',
+      className,
+      fileName: `classes/${className}.cls`,
+      type: 'ApexClass',
+      sourceAlias,
+      code
     });
 
-    return res.json(analysis);
-
   } catch (err) {
-    console.error('Analyzer error:', err.message || err);
+    console.error('Fetch Apex class error:', err.message || err);
     return res.status(500).json({
       status: 'error',
-      message: err.message || 'Failed to analyze Apex class'
+      message: err.message || 'Failed to fetch Apex class'
     });
   }
 });
