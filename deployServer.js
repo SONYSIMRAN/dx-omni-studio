@@ -2491,258 +2491,258 @@ app.post('/redeploy-rollback', async (req, res) => {
 
 
 
-app.get('/components', async (req, res) => {
-    const { sourceAlias } = req.query;
-    if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+// app.get('/components', async (req, res) => {
+//     const { sourceAlias } = req.query;
+//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
-    const safeTypes = [
-        'OmniScript', 'FlexCard', 'DataRaptor', 'IntegrationProcedure',
-        'OmniStudioTrackingService', 'VlocityUILayout', 'VlocityUITemplate',
-        'CalculationMatrix', 'CalculationProcedure'
-    ];
+//     const safeTypes = [
+//         'OmniScript', 'FlexCard', 'DataRaptor', 'IntegrationProcedure',
+//         'OmniStudioTrackingService', 'VlocityUILayout', 'VlocityUITemplate',
+//         'CalculationMatrix', 'CalculationProcedure'
+//     ];
 
-    const regularMetadataTypes = [
-        { name: 'ApexClass', members: ['*'] },
-        { name: 'ApexTrigger', members: ['*'] },
-        { name: 'LightningComponentBundle', members: ['*'] }
-    ];
+//     const regularMetadataTypes = [
+//         { name: 'ApexClass', members: ['*'] },
+//         { name: 'ApexTrigger', members: ['*'] },
+//         { name: 'LightningComponentBundle', members: ['*'] }
+//     ];
 
-    const summary = {};
-    const omniScriptKeyMap = {};
+//     const summary = {};
+//     const omniScriptKeyMap = {};
 
-    // CLEAN STORAGE COMPONENT FOLDERS
-    const storagePath = path.join(__dirname, 'storage', sourceAlias);
-    for (const type of safeTypes) {
-        const folder = path.join(storagePath, type);
-        if (fs.existsSync(folder)) {
-            fs.rmSync(folder, { recursive: true, force: true });
-        }
-    }
-    const regTypes = ['ApexClass', 'ApexTrigger', 'LightningComponentBundle'];
-    for (const regType of regTypes) {
-        const folder = path.join(storagePath, 'RegularMetadata', regType);
-        if (fs.existsSync(folder)) {
-            fs.rmSync(folder, { recursive: true, force: true });
-        }
-    }
+//     // CLEAN STORAGE COMPONENT FOLDERS
+//     const storagePath = path.join(__dirname, 'storage', sourceAlias);
+//     for (const type of safeTypes) {
+//         const folder = path.join(storagePath, type);
+//         if (fs.existsSync(folder)) {
+//             fs.rmSync(folder, { recursive: true, force: true });
+//         }
+//     }
+//     const regTypes = ['ApexClass', 'ApexTrigger', 'LightningComponentBundle'];
+//     for (const regType of regTypes) {
+//         const folder = path.join(storagePath, 'RegularMetadata', regType);
+//         if (fs.existsSync(folder)) {
+//             fs.rmSync(folder, { recursive: true, force: true });
+//         }
+//     }
 
-    // Read latest release info
-    const releasesDir = path.join(__dirname, 'storage', sourceAlias, 'releases');
-    let latestReleaseTime = null;
-    let latestReleaseComponents = {};
-    if (fs.existsSync(releasesDir)) {
-        const releaseFiles = fs.readdirSync(releasesDir)
-            .filter(f => f.endsWith('.json'))
-            .map(f => path.join(releasesDir, f))
-            .sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime); // newest first
-        if (releaseFiles.length > 0) {
-            const latestRelease = JSON.parse(fs.readFileSync(releaseFiles[0], 'utf-8'));
-            latestReleaseTime = new Date(latestRelease.deployedAt);
-            latestReleaseComponents = latestRelease.components || {};
-        }
-    }
+//     // Read latest release info
+//     const releasesDir = path.join(__dirname, 'storage', sourceAlias, 'releases');
+//     let latestReleaseTime = null;
+//     let latestReleaseComponents = {};
+//     if (fs.existsSync(releasesDir)) {
+//         const releaseFiles = fs.readdirSync(releasesDir)
+//             .filter(f => f.endsWith('.json'))
+//             .map(f => path.join(releasesDir, f))
+//             .sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime); // newest first
+//         if (releaseFiles.length > 0) {
+//             const latestRelease = JSON.parse(fs.readFileSync(releaseFiles[0], 'utf-8'));
+//             latestReleaseTime = new Date(latestRelease.deployedAt);
+//             latestReleaseComponents = latestRelease.components || {};
+//         }
+//     }
 
-    // Clean folders
-    safeTypes.forEach(type => {
-        const dirPath = path.join(__dirname, type);
-        if (fs.existsSync(dirPath)) {
-            fs.rmSync(dirPath, { recursive: true, force: true });
-        }
-    });
+//     // Clean folders
+//     safeTypes.forEach(type => {
+//         const dirPath = path.join(__dirname, type);
+//         if (fs.existsSync(dirPath)) {
+//             fs.rmSync(dirPath, { recursive: true, force: true });
+//         }
+//     });
 
-    const yamlContent = {
-        export: {},
-        exportPacks: {
-            autoAddDependentFields: true,
-            autoAddDependencies: true
-        }
-    };
-    safeTypes.forEach(type => yamlContent.export[type] = {});
-    fs.writeFileSync('exportAllOmni.yaml', require('js-yaml').dump(yamlContent));
+//     const yamlContent = {
+//         export: {},
+//         exportPacks: {
+//             autoAddDependentFields: true,
+//             autoAddDependencies: true
+//         }
+//     };
+//     safeTypes.forEach(type => yamlContent.export[type] = {});
+//     fs.writeFileSync('exportAllOmni.yaml', require('js-yaml').dump(yamlContent));
 
-    try {
-        const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
-        execSync(exportCmd, { encoding: 'utf-8', stdio: 'pipe' });
+//     try {
+//         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+//         execSync(exportCmd, { encoding: 'utf-8', stdio: 'pipe' });
 
-        for (const type of safeTypes) {
-            const typeDir = path.join(__dirname, type);
-            if (!fs.existsSync(typeDir)) continue;
+//         for (const type of safeTypes) {
+//             const typeDir = path.join(__dirname, type);
+//             if (!fs.existsSync(typeDir)) continue;
 
-            const entries = fs.readdirSync(typeDir).filter(entry =>
-                fs.statSync(path.join(typeDir, entry)).isDirectory()
-            );
-            summary[type] = entries;
+//             const entries = fs.readdirSync(typeDir).filter(entry =>
+//                 fs.statSync(path.join(typeDir, entry)).isDirectory()
+//             );
+//             summary[type] = entries;
 
-            for (const name of entries) {
-                const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
-                if (!fs.existsSync(jsonPath)) continue;
+//             for (const name of entries) {
+//                 const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
+//                 if (!fs.existsSync(jsonPath)) continue;
 
-                const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-                storage.saveComponentWithMetadata(sourceAlias, type, name, data);
+//                 const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+//                 storage.saveComponentWithMetadata(sourceAlias, type, name, data);
 
-                if (type === 'OmniScript') {
-                    const isOmni = data?.OmniProcessType === 'OmniScript';
-                    const omniName = data?.Name;
-                    const lang = data?.Language;
-                    const subType = data?.SubType;
-                    const omniType = data?.Type;
+//                 if (type === 'OmniScript') {
+//                     const isOmni = data?.OmniProcessType === 'OmniScript';
+//                     const omniName = data?.Name;
+//                     const lang = data?.Language;
+//                     const subType = data?.SubType;
+//                     const omniType = data?.Type;
 
-                    if (isOmni && omniName && lang && subType && omniType) {
-                        const key = `${omniType}_${subType}_${lang}`;
-                        omniScriptKeyMap[key] = omniName;
-                    }
-                }
-            }
-        }
-    } catch (err) {
-        console.error('OmniStudio export failed:', err.message);
-    }
+//                     if (isOmni && omniName && lang && subType && omniType) {
+//                         const key = `${omniType}_${subType}_${lang}`;
+//                         omniScriptKeyMap[key] = omniName;
+//                     }
+//                 }
+//             }
+//         }
+//     } catch (err) {
+//         console.error('OmniStudio export failed:', err.message);
+//     }
 
-    let accessToken, instanceUrl;
-    try {
-        const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf-8' }));
-        accessToken = authInfo.result.accessToken;
-        instanceUrl = authInfo.result.instanceUrl;
-    } catch (err) {
-        console.error('Auth error:', err.message);
-    }
+//     let accessToken, instanceUrl;
+//     try {
+//         const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf-8' }));
+//         accessToken = authInfo.result.accessToken;
+//         instanceUrl = authInfo.result.instanceUrl;
+//     } catch (err) {
+//         console.error('Auth error:', err.message);
+//     }
 
-    try {
-        for (const type of safeTypes) {
-            if (summary[type] && summary[type].length > 0) {
-                const timestampMap = (type === 'OmniScript')
-                    ? await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type], omniScriptKeyMap)
-                    : await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type]);
+//     try {
+//         for (const type of safeTypes) {
+//             if (summary[type] && summary[type].length > 0) {
+//                 const timestampMap = (type === 'OmniScript')
+//                     ? await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type], omniScriptKeyMap)
+//                     : await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type]);
 
-                summary[type] = summary[type].map(name => {
-                    const raw = timestampMap[name] || {};
-                    const modDate = raw.lastModifiedDate ? new Date(raw.lastModifiedDate) : null;
+//                 summary[type] = summary[type].map(name => {
+//                     const raw = timestampMap[name] || {};
+//                     const modDate = raw.lastModifiedDate ? new Date(raw.lastModifiedDate) : null;
 
-                    const wasDeployed = latestReleaseComponents[type]?.includes(name);
-                    const modifiedAfterDeployment = modDate && latestReleaseTime ? modDate > latestReleaseTime : true;
-                    const include = !wasDeployed || modifiedAfterDeployment;
+//                     const wasDeployed = latestReleaseComponents[type]?.includes(name);
+//                     const modifiedAfterDeployment = modDate && latestReleaseTime ? modDate > latestReleaseTime : true;
+//                     const include = !wasDeployed || modifiedAfterDeployment;
 
-                    const formatted = {
-                        name,
-                        type,
-                        createdDate: raw.createdDate,
-                        lastModifiedDate: raw.lastModifiedDate,
-                        createdDateFormatted: formatDate(raw.createdDate),
-                        lastModifiedDateFormatted: formatDate(raw.lastModifiedDate),
-                        wasPreviouslyDeployed: wasDeployed,
-                        modifiedAfterDeployment
-                    };
+//                     const formatted = {
+//                         name,
+//                         type,
+//                         createdDate: raw.createdDate,
+//                         lastModifiedDate: raw.lastModifiedDate,
+//                         createdDateFormatted: formatDate(raw.createdDate),
+//                         lastModifiedDateFormatted: formatDate(raw.lastModifiedDate),
+//                         wasPreviouslyDeployed: wasDeployed,
+//                         modifiedAfterDeployment
+//                     };
 
-                    if (include) {
-                        storage.saveComponentWithMetadata(sourceAlias, type, name, formatted);
-                        return formatted;
-                    }
-                    return null;
-                }).filter(Boolean);
-            }
-        }
-    } catch (err) {
-        console.warn('Failed to fetch OmniStudio component dates:', err.message);
-    }
+//                     if (include) {
+//                         storage.saveComponentWithMetadata(sourceAlias, type, name, formatted);
+//                         return formatted;
+//                     }
+//                     return null;
+//                 }).filter(Boolean);
+//             }
+//         }
+//     } catch (err) {
+//         console.warn('Failed to fetch OmniStudio component dates:', err.message);
+//     }
 
-    // REGULAR METADATA
+//     // REGULAR METADATA
 
-    const retrieveTempDir = path.join(__dirname, 'retrieved-metadata');
-    const outputPath = path.join(__dirname, 'sf-output');
-    fs.rmSync(retrieveTempDir, { recursive: true, force: true });
-    fs.rmSync(outputPath, { recursive: true, force: true });
-    fs.mkdirSync(path.join(retrieveTempDir, 'force-app'), { recursive: true });
-    fs.mkdirSync(outputPath, { recursive: true });
+//     const retrieveTempDir = path.join(__dirname, 'retrieved-metadata');
+//     const outputPath = path.join(__dirname, 'sf-output');
+//     fs.rmSync(retrieveTempDir, { recursive: true, force: true });
+//     fs.rmSync(outputPath, { recursive: true, force: true });
+//     fs.mkdirSync(path.join(retrieveTempDir, 'force-app'), { recursive: true });
+//     fs.mkdirSync(outputPath, { recursive: true });
 
-    fs.writeFileSync(
-        path.join(retrieveTempDir, 'sfdx-project.json'),
-        JSON.stringify({
-            packageDirectories: [{ path: 'force-app', default: true }],
-            namespace: '',
-            sourceApiVersion: '59.0'
-        }, null, 2)
-    );
+//     fs.writeFileSync(
+//         path.join(retrieveTempDir, 'sfdx-project.json'),
+//         JSON.stringify({
+//             packageDirectories: [{ path: 'force-app', default: true }],
+//             namespace: '',
+//             sourceApiVersion: '59.0'
+//         }, null, 2)
+//     );
 
-    fs.writeFileSync(
-        path.join(retrieveTempDir, 'package.xml'),
-        xmlBuilder.create({ Package: { types: regularMetadataTypes, version: '59.0' } }).end({ pretty: true })
-    );
+//     fs.writeFileSync(
+//         path.join(retrieveTempDir, 'package.xml'),
+//         xmlBuilder.create({ Package: { types: regularMetadataTypes, version: '59.0' } }).end({ pretty: true })
+//     );
 
-    const categorized = {
-        ApexClass: [],
-        ApexTrigger: [],
-        LightningComponentBundle: []
-    };
+//     const categorized = {
+//         ApexClass: [],
+//         ApexTrigger: [],
+//         LightningComponentBundle: []
+//     };
 
-    try {
-        const retrieveCmd = `sf project retrieve start --manifest package.xml --target-org ${sourceAlias} --output-dir ${outputPath}`;
-        execSync(retrieveCmd, { cwd: retrieveTempDir, encoding: 'utf-8' });
+//     try {
+//         const retrieveCmd = `sf project retrieve start --manifest package.xml --target-org ${sourceAlias} --output-dir ${outputPath}`;
+//         execSync(retrieveCmd, { cwd: retrieveTempDir, encoding: 'utf-8' });
 
-        const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
-            .flatMap(entry => {
-                const subDir = path.join(outputPath, entry.name);
-                return entry.isDirectory()
-                    ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
-                    : [entry.name];
-            });
+//         const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
+//             .flatMap(entry => {
+//                 const subDir = path.join(outputPath, entry.name);
+//                 return entry.isDirectory()
+//                     ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
+//                     : [entry.name];
+//             });
 
-        regularFiles.forEach(filePath => {
-            if (filePath.startsWith('classes/') && filePath.endsWith('.cls')) {
-                const name = path.basename(filePath, '.cls');
-                categorized.ApexClass.push(name);
-            } else if (filePath.startsWith('triggers/') && filePath.endsWith('.trigger')) {
-                const name = path.basename(filePath, '.trigger');
-                categorized.ApexTrigger.push(name);
-            } else if (filePath.startsWith('lwc/')) {
-                const name = filePath.split('/')[1];
-                categorized.LightningComponentBundle.push(name);
-            }
-        });
+//         regularFiles.forEach(filePath => {
+//             if (filePath.startsWith('classes/') && filePath.endsWith('.cls')) {
+//                 const name = path.basename(filePath, '.cls');
+//                 categorized.ApexClass.push(name);
+//             } else if (filePath.startsWith('triggers/') && filePath.endsWith('.trigger')) {
+//                 const name = path.basename(filePath, '.trigger');
+//                 categorized.ApexTrigger.push(name);
+//             } else if (filePath.startsWith('lwc/')) {
+//                 const name = filePath.split('/')[1];
+//                 categorized.LightningComponentBundle.push(name);
+//             }
+//         });
 
-        const allTimestamps = {};
-        for (const [metaType, components] of Object.entries(categorized)) {
-            if (components.length > 0) {
-                const ts = await storage.fetchMetadataDatesFromSalesforce(instanceUrl, accessToken, metaType, components);
-                allTimestamps[metaType] = ts;
-            }
-        }
+//         const allTimestamps = {};
+//         for (const [metaType, components] of Object.entries(categorized)) {
+//             if (components.length > 0) {
+//                 const ts = await storage.fetchMetadataDatesFromSalesforce(instanceUrl, accessToken, metaType, components);
+//                 allTimestamps[metaType] = ts;
+//             }
+//         }
 
-        summary['RegularMetadata'] = {};
-        Object.entries(categorized).forEach(([metaType, components]) => {
-            summary['RegularMetadata'][metaType] = components.map(name => {
-                const raw = (allTimestamps[metaType] && allTimestamps[metaType][name]) || {};
-                const modDate = raw.lastModifiedDate ? new Date(raw.lastModifiedDate) : null;
+//         summary['RegularMetadata'] = {};
+//         Object.entries(categorized).forEach(([metaType, components]) => {
+//             summary['RegularMetadata'][metaType] = components.map(name => {
+//                 const raw = (allTimestamps[metaType] && allTimestamps[metaType][name]) || {};
+//                 const modDate = raw.lastModifiedDate ? new Date(raw.lastModifiedDate) : null;
 
-                const wasDeployed = (latestReleaseComponents['RegularMetadata']?.[metaType] || []).includes(name);
-                const modifiedAfterDeployment = modDate && latestReleaseTime ? modDate > latestReleaseTime : true;
-                const include = !wasDeployed || modifiedAfterDeployment;
+//                 const wasDeployed = (latestReleaseComponents['RegularMetadata']?.[metaType] || []).includes(name);
+//                 const modifiedAfterDeployment = modDate && latestReleaseTime ? modDate > latestReleaseTime : true;
+//                 const include = !wasDeployed || modifiedAfterDeployment;
 
-                const formatted = {
-                    name,
-                    type: metaType,
-                    ...raw,
-                    wasPreviouslyDeployed: wasDeployed,
-                    modifiedAfterDeployment
-                };
+//                 const formatted = {
+//                     name,
+//                     type: metaType,
+//                     ...raw,
+//                     wasPreviouslyDeployed: wasDeployed,
+//                     modifiedAfterDeployment
+//                 };
 
-                if (include) {
-                    storage.saveComponentWithMetadata(sourceAlias, path.join('RegularMetadata', metaType), name, formatted);
-                    return formatted;
-                }
-                return null;
-            }).filter(Boolean);
-        });
+//                 if (include) {
+//                     storage.saveComponentWithMetadata(sourceAlias, path.join('RegularMetadata', metaType), name, formatted);
+//                     return formatted;
+//                 }
+//                 return null;
+//             }).filter(Boolean);
+//         });
 
-    } catch (err) {
-        console.warn('Failed to retrieve regular metadata:', err.message);
-        summary['RegularMetadata'] = [`Failed: ${err.message}`];
-    }
+//     } catch (err) {
+//         console.warn('Failed to retrieve regular metadata:', err.message);
+//         summary['RegularMetadata'] = [`Failed: ${err.message}`];
+//     }
 
-    summary.timestamp = new Date().toISOString();
-    summary.sourceAlias = sourceAlias;
-    storage.saveIndex(sourceAlias, summary);
-    return res.json(summary);
-});
+//     summary.timestamp = new Date().toISOString();
+//     summary.sourceAlias = sourceAlias;
+//     storage.saveIndex(sourceAlias, summary);
+//     return res.json(summary);
+// });
 
 
 app.get('/stored-components', (req, res) => {
@@ -3055,284 +3055,285 @@ app.get('/commits', async (req, res) => {
 });
 
 
-// app.get('/components', async (req, res) => {
-//     const { sourceAlias } = req.query;
-//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+app.get('/components', async (req, res) => {
+    const { sourceAlias } = req.query;
+    if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
-//     const safeTypes = [
-//         'OmniScript', 'FlexCard', 'DataRaptor', 'IntegrationProcedure',
-//         'OmniStudioTrackingService', 'VlocityUILayout', 'VlocityUITemplate',
-//         'CalculationMatrix', 'CalculationProcedure'
-//     ];
+    const safeTypes = [
+        'OmniScript', 'FlexCard', 'DataRaptor', 'IntegrationProcedure',
+        'OmniStudioTrackingService', 'VlocityUILayout', 'VlocityUITemplate',
+        'CalculationMatrix', 'CalculationProcedure'
+    ];
 
-//     const regularMetadataTypes = [
-//         { name: 'ApexClass', members: ['*'] },
-//         { name: 'ApexTrigger', members: ['*'] },
-//         { name: 'LightningComponentBundle', members: ['*'] }
-//     ];
+    const regularMetadataTypes = [
+        { name: 'ApexClass', members: ['*'] },
+        { name: 'ApexTrigger', members: ['*'] },
+        { name: 'LightningComponentBundle', members: ['*'] }
+    ];
 
-//     const summary = {};
-//     const omniScriptKeyMap = {};
+    const summary = {};
+    const omniScriptKeyMap = {};
 
-//     // CLEAN STORAGE COMPONENT FOLDERS
-//     const storagePath = path.join(__dirname, 'storage', sourceAlias);
-//     for (const type of safeTypes) {
-//         const folder = path.join(storagePath, type);
-//         if (fs.existsSync(folder)) {
-//             fs.rmSync(folder, { recursive: true, force: true });
-//         }
-//     }
-//     const regTypes = ['ApexClass', 'ApexTrigger', 'LightningComponentBundle'];
-//     for (const regType of regTypes) {
-//         const folder = path.join(storagePath, 'RegularMetadata', regType);
-//         if (fs.existsSync(folder)) {
-//             fs.rmSync(folder, { recursive: true, force: true });
-//         }
-//     }
+    // CLEAN STORAGE COMPONENT FOLDERS
+    const storagePath = path.join(__dirname, 'storage', sourceAlias);
+    for (const type of safeTypes) {
+        const folder = path.join(storagePath, type);
+        if (fs.existsSync(folder)) {
+            fs.rmSync(folder, { recursive: true, force: true });
+        }
+    }
+    const regTypes = ['ApexClass', 'ApexTrigger', 'LightningComponentBundle'];
+    for (const regType of regTypes) {
+        const folder = path.join(storagePath, 'RegularMetadata', regType);
+        if (fs.existsSync(folder)) {
+            fs.rmSync(folder, { recursive: true, force: true });
+        }
+    }
 
-//     // Read latest release info
-//     const releasesDir = path.join(__dirname, 'storage', sourceAlias, 'releases');
-//     let latestReleaseTime = null;
-//     let latestReleaseComponents = {};
-//     if (fs.existsSync(releasesDir)) {
-//         const releaseFiles = fs.readdirSync(releasesDir)
-//             .filter(f => f.endsWith('.json'))
-//             .map(f => path.join(releasesDir, f))
-//             .sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime);
-//         if (releaseFiles.length > 0) {
-//             const latestRelease = JSON.parse(fs.readFileSync(releaseFiles[0], 'utf-8'));
-//             latestReleaseTime = new Date(latestRelease.deployedAt);
-//             latestReleaseComponents = latestRelease.components || {};
-//         }
-//     }
+    // Read latest release info
+    const releasesDir = path.join(__dirname, 'storage', sourceAlias, 'releases');
+    let latestReleaseTime = null;
+    let latestReleaseComponents = {};
+    if (fs.existsSync(releasesDir)) {
+        const releaseFiles = fs.readdirSync(releasesDir)
+            .filter(f => f.endsWith('.json'))
+            .map(f => path.join(releasesDir, f))
+            .sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime);
+        if (releaseFiles.length > 0) {
+            const latestRelease = JSON.parse(fs.readFileSync(releaseFiles[0], 'utf-8'));
+            latestReleaseTime = new Date(latestRelease.deployedAt);
+            latestReleaseComponents = latestRelease.components || {};
+        }
+    }
 
-//     // Clean folders
-//     safeTypes.forEach(type => {
-//         const dirPath = path.join(__dirname, type);
-//         if (fs.existsSync(dirPath)) {
-//             fs.rmSync(dirPath, { recursive: true, force: true });
-//         }
-//     });
+    // Clean folders
+    safeTypes.forEach(type => {
+        const dirPath = path.join(__dirname, type);
+        if (fs.existsSync(dirPath)) {
+            fs.rmSync(dirPath, { recursive: true, force: true });
+        }
+    });
 
-//     const yamlContent = {
-//         export: {},
-//         exportPacks: {
-//             autoAddDependentFields: true,
-//             autoAddDependencies: true
-//         }
-//     };
-//     safeTypes.forEach(type => yamlContent.export[type] = {});
-//     fs.writeFileSync('exportAllOmni.yaml', require('js-yaml').dump(yamlContent));
+    const yamlContent = {
+        export: {},
+        exportPacks: {
+            autoAddDependentFields: true,
+            autoAddDependencies: true
+        }
+    };
+    safeTypes.forEach(type => yamlContent.export[type] = {});
+    fs.writeFileSync('exportAllOmni.yaml', require('js-yaml').dump(yamlContent));
 
-//     try {
-//         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
-//         execSync(exportCmd, { encoding: 'utf-8', stdio: 'pipe' });
+    try {
+        const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+        execSync(exportCmd, { encoding: 'utf-8', stdio: 'pipe' });
 
-//         for (const type of safeTypes) {
-//             const typeDir = path.join(__dirname, type);
-//             if (!fs.existsSync(typeDir)) continue;
+        for (const type of safeTypes) {
+            const typeDir = path.join(__dirname, type);
+            if (!fs.existsSync(typeDir)) continue;
 
-//             const entries = fs.readdirSync(typeDir).filter(entry =>
-//                 fs.statSync(path.join(typeDir, entry)).isDirectory()
-//             );
-//             summary[type] = entries;
+            const entries = fs.readdirSync(typeDir).filter(entry =>
+                fs.statSync(path.join(typeDir, entry)).isDirectory()
+            );
+            summary[type] = entries;
 
-//             for (const name of entries) {
-//                 const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
-//                 if (!fs.existsSync(jsonPath)) continue;
+            for (const name of entries) {
+                const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
+                if (!fs.existsSync(jsonPath)) continue;
 
-//                 const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-//                 storage.saveComponentWithMetadata(sourceAlias, type, name, data);
+                const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+                storage.saveComponentWithMetadata(sourceAlias, type, name, data);
 
-//                 if (type === 'OmniScript') {
-//                     const isOmni = data?.OmniProcessType === 'OmniScript';
-//                     const omniName = data?.Name;
-//                     const lang = data?.Language;
-//                     const subType = data?.SubType;
-//                     const omniType = data?.Type;
+                if (type === 'OmniScript') {
+                    const isOmni = data?.OmniProcessType === 'OmniScript';
+                    const omniName = data?.Name;
+                    const lang = data?.Language;
+                    const subType = data?.SubType;
+                    const omniType = data?.Type;
 
-//                     if (isOmni && omniName && lang && subType && omniType) {
-//                         const key = `${omniType}_${subType}_${lang}`;
-//                         omniScriptKeyMap[key] = omniName;
-//                     }
-//                 }
-//             }
-//         }
-//     } catch (err) {
-//         console.error('OmniStudio export failed:', err.message);
-//     }
+                    if (isOmni && omniName && lang && subType && omniType) {
+                        const key = `${omniType}_${subType}_${lang}`;
+                        omniScriptKeyMap[key] = omniName;
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.error('OmniStudio export failed:', err.message);
+    }
 
-//     let accessToken, instanceUrl;
-//     try {
-//         const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf-8' }));
-//         accessToken = authInfo.result.accessToken;
-//         instanceUrl = authInfo.result.instanceUrl;
-//     } catch (err) {
-//         console.error('Auth error:', err.message);
-//     }
+    let accessToken, instanceUrl;
+    try {
+        const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf-8' }));
+        accessToken = authInfo.result.accessToken;
+        instanceUrl = authInfo.result.instanceUrl;
+    } catch (err) {
+        console.error('Auth error:', err.message);
+    }
 
-//     try {
-//         for (const type of safeTypes) {
-//             if (summary[type] && summary[type].length > 0) {
-//                 const timestampMap = (type === 'OmniScript')
-//                     ? await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type], omniScriptKeyMap)
-//                     : await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type]);
+    try {
+        for (const type of safeTypes) {
+            if (summary[type] && summary[type].length > 0) {
+                const timestampMap = (type === 'OmniScript')
+                    ? await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type], omniScriptKeyMap)
+                    : await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type]);
 
-//                 summary[type] = summary[type].map(name => {
-//                     const raw = timestampMap[name] || {};
-//                     const modDate = raw.lastModifiedDate ? new Date(raw.lastModifiedDate) : null;
+                summary[type] = summary[type].map(name => {
+                    const raw = timestampMap[name] || {};
+                    const modDate = raw.lastModifiedDate ? new Date(raw.lastModifiedDate) : null;
 
-//                     const wasDeployed = latestReleaseComponents[type]?.includes(name);
-//                     const modifiedAfterDeployment = modDate && latestReleaseTime ? modDate > latestReleaseTime : true;
-//                     const include = !wasDeployed || modifiedAfterDeployment;
+                    const wasDeployed = latestReleaseComponents[type]?.includes(name);
+                    const modifiedAfterDeployment = modDate && latestReleaseTime ? modDate > latestReleaseTime : true;
+                    const include = !wasDeployed || modifiedAfterDeployment;
 
-//                     const formatted = {
-//                         name,
-//                         type,
-//                         createdDate: raw.createdDate,
-//                         lastModifiedDate: raw.lastModifiedDate,
-//                         createdDateFormatted: formatDate(raw.createdDate),
-//                         lastModifiedDateFormatted: formatDate(raw.lastModifiedDate),
-//                         wasPreviouslyDeployed: wasDeployed,
-//                         modifiedAfterDeployment
-//                     };
+                    const formatted = {
+                        name,
+                        type,
+                        createdDate: raw.createdDate,
+                        lastModifiedDate: raw.lastModifiedDate,
+                        createdDateFormatted: formatDate(raw.createdDate),
+                        lastModifiedDateFormatted: formatDate(raw.lastModifiedDate),
+                        wasPreviouslyDeployed: wasDeployed,
+                        modifiedAfterDeployment
+                    };
 
-//                     if (include) {
-//                         storage.saveComponentWithMetadata(sourceAlias, type, name, formatted);
-//                         return formatted;
-//                     }
-//                     return null;
-//                 }).filter(Boolean);
-//             }
-//         }
-//     } catch (err) {
-//         console.warn('Failed to fetch OmniStudio component dates:', err.message);
-//     }
+                    if (include) {
+                        storage.saveComponentWithMetadata(sourceAlias, type, name, formatted);
+                        return formatted;
+                    }
+                    return null;
+                }).filter(Boolean);
+            }
+        }
+    } catch (err) {
+        console.warn('Failed to fetch OmniStudio component dates:', err.message);
+    }
 
-//     // REGULAR METADATA
-//     const retrieveTempDir = path.join(__dirname, 'retrieved-metadata');
-//     const outputPath = path.join(__dirname, 'sf-output');
-//     fs.rmSync(retrieveTempDir, { recursive: true, force: true });
-//     fs.rmSync(outputPath, { recursive: true, force: true });
-//     fs.mkdirSync(path.join(retrieveTempDir, 'force-app'), { recursive: true });
-//     fs.mkdirSync(outputPath, { recursive: true });
+    // REGULAR METADATA
+    const retrieveTempDir = path.join(__dirname, 'retrieved-metadata');
+    const outputPath = path.join(__dirname, 'sf-output');
+    fs.rmSync(retrieveTempDir, { recursive: true, force: true });
+    fs.rmSync(outputPath, { recursive: true, force: true });
+    fs.mkdirSync(path.join(retrieveTempDir, 'force-app'), { recursive: true });
+    fs.mkdirSync(outputPath, { recursive: true });
 
-//     fs.writeFileSync(
-//         path.join(retrieveTempDir, 'sfdx-project.json'),
-//         JSON.stringify({
-//             packageDirectories: [{ path: 'force-app', default: true }],
-//             namespace: '',
-//             sourceApiVersion: '59.0'
-//         }, null, 2)
-//     );
+    fs.writeFileSync(
+        path.join(retrieveTempDir, 'sfdx-project.json'),
+        JSON.stringify({
+            packageDirectories: [{ path: 'force-app', default: true }],
+            namespace: '',
+            sourceApiVersion: '59.0'
+        }, null, 2)
+    );
 
-//     fs.writeFileSync(
-//         path.join(retrieveTempDir, 'package.xml'),
-//         xmlBuilder.create({ Package: { types: regularMetadataTypes, version: '59.0' } }).end({ pretty: true })
-//     );
+    fs.writeFileSync(
+        path.join(retrieveTempDir, 'package.xml'),
+        xmlBuilder.create({ Package: { types: regularMetadataTypes, version: '59.0' } }).end({ pretty: true })
+    );
 
-//     const categorized = {
-//         ApexClass: [],
-//         ApexTrigger: [],
-//         LightningComponentBundle: []
-//     };
+    const categorized = {
+        ApexClass: [],
+        ApexTrigger: [],
+        LightningComponentBundle: []
+    };
 
-//     try {
-//         const retrieveCmd = `sf project retrieve start --manifest package.xml --target-org ${sourceAlias} --output-dir ${outputPath}`;
-//         execSync(retrieveCmd, { cwd: retrieveTempDir, encoding: 'utf-8' });
+    try {
+        const retrieveCmd = `sf project retrieve start --manifest package.xml --target-org ${sourceAlias} --output-dir ${outputPath}`;
+        execSync(retrieveCmd, { cwd: retrieveTempDir, encoding: 'utf-8' });
 
-//         const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
-//             .flatMap(entry => {
-//                 const subDir = path.join(outputPath, entry.name);
-//                 return entry.isDirectory()
-//                     ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
-//                     : [entry.name];
-//             });
+        const regularFiles = fs.readdirSync(outputPath, { withFileTypes: true })
+            .flatMap(entry => {
+                const subDir = path.join(outputPath, entry.name);
+                return entry.isDirectory()
+                    ? fs.readdirSync(subDir).map(f => `${entry.name}/${f}`)
+                    : [entry.name];
+            });
 
-//         regularFiles.forEach(filePath => {
-//             if (filePath.startsWith('classes/') && filePath.endsWith('.cls')) {
-//                 const name = path.basename(filePath, '.cls');
-//                 categorized.ApexClass.push(name);
-//             } else if (filePath.startsWith('triggers/') && filePath.endsWith('.trigger')) {
-//                 const name = path.basename(filePath, '.trigger');
-//                 categorized.ApexTrigger.push(name);
-//             } else if (filePath.startsWith('lwc/')) {
-//                 const name = filePath.split('/')[1];
-//                 categorized.LightningComponentBundle.push(name);
-//             }
-//         });
+        regularFiles.forEach(filePath => {
+            if (filePath.startsWith('classes/') && filePath.endsWith('.cls')) {
+                const name = path.basename(filePath, '.cls');
+                categorized.ApexClass.push(name);
+            } else if (filePath.startsWith('triggers/') && filePath.endsWith('.trigger')) {
+                const name = path.basename(filePath, '.trigger');
+                categorized.ApexTrigger.push(name);
+            } else if (filePath.startsWith('lwc/')) {
+                const name = filePath.split('/')[1];
+                categorized.LightningComponentBundle.push(name);
+            }
+        });
 
-//         const allTimestamps = {};
-//         for (const [metaType, components] of Object.entries(categorized)) {
-//             if (components.length > 0) {
-//                 const ts = await storage.fetchMetadataDatesFromSalesforce(instanceUrl, accessToken, metaType, components);
-//                 allTimestamps[metaType] = ts;
-//             }
-//         }
+        const allTimestamps = {};
+        for (const [metaType, components] of Object.entries(categorized)) {
+            if (components.length > 0) {
+                const ts = await storage.fetchMetadataDatesFromSalesforce(instanceUrl, accessToken, metaType, components);
+                allTimestamps[metaType] = ts;
+            }
+        }
 
-//         summary['RegularMetadata'] = {};
-//         Object.entries(categorized).forEach(([metaType, components]) => {
-//             summary['RegularMetadata'][metaType] = components.map(name => {
-//                 const raw = (allTimestamps[metaType] && allTimestamps[metaType][name]) || {};
-//                 const modDate = raw.lastModifiedDate ? new Date(raw.lastModifiedDate) : null;
+        summary['RegularMetadata'] = {};
+        Object.entries(categorized).forEach(([metaType, components]) => {
+            summary['RegularMetadata'][metaType] = components.map(name => {
+                const raw = (allTimestamps[metaType] && allTimestamps[metaType][name]) || {};
+                const modDate = raw.lastModifiedDate ? new Date(raw.lastModifiedDate) : null;
 
-//                 const wasDeployed = (latestReleaseComponents['RegularMetadata']?.[metaType] || []).includes(name);
-//                 const modifiedAfterDeployment = modDate && latestReleaseTime ? modDate > latestReleaseTime : true;
-//                 const include = !wasDeployed || modifiedAfterDeployment;
+                const wasDeployed = (latestReleaseComponents['RegularMetadata']?.[metaType] || []).includes(name);
+                const modifiedAfterDeployment = modDate && latestReleaseTime ? modDate > latestReleaseTime : true;
+                const include = !wasDeployed || modifiedAfterDeployment;
 
-//                 const formatted = {
-//                     name,
-//                     type: metaType,
-//                     ...raw,
-//                     wasPreviouslyDeployed: wasDeployed,
-//                     modifiedAfterDeployment
-//                 };
+                const formatted = {
+                    name,
+                    type: metaType,
+                    ...raw,
+                    wasPreviouslyDeployed: wasDeployed,
+                    modifiedAfterDeployment
+                };
 
-//                 if (include) {
-//                     storage.saveComponentWithMetadata(sourceAlias, path.join('RegularMetadata', metaType), name, formatted);
+                if (include) {
+                    storage.saveComponentWithMetadata(sourceAlias, path.join('RegularMetadata', metaType), name, formatted);
 
-//                     // ✅ COPY .cls/.trigger/.js FILES FOR ANALYSIS
-//                     const baseExportPath = path.join(outputPath, metaType === 'ApexTrigger' ? 'triggers' : (metaType === 'ApexClass' ? 'classes' : 'lwc'));
+                    // ✅ COPY .cls/.trigger/.js FILES FOR ANALYSIS
+                    const baseExportPath = path.join(outputPath, metaType === 'ApexTrigger' ? 'triggers' : (metaType === 'ApexClass' ? 'classes' : 'lwc'));
 
-//                     if (metaType === 'ApexClass') {
-//                         const src = path.join(baseExportPath, `${name}.cls`);
-//                         const dest = path.join(__dirname, 'storage', sourceAlias, 'RegularMetadata', 'classes', `${name}.cls`);
-//                         if (fs.existsSync(src)) {
-//                             fs.mkdirSync(path.dirname(dest), { recursive: true });
-//                             fs.copyFileSync(src, dest);
-//                         }
-//                     } else if (metaType === 'ApexTrigger') {
-//                         const src = path.join(baseExportPath, `${name}.trigger`);
-//                         const dest = path.join(__dirname, 'storage', sourceAlias, 'RegularMetadata', 'triggers', `${name}.trigger`);
-//                         if (fs.existsSync(src)) {
-//                             fs.mkdirSync(path.dirname(dest), { recursive: true });
-//                             fs.copyFileSync(src, dest);
-//                         }
-//                     } else if (metaType === 'LightningComponentBundle') {
-//                         const src = path.join(baseExportPath, name, `${name}.js`);
-//                         const dest = path.join(__dirname, 'storage', sourceAlias, 'RegularMetadata', 'lwc', `${name}.js`);
-//                         if (fs.existsSync(src)) {
-//                             fs.mkdirSync(path.dirname(dest), { recursive: true });
-//                             fs.copyFileSync(src, dest);
-//                         }
-//                     }
+                    if (metaType === 'ApexClass') {
+                        const src = path.join(baseExportPath, `${name}.cls`);
+                        const dest = path.join(__dirname, 'storage', sourceAlias, 'RegularMetadata', 'classes', `${name}.cls`);
+                        if (fs.existsSync(src)) {
+                            fs.mkdirSync(path.dirname(dest), { recursive: true });
+                            fs.copyFileSync(src, dest);
+                        }
+                    } else if (metaType === 'ApexTrigger') {
+                        const src = path.join(baseExportPath, `${name}.trigger`);
+                        const dest = path.join(__dirname, 'storage', sourceAlias, 'RegularMetadata', 'triggers', `${name}.trigger`);
+                        if (fs.existsSync(src)) {
+                            fs.mkdirSync(path.dirname(dest), { recursive: true });
+                            fs.copyFileSync(src, dest);
+                        }
+                    } else if (metaType === 'LightningComponentBundle') {
+                        const src = path.join(baseExportPath, name, `${name}.js`);
+                        const dest = path.join(__dirname, 'storage', sourceAlias, 'RegularMetadata', 'lwc', `${name}.js`);
+                        if (fs.existsSync(src)) {
+                            fs.mkdirSync(path.dirname(dest), { recursive: true });
+                            fs.copyFileSync(src, dest);
+                        }
+                    }
 
-//                     return formatted;
-//                 }
-//                 return null;
-//             }).filter(Boolean);
-//         });
+                    return formatted;
+                }
+                return null;
+            }).filter(Boolean);
+        });
 
-//     } catch (err) {
-//         console.warn('Failed to retrieve regular metadata:', err.message);
-//         summary['RegularMetadata'] = [`Failed: ${err.message}`];
-//     }
+    } catch (err) {
+        console.warn('Failed to retrieve regular metadata:', err.message);
+        summary['RegularMetadata'] = [`Failed: ${err.message}`];
+    }
 
-//     summary.timestamp = new Date().toISOString();
-//     summary.sourceAlias = sourceAlias;
-//     storage.saveIndex(sourceAlias, summary);
-//     return res.json(summary);
-// });
+    summary.timestamp = new Date().toISOString();
+    summary.sourceAlias = sourceAlias;
+    storage.saveIndex(sourceAlias, summary);
+    return res.json(summary);
+});
+
 
 
 app.post('/analyze-class', async (req, res) => {
