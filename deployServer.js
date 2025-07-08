@@ -3055,7 +3055,32 @@ app.get('/commits', async (req, res) => {
 });
 
 
+app.post('/analyze-class', async (req, res) => {
+    const { className, sourceAlias } = req.body;
 
+    if (!className || !sourceAlias) {
+        return res.status(400).json({ status: 'error', message: 'Missing className or sourceAlias' });
+    }
+
+    try {
+        const basePath = path.join(__dirname, 'storage', sourceAlias, 'RegularMetadata', 'classes');
+        const classFile = path.join(basePath, `${className}.cls`);
+
+        if (!fs.existsSync(classFile)) {
+            return res.status(404).json({ status: 'error', message: `Class ${className}.cls not found.` });
+        }
+
+        const command = `sfdx scanner:run --target ${classFile} --json`;
+        const output = execSync(command, { encoding: 'utf8' });
+        const parsed = JSON.parse(output);
+
+        res.status(200).json({ status: 'success', results: parsed?.results || [] });
+
+    } catch (err) {
+        console.error('Analyzer failed:', err);
+        res.status(500).json({ status: 'error', message: err.message || 'SFDX Analyzer failed.' });
+    }
+});
 
 
 
