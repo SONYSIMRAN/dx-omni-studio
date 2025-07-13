@@ -3127,20 +3127,13 @@ app.post('/analyze-class', async (req, res) => {
   }
 });
 
-/**
- * GET  /coverage
- * body: { sourceAlias: 'DevHubAlias', className?: 'MyClass' }
- *
- * – If className omitted or '*', returns aggregate coverage for every class.
- * – Leverages sf CLI + Tooling API exactly like /analyze-class.
- */
 app.post('/coverage', async (req, res) => {
   let { sourceAlias, className = '*' } = req.body;
   if (!sourceAlias) {
     return res.status(400).json({ status: 'error', message: 'sourceAlias is required' });
   }
 
-  // 1️⃣  Authenticate & grab token/instance
+  // 1️Authenticate & grab token/instance
   let accessToken, instanceUrl;
   try {
     const info = JSON.parse(
@@ -3153,7 +3146,7 @@ app.post('/coverage', async (req, res) => {
     return res.status(500).json({ status: 'error', message: 'sf org display failed' });
   }
 
-  // 2️⃣  Build SOQL
+  // Build SOQL
   const whereClause =
     className === '*' ? '' :
     ` WHERE ApexClassOrTrigger.Name = '${className.replace(/'/g, "\\'")}'`;
@@ -3164,7 +3157,7 @@ app.post('/coverage', async (req, res) => {
            NumLinesUncovered
       FROM ApexCodeCoverageAggregate${whereClause}`.trim();
 
-  // 3️⃣  Call Tooling API
+  // Call Tooling API
   try {
     const resp = await axios.get(
       `${instanceUrl}/services/data/v60.0/tooling/query?q=${encodeURIComponent(soql)}`,
@@ -3195,6 +3188,71 @@ app.post('/coverage', async (req, res) => {
     return res.status(500).json({ status: 'error', message: 'Tooling API query failed' });
   }
 });
+
+app.post('/test-methods', async (req, res) => {
+  let { sourceAlias, className = '*' } = req.body;
+
+  if (!sourceAlias) {
+    return res.status(400).json({ status: 'error', message: 'sourceAlias is required' });
+  }
+
+  /* 1️⃣  Authenticate & get access token / instance URL */
+  let accessToken, instanceUrl;
+  try {
+    const info = JSON.parse(
+      execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf8' })
+    );
+    accessToken = info.result.accessToken;
+    instanceUrl = info.result.instanceUrl;
+  } catch (err) {
+    console.error('Auth error:', err.message || err);
+    return res.status(500).json({ status: 'error', message: 'sf org display failed' });
+  }
+
+  /* 2️⃣  Build SOQL safely */
+  const base = `SELECT ApexClass.Name, MethodName, Outcome, RunTime, TestTimestamp, Message, StackTrace FROM ApexTestResult`;
+  const whereClause =
+    className && className !== '*'
+      ? ` WHERE ApexClass.Name = '${className.replace(/'/g, "\\'")}'`
+      : '';
+  const soql = `${base}${whereClause} ORDER BY TestTimestamp DESC`;
+
+  /* 3️⃣  Call Tooling API */
+  try {
+    const resp = await axios.get(
+      `${instanceUrl}/services/data/v60.0/tooling/query?q=${encodeURIComponent(soql)}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+
+    const results = resp.data.records.map(r => ({
+      className   : r.ApexClass.Name,
+      methodName  : r.MethodName,
+      outcome     : r.Outcome,
+      runTime     : r.RunTime,
+      timeStamp   : r.TestTimestamp,
+      message     : r.Message,
+      stackTrace  : r.StackTrace
+    }));
+
+    return res.json({
+      status         : 'success',
+      sourceAlias,
+      classNameScope : className === '*' ? 'ALL' : className,
+      count          : results.length,
+      results
+    });
+  } catch (err) {
+    console.error('Query failed:', err.response?.data || err.message || err);
+    return res.status(500).json({
+      status  : 'error',
+      message : 'Tooling API or test execution failed',
+      error   : err.response?.data || err.message
+    });
+  }
+});
+
+
+
 
 
 // Start server
