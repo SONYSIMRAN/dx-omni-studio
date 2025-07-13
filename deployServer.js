@@ -2833,52 +2833,54 @@ app.get('/components', async (req, res) => {
     storage.saveIndex(sourceAlias, summary);
     return res.json(summary);
 });
+
+
 /**correct one for apex clas */
-// app.post('/analyze-class', async (req, res) => {
-//   let { className, sourceAlias } = req.body;
+app.post('/analyze-class', async (req, res) => {
+  let { className, sourceAlias } = req.body;
 
-//   if (!className || !sourceAlias) {
-//     return res.status(400).json({ status: 'error', message: 'Missing className or sourceAlias' });
-//   }
+  if (!className || !sourceAlias) {
+    return res.status(400).json({ status: 'error', message: 'Missing className or sourceAlias' });
+  }
 
-//   className = className.replace(/\.cls$/i, '');
+  className = className.replace(/\.cls$/i, '');
 
-//   try {
-//     // Authenticate and get org info
-//     const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf8' }));
-//     const accessToken = authInfo.result.accessToken;
-//     const instanceUrl = authInfo.result.instanceUrl;
+  try {
+    // Authenticate and get org info
+    const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf8' }));
+    const accessToken = authInfo.result.accessToken;
+    const instanceUrl = authInfo.result.instanceUrl;
 
-//     // Fetch Apex class body
-//     const query = `SELECT Body FROM ApexClass WHERE Name = '${className}'`;
-//     const queryUrl = `${instanceUrl}/services/data/v59.0/tooling/query?q=${encodeURIComponent(query)}`;
-//     const headers = { Authorization: `Bearer ${accessToken}` };
-//     const response = await axios.get(queryUrl, { headers });
+    // Fetch Apex class body
+    const query = `SELECT Body FROM ApexClass WHERE Name = '${className}'`;
+    const queryUrl = `${instanceUrl}/services/data/v59.0/tooling/query?q=${encodeURIComponent(query)}`;
+    const headers = { Authorization: `Bearer ${accessToken}` };
+    const response = await axios.get(queryUrl, { headers });
 
-//     if (!response.data.records || response.data.records.length === 0) {
-//       return res.status(404).json({ status: 'error', message: `Apex class ${className} not found.` });
-//     }
+    if (!response.data.records || response.data.records.length === 0) {
+      return res.status(404).json({ status: 'error', message: `Apex class ${className} not found.` });
+    }
 
-//     const code = response.data.records[0].Body;
+    const code = response.data.records[0].Body;
 
-//     // Return the code and metadata
-//     return res.json({
-//       status: 'success',
-//       className,
-//       fileName: `classes/${className}.cls`,
-//       type: 'ApexClass',
-//       sourceAlias,
-//       code
-//     });
+    // Return the code and metadata
+    return res.json({
+      status: 'success',
+      className,
+      fileName: `classes/${className}.cls`,
+      type: 'ApexClass',
+      sourceAlias,
+      code
+    });
 
-//   } catch (err) {
-//     console.error('Fetch Apex class error:', err.message || err);
-//     return res.status(500).json({
-//       status: 'error',
-//       message: err.message || 'Failed to fetch Apex class'
-//     });
-//   }
-// });
+  } catch (err) {
+    console.error('Fetch Apex class error:', err.message || err);
+    return res.status(500).json({
+      status: 'error',
+      message: err.message || 'Failed to fetch Apex class'
+    });
+  }
+});
 
 app.post('/coverage', async (req, res) => {
   let { sourceAlias, className = '*' } = req.body;
@@ -3005,112 +3007,112 @@ app.post('/test-methods', async (req, res) => {
 });
 
 
-app.post('/analyze-component', async (req, res) => {
-  let { sourceAlias, componentType = 'ApexClass', name } = req.body;
+// app.post('/analyze-component', async (req, res) => {
+//   let { sourceAlias, componentType = 'ApexClass', name } = req.body;
 
-  if (!sourceAlias || !name) {
-    return res.status(400).json({ status: 'error', message: 'sourceAlias and name are required' });
-  }
+//   if (!sourceAlias || !name) {
+//     return res.status(400).json({ status: 'error', message: 'sourceAlias and name are required' });
+//   }
 
-  componentType = componentType.trim();
-  const files = [];
+//   componentType = componentType.trim();
+//   const files = [];
 
-  /* 1Org auth */
-  let accessToken, instanceUrl;
-  try {
-    const org = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf8' }));
-    accessToken = org.result.accessToken;
-    instanceUrl = org.result.instanceUrl;
-  } catch (err) {
-    return res.status(500).json({ status: 'error', message: 'sf org display failed', details: err.message });
-  }
+//   /* 1Org auth */
+//   let accessToken, instanceUrl;
+//   try {
+//     const org = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf8' }));
+//     accessToken = org.result.accessToken;
+//     instanceUrl = org.result.instanceUrl;
+//   } catch (err) {
+//     return res.status(500).json({ status: 'error', message: 'sf org display failed', details: err.message });
+//   }
 
-  /* Helper builders */
-  const toolingUrl = (suffix) => `${instanceUrl}/services/data/v60.0/tooling${suffix}`;
-  const headers    = { Authorization: `Bearer ${accessToken}` };
+//   /* Helper builders */
+//   const toolingUrl = (suffix) => `${instanceUrl}/services/data/v60.0/tooling${suffix}`;
+//   const headers    = { Authorization: `Bearer ${accessToken}` };
 
-  try {
-    if (componentType === 'ApexClass' || componentType === 'ApexTrigger') {
-      /* 2Apex class / trigger body */
-      const soql = `SELECT Body FROM ${componentType} WHERE Name = '${name.replace(/'/g, "\\'")}'`;
-      const rsp  = await axios.get(toolingUrl(`/query?q=${encodeURIComponent(soql)}`), { headers });
-      if (!rsp.data.records?.length) throw new Error(`${componentType} not found`);
-      const ext = componentType === 'ApexClass' ? 'cls' : 'trigger';
-      files.push({ fileName: `${name}.${ext}`, code: rsp.data.records[0].Body });
+//   try {
+//     if (componentType === 'ApexClass' || componentType === 'ApexTrigger') {
+//       /* 2Apex class / trigger body */
+//       const soql = `SELECT Body FROM ${componentType} WHERE Name = '${name.replace(/'/g, "\\'")}'`;
+//       const rsp  = await axios.get(toolingUrl(`/query?q=${encodeURIComponent(soql)}`), { headers });
+//       if (!rsp.data.records?.length) throw new Error(`${componentType} not found`);
+//       const ext = componentType === 'ApexClass' ? 'cls' : 'trigger';
+//       files.push({ fileName: `${name}.${ext}`, code: rsp.data.records[0].Body });
 
-    } else if (componentType === 'LightningComponentBundle') {
-      /* LWC — check cache first */
-      const cacheDir = path.join(__dirname, 'storage', sourceAlias, 'RegularMetadata', 'lwc', name);
-      if (fs.existsSync(cacheDir)) {
-        fs.readdirSync(cacheDir).forEach(f => {
-          if (/\.(js|html|css|xml|svg|json)$/i.test(f)) {
-            files.push({ fileName: f, code: fs.readFileSync(path.join(cacheDir, f), 'utf8') });
-          }
-        });
-      }
+//     } else if (componentType === 'LightningComponentBundle') {
+//       /* LWC — check cache first */
+//       const cacheDir = path.join(__dirname, 'storage', sourceAlias, 'RegularMetadata', 'lwc', name);
+//       if (fs.existsSync(cacheDir)) {
+//         fs.readdirSync(cacheDir).forEach(f => {
+//           if (/\.(js|html|css|xml|svg|json)$/i.test(f)) {
+//             files.push({ fileName: f, code: fs.readFileSync(path.join(cacheDir, f), 'utf8') });
+//           }
+//         });
+//       }
 
-      /* Fetch from Tooling API if cache empty */
-      if (!files.length) {
-        // ── Get bundle Id
-        const bundleQ = `SELECT Id FROM LightningComponentBundle WHERE DeveloperName='${name.replace(/'/g,"\\'")}'`;
-        const bRsp    = await axios.get(toolingUrl(`/query?q=${encodeURIComponent(bundleQ)}`), { headers });
-        if (!bRsp.data.records?.length) throw new Error('LWC bundle not found');
-        const bundleId = bRsp.data.records[0].Id;
+//       /* Fetch from Tooling API if cache empty */
+//       if (!files.length) {
+//         // ── Get bundle Id
+//         const bundleQ = `SELECT Id FROM LightningComponentBundle WHERE DeveloperName='${name.replace(/'/g,"\\'")}'`;
+//         const bRsp    = await axios.get(toolingUrl(`/query?q=${encodeURIComponent(bundleQ)}`), { headers });
+//         if (!bRsp.data.records?.length) throw new Error('LWC bundle not found');
+//         const bundleId = bRsp.data.records[0].Id;
 
-        // ── Try zipped /source first (works in most orgs)
-        let zipBuf;
-        try {
-          const zipRsp = await axios.get(toolingUrl(`/sobjects/LightningComponentBundle/${bundleId}/source`), { headers, responseType: 'arraybuffer' });
-          zipBuf = zipRsp.data;
-        } catch {
-          /* /source not enabled – fall back to LightningComponentResource */
-        }
+//         // ── Try zipped /source first (works in most orgs)
+//         let zipBuf;
+//         try {
+//           const zipRsp = await axios.get(toolingUrl(`/sobjects/LightningComponentBundle/${bundleId}/source`), { headers, responseType: 'arraybuffer' });
+//           zipBuf = zipRsp.data;
+//         } catch {
+//           /* /source not enabled – fall back to LightningComponentResource */
+//         }
 
-        if (zipBuf) {
-          const zip = new AdmZip(zipBuf);
-          zip.getEntries().forEach(e => {
-            if (!e.isDirectory && /\.(js|html|css|xml|svg|json)$/i.test(e.entryName)) {
-              files.push({ fileName: path.basename(e.entryName), code: e.getData().toString('utf8') });
-            }
-          });
-        } else {
-          // ── Fallback: pull each resource row
-          const resQ = `SELECT FilePath, Source FROM LightningComponentResource WHERE LightningComponentBundleId='${bundleId}'`;
-          const rRsp = await axios.get(toolingUrl(`/query?q=${encodeURIComponent(resQ)}`), { headers });
-          rRsp.data.records.forEach(r => {
-            const fname = path.basename(r.FilePath);
-            files.push({ fileName: fname, code: r.Source || '' });
-          });
-        }
+//         if (zipBuf) {
+//           const zip = new AdmZip(zipBuf);
+//           zip.getEntries().forEach(e => {
+//             if (!e.isDirectory && /\.(js|html|css|xml|svg|json)$/i.test(e.entryName)) {
+//               files.push({ fileName: path.basename(e.entryName), code: e.getData().toString('utf8') });
+//             }
+//           });
+//         } else {
+//           // ── Fallback: pull each resource row
+//           const resQ = `SELECT FilePath, Source FROM LightningComponentResource WHERE LightningComponentBundleId='${bundleId}'`;
+//           const rRsp = await axios.get(toolingUrl(`/query?q=${encodeURIComponent(resQ)}`), { headers });
+//           rRsp.data.records.forEach(r => {
+//             const fname = path.basename(r.FilePath);
+//             files.push({ fileName: fname, code: r.Source || '' });
+//           });
+//         }
 
-        // ── save cache for next time
-        if (files.length) {
-          fsExtra.mkdirpSync(cacheDir);
-          files.forEach(f => fs.writeFileSync(path.join(cacheDir, f.fileName), f.code, 'utf8'));
-        }
-      }
+//         // ── save cache for next time
+//         if (files.length) {
+//           fsExtra.mkdirpSync(cacheDir);
+//           files.forEach(f => fs.writeFileSync(path.join(cacheDir, f.fileName), f.code, 'utf8'));
+//         }
+//       }
 
-      if (!files.length) throw new Error('No readable files in LWC bundle');
-    } else {
-      /* 5 Unsupported type */
-      return res.status(400).json({ status: 'error', message: `Unsupported componentType: ${componentType}` });
-    }
+//       if (!files.length) throw new Error('No readable files in LWC bundle');
+//     } else {
+//       /* 5 Unsupported type */
+//       return res.status(400).json({ status: 'error', message: `Unsupported componentType: ${componentType}` });
+//     }
 
-    /* 6ccess */
-    return res.json({
-      status: 'success',
-      sourceAlias,
-      componentType,
-      name,
-      fileCount: files.length,
-      files
-    });
+//     /* 6ccess */
+//     return res.json({
+//       status: 'success',
+//       sourceAlias,
+//       componentType,
+//       name,
+//       fileCount: files.length,
+//       files
+//     });
 
-  } catch (err) {
-    const msg = err.response?.data?.message || err.message || err;
-    return res.status(404).json({ status: 'error', message: `Unable to retrieve ${componentType}: ${msg}` });
-  }
-});
+//   } catch (err) {
+//     const msg = err.response?.data?.message || err.message || err;
+//     return res.status(404).json({ status: 'error', message: `Unable to retrieve ${componentType}: ${msg}` });
+//   }
+// });
 
 
 // Start server
