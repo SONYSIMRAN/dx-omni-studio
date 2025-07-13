@@ -2836,51 +2836,51 @@ app.get('/components', async (req, res) => {
 
 
 /**correct one for apex clas */
-app.post('/analyze-class', async (req, res) => {
-  let { className, sourceAlias } = req.body;
+// app.post('/analyze-class', async (req, res) => {
+//   let { className, sourceAlias } = req.body;
 
-  if (!className || !sourceAlias) {
-    return res.status(400).json({ status: 'error', message: 'Missing className or sourceAlias' });
-  }
+//   if (!className || !sourceAlias) {
+//     return res.status(400).json({ status: 'error', message: 'Missing className or sourceAlias' });
+//   }
 
-  className = className.replace(/\.cls$/i, '');
+//   className = className.replace(/\.cls$/i, '');
 
-  try {
-    // Authenticate and get org info
-    const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf8' }));
-    const accessToken = authInfo.result.accessToken;
-    const instanceUrl = authInfo.result.instanceUrl;
+//   try {
+//     // Authenticate and get org info
+//     const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf8' }));
+//     const accessToken = authInfo.result.accessToken;
+//     const instanceUrl = authInfo.result.instanceUrl;
 
-    // Fetch Apex class body
-    const query = `SELECT Body FROM ApexClass WHERE Name = '${className}'`;
-    const queryUrl = `${instanceUrl}/services/data/v59.0/tooling/query?q=${encodeURIComponent(query)}`;
-    const headers = { Authorization: `Bearer ${accessToken}` };
-    const response = await axios.get(queryUrl, { headers });
+//     // Fetch Apex class body
+//     const query = `SELECT Body FROM ApexClass WHERE Name = '${className}'`;
+//     const queryUrl = `${instanceUrl}/services/data/v59.0/tooling/query?q=${encodeURIComponent(query)}`;
+//     const headers = { Authorization: `Bearer ${accessToken}` };
+//     const response = await axios.get(queryUrl, { headers });
 
-    if (!response.data.records || response.data.records.length === 0) {
-      return res.status(404).json({ status: 'error', message: `Apex class ${className} not found.` });
-    }
+//     if (!response.data.records || response.data.records.length === 0) {
+//       return res.status(404).json({ status: 'error', message: `Apex class ${className} not found.` });
+//     }
 
-    const code = response.data.records[0].Body;
+//     const code = response.data.records[0].Body;
 
-    // Return the code and metadata
-    return res.json({
-      status: 'success',
-      className,
-      fileName: `classes/${className}.cls`,
-      type: 'ApexClass',
-      sourceAlias,
-      code
-    });
+//     // Return the code and metadata
+//     return res.json({
+//       status: 'success',
+//       className,
+//       fileName: `classes/${className}.cls`,
+//       type: 'ApexClass',
+//       sourceAlias,
+//       code
+//     });
 
-  } catch (err) {
-    console.error('Fetch Apex class error:', err.message || err);
-    return res.status(500).json({
-      status: 'error',
-      message: err.message || 'Failed to fetch Apex class'
-    });
-  }
-});
+//   } catch (err) {
+//     console.error('Fetch Apex class error:', err.message || err);
+//     return res.status(500).json({
+//       status: 'error',
+//       message: err.message || 'Failed to fetch Apex class'
+//     });
+//   }
+// });
 
 app.post('/coverage', async (req, res) => {
   let { sourceAlias, className = '*' } = req.body;
@@ -3007,112 +3007,139 @@ app.post('/test-methods', async (req, res) => {
 });
 
 
-// app.post('/analyze-component', async (req, res) => {
-//   let { sourceAlias, componentType = 'ApexClass', name } = req.body;
+// ⬇️  NEW universal analysis endpoint
+app.post('/analyze-component', async (req, res) => {
+  let { sourceAlias, componentType = 'ApexClass', name } = req.body;
 
-//   if (!sourceAlias || !name) {
-//     return res.status(400).json({ status: 'error', message: 'sourceAlias and name are required' });
-//   }
+  /* ---------- 1. validate input ---------- */
+  if (!sourceAlias || !name) {
+    return res.status(400).json({
+      status : 'error',
+      message: 'sourceAlias and name are required'
+    });
+  }
 
-//   componentType = componentType.trim();
-//   const files = [];
+  /* ---------- 2. auth ---------- */
+  let accessToken, instanceUrl;
+  try {
+    const info = JSON.parse(
+      execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf8' })
+    );
+    accessToken = info.result.accessToken;
+    instanceUrl = info.result.instanceUrl;
+  } catch (e) {
+    return res.status(500).json({
+      status : 'error',
+      message: 'sf org display failed: ' + e.message
+    });
+  }
 
-//   /* 1Org auth */
-//   let accessToken, instanceUrl;
-//   try {
-//     const org = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf8' }));
-//     accessToken = org.result.accessToken;
-//     instanceUrl = org.result.instanceUrl;
-//   } catch (err) {
-//     return res.status(500).json({ status: 'error', message: 'sf org display failed', details: err.message });
-//   }
+  const headers = { Authorization: `Bearer ${accessToken}` };
+  const baseTooling = `${instanceUrl}/services/data/v60.0/tooling`;
 
-//   /* Helper builders */
-//   const toolingUrl = (suffix) => `${instanceUrl}/services/data/v60.0/tooling${suffix}`;
-//   const headers    = { Authorization: `Bearer ${accessToken}` };
+  /* ---------- 3. handle ApexClass / ApexTrigger ---------- */
+  if (componentType === 'ApexClass' || componentType === 'ApexTrigger') {
+    const sobject = componentType;
+    const soql = `SELECT Body FROM ${sobject} WHERE Name = '${name.replace(/'/g, "\\'")}'`;
+    const url  = `${baseTooling}/query?q=${encodeURIComponent(soql)}`;
 
-//   try {
-//     if (componentType === 'ApexClass' || componentType === 'ApexTrigger') {
-//       /* 2Apex class / trigger body */
-//       const soql = `SELECT Body FROM ${componentType} WHERE Name = '${name.replace(/'/g, "\\'")}'`;
-//       const rsp  = await axios.get(toolingUrl(`/query?q=${encodeURIComponent(soql)}`), { headers });
-//       if (!rsp.data.records?.length) throw new Error(`${componentType} not found`);
-//       const ext = componentType === 'ApexClass' ? 'cls' : 'trigger';
-//       files.push({ fileName: `${name}.${ext}`, code: rsp.data.records[0].Body });
+    try {
+      const resp = await axios.get(url, { headers });
+      if (!resp.data.records?.length) {
+        return res.status(404).json({
+          status : 'error',
+          message: `${componentType} ${name} not found`
+        });
+      }
 
-//     } else if (componentType === 'LightningComponentBundle') {
-//       /* LWC — check cache first */
-//       const cacheDir = path.join(__dirname, 'storage', sourceAlias, 'RegularMetadata', 'lwc', name);
-//       if (fs.existsSync(cacheDir)) {
-//         fs.readdirSync(cacheDir).forEach(f => {
-//           if (/\.(js|html|css|xml|svg|json)$/i.test(f)) {
-//             files.push({ fileName: f, code: fs.readFileSync(path.join(cacheDir, f), 'utf8') });
-//           }
-//         });
-//       }
+      const body     = resp.data.records[0].Body;
+      const fileExt  = componentType === 'ApexClass' ? 'cls' : 'trigger';
+      const filePath = `${componentType === 'ApexClass' ? 'classes' : 'triggers'}/${name}.${fileExt}`;
 
-//       /* Fetch from Tooling API if cache empty */
-//       if (!files.length) {
-//         // ── Get bundle Id
-//         const bundleQ = `SELECT Id FROM LightningComponentBundle WHERE DeveloperName='${name.replace(/'/g,"\\'")}'`;
-//         const bRsp    = await axios.get(toolingUrl(`/query?q=${encodeURIComponent(bundleQ)}`), { headers });
-//         if (!bRsp.data.records?.length) throw new Error('LWC bundle not found');
-//         const bundleId = bRsp.data.records[0].Id;
+      return res.json({
+        status      : 'success',
+        sourceAlias,
+        componentType,
+        name,
+        fileName    : filePath,
+        code        : body
+      });
 
-//         // ── Try zipped /source first (works in most orgs)
-//         let zipBuf;
-//         try {
-//           const zipRsp = await axios.get(toolingUrl(`/sobjects/LightningComponentBundle/${bundleId}/source`), { headers, responseType: 'arraybuffer' });
-//           zipBuf = zipRsp.data;
-//         } catch {
-//           /* /source not enabled – fall back to LightningComponentResource */
-//         }
+    } catch (err) {
+      return res.status(500).json({
+        status : 'error',
+        message: 'Tooling query failed: ' + err.message
+      });
+    }
+  }
 
-//         if (zipBuf) {
-//           const zip = new AdmZip(zipBuf);
-//           zip.getEntries().forEach(e => {
-//             if (!e.isDirectory && /\.(js|html|css|xml|svg|json)$/i.test(e.entryName)) {
-//               files.push({ fileName: path.basename(e.entryName), code: e.getData().toString('utf8') });
-//             }
-//           });
-//         } else {
-//           // ── Fallback: pull each resource row
-//           const resQ = `SELECT FilePath, Source FROM LightningComponentResource WHERE LightningComponentBundleId='${bundleId}'`;
-//           const rRsp = await axios.get(toolingUrl(`/query?q=${encodeURIComponent(resQ)}`), { headers });
-//           rRsp.data.records.forEach(r => {
-//             const fname = path.basename(r.FilePath);
-//             files.push({ fileName: fname, code: r.Source || '' });
-//           });
-//         }
+  /* ---------- 4. handle LightningComponentBundle (LWC) ---------- */
+  if (componentType === 'LightningComponentBundle') {
+    try {
+      // 4-a. get bundle Id
+      const soql = `SELECT Id FROM LightningComponentBundle WHERE DeveloperName='${name}'`;
+      const qry  = await axios.get(`${baseTooling}/query?q=${encodeURIComponent(soql)}`, { headers });
 
-//         // ── save cache for next time
-//         if (files.length) {
-//           fsExtra.mkdirpSync(cacheDir);
-//           files.forEach(f => fs.writeFileSync(path.join(cacheDir, f.fileName), f.code, 'utf8'));
-//         }
-//       }
+      if (!qry.data.records?.length) {
+        return res.status(404).json({
+          status : 'error',
+          message: `LWC bundle ${name} not found`
+        });
+      }
+      const bundleId = qry.data.records[0].Id;
 
-//       if (!files.length) throw new Error('No readable files in LWC bundle');
-//     } else {
-//       /* 5 Unsupported type */
-//       return res.status(400).json({ status: 'error', message: `Unsupported componentType: ${componentType}` });
-//     }
+      // 4-b. download zipped bundle
+      const zipRes = await axios.get(
+        `${baseTooling}/sobjects/LightningComponentBundle/${bundleId}/source`,
+        { headers, responseType: 'arraybuffer' }
+      );
 
-//     /* 6ccess */
-//     return res.json({
-//       status: 'success',
-//       sourceAlias,
-//       componentType,
-//       name,
-//       fileCount: files.length,
-//       files
-//     });
+      const AdmZip = require('adm-zip');
+      const zip    = new AdmZip(zipRes.data);
+      const files  = [];
 
-//   } catch (err) {
-//     const msg = err.response?.data?.message || err.message || err;
-//     return res.status(404).json({ status: 'error', message: `Unable to retrieve ${componentType}: ${msg}` });
-//   }
-// });
+      zip.getEntries().forEach(entry => {
+        if (
+          !entry.isDirectory &&
+          /\.(js|html|css|xml|svg|json)$/i.test(entry.entryName)
+        ) {
+          files.push({
+            fileName: entry.entryName,
+            code    : entry.getData().toString('utf8')
+          });
+        }
+      });
+
+      if (!files.length) {
+        return res.status(404).json({
+          status : 'error',
+          message: 'No readable files in LWC bundle'
+        });
+      }
+
+      return res.json({
+        status         : 'success',
+        sourceAlias,
+        componentType,
+        name,
+        fileCount      : files.length,
+        files
+      });
+
+    } catch (err) {
+      return res.status(500).json({
+        status : 'error',
+        message: 'Failed to retrieve LWC bundle: ' + err.message
+      });
+    }
+  }
+
+  /* ---------- 5. unsupported type ---------- */
+  return res.status(400).json({
+    status : 'error',
+    message: `Unsupported componentType: ${componentType}`
+  });
+});
 
 
 // Start server
