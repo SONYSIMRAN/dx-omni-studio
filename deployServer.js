@@ -3127,6 +3127,76 @@ app.post('/analyze-class', async (req, res) => {
   }
 });
 
+/**
+ * GET  /coverage
+ * body: { sourceAlias: 'DevHubAlias', className?: 'MyClass' }
+ *
+ * – If className omitted or '*', returns aggregate coverage for every class.
+ * – Leverages sf CLI + Tooling API exactly like /analyze-class.
+ */
+app.post('/coverage', async (req, res) => {
+  let { sourceAlias, className = '*' } = req.body;
+  if (!sourceAlias) {
+    return res.status(400).json({ status: 'error', message: 'sourceAlias is required' });
+  }
+
+  // 1️⃣  Authenticate & grab token/instance
+  let accessToken, instanceUrl;
+  try {
+    const info = JSON.parse(
+      execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf8' })
+    );
+    accessToken = info.result.accessToken;
+    instanceUrl = info.result.instanceUrl;
+  } catch (err) {
+    console.error('Auth error:', err.message);
+    return res.status(500).json({ status: 'error', message: 'sf org display failed' });
+  }
+
+  // 2️⃣  Build SOQL
+  const whereClause =
+    className === '*' ? '' :
+    ` WHERE ApexClassOrTrigger.Name = '${className.replace(/'/g, "\\'")}'`;
+
+  const soql = `
+    SELECT ApexClassOrTrigger.Name,
+           NumLinesCovered,
+           NumLinesUncovered
+      FROM ApexCodeCoverageAggregate${whereClause}`.trim();
+
+  // 3️⃣  Call Tooling API
+  try {
+    const resp = await axios.get(
+      `${instanceUrl}/services/data/v60.0/tooling/query?q=${encodeURIComponent(soql)}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+
+    const results = resp.data.records.map(r => {
+      const covered = r.NumLinesCovered || 0;
+      const uncovered = r.NumLinesUncovered || 0;
+      const pct = covered + uncovered === 0 ? 0 : (covered / (covered + uncovered) * 100).toFixed(2);
+      return {
+        className : r.ApexClassOrTrigger.Name,
+        numLinesCovered   : covered,
+        numLinesUncovered : uncovered,
+        coveragePercent   : Number(pct)
+      };
+    });
+
+    return res.json({
+      status : 'success',
+      sourceAlias,
+      scope  : className === '*' ? 'all' : 'single',
+      count  : results.length,
+      results
+    });
+  } catch (err) {
+    console.error('Coverage query failed:', err.response?.data || err.message);
+    return res.status(500).json({ status: 'error', message: 'Tooling API query failed' });
+  }
+});
+
+
 // Start server
 app.listen(3000, () => {
     console.log('Deployment API running at http://localhost:3000');
