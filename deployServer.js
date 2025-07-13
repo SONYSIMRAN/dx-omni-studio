@@ -2834,7 +2834,6 @@ app.get('/components', async (req, res) => {
     return res.json(summary);
 });
 
-
 /**correct one for apex clas */
 app.post('/analyze-class', async (req, res) => {
   let { className, sourceAlias } = req.body;
@@ -2881,7 +2880,6 @@ app.post('/analyze-class', async (req, res) => {
     });
   }
 });
-
 
 app.post('/coverage', async (req, res) => {
   let { sourceAlias, className = '*' } = req.body;
@@ -3006,7 +3004,6 @@ app.post('/test-methods', async (req, res) => {
     });
   }
 });
-
 
 
 
