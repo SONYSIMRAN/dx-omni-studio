@@ -2410,30 +2410,39 @@ app.get('/releases', (req, res) => {
         // Sort by newest first
         filtered.sort((a, b) => new Date(b.deployedAt) - new Date(a.deployedAt));
 
-        if (branch) {
-            // Return flat list if branch is specified
-            return res.json({
-                status: 'success',
-                sourceAlias,
-                filterBranch: branch,
-                count: filtered.length,
-                releases: filtered
-            });
-        } else {
-            // Group by branch if no branch filter
-            const grouped = {};
-            for (const rel of filtered) {
-                if (!grouped[rel.gitBranch]) grouped[rel.gitBranch] = [];
-                grouped[rel.gitBranch].push(rel);
-            }
+        // if (branch) {
+        //     // Return flat list if branch is specified
+        //     return res.json({
+        //         status: 'success',
+        //         sourceAlias,
+        //         filterBranch: branch,
+        //         count: filtered.length,
+        //         releases: filtered
+        //     });
+        // } else {
+        //     // Group by branch if no branch filter
+        //     const grouped = {};
+        //     for (const rel of filtered) {
+        //         if (!grouped[rel.gitBranch]) grouped[rel.gitBranch] = [];
+        //         grouped[rel.gitBranch].push(rel);
+        //     }
 
-            return res.json({
-                status: 'success',
-                sourceAlias,
-                branches: Object.keys(grouped),
-                releases: grouped
-            });
-        }
+        //     return res.json({
+        //         status: 'success',
+        //         sourceAlias,
+        //         branches: Object.keys(grouped),
+        //         releases: grouped
+        //     });
+        // }
+
+        return res.json({
+        status: 'success',
+        sourceAlias,
+        filterBranch: branch || null,
+        count: filtered.length,
+        releases: filtered
+});
+
     } catch (err) {
         console.error('Error reading releases:', err);
         return res.status(500).json({ status: 'error', message: 'Failed to read releases' });
