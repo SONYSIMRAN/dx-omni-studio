@@ -1,0 +1,27 @@
+{
+    "CustomJavaScript": "GetUserDetailsIP_GetUserDetailsIP_SampleInput.json",
+    "ElementTypeComponentMapping": "{\"ElementTypeToHTMLTemplateList\":[]}",
+    "IsIntegProcdSignatureAvl": false,
+    "IsIntegrationProcedure": true,
+    "IsManagedUsingStdDesigner": false,
+    "IsMetadataCacheDisabled": false,
+    "IsOmniScriptEmbeddable": false,
+    "IsTestProcedure": false,
+    "IsWebCompEnabled": false,
+    "Language": "Procedure",
+    "Name": "GetUserDetailsIP",
+    "OmniProcessElement": [
+        "GetUserDetailsIP_GetUserDetailsIP_Element_GetAPIConfig.json",
+        "GetUserDetailsIP_GetUserDetailsIP_Element_GetEmployeeId.json",
+        "GetUserDetailsIP_GetUserDetailsIP_Element_GetUserDetailsFromAPI.json",
+        "GetUserDetailsIP_GetUserDetailsIP_Element_ResponseAction1.json"
+    ],
+    "OmniProcessKey": "GetUserDetailsIP_GetUserDetailsIP",
+    "OmniProcessType": "Integration Procedure",
+    "PropertySetConfig": "GetUserDetailsIP_GetUserDetailsIP_PropertySetConfig.json",
+    "SubType": "GetUserDetailsIP",
+    "Type": "GetUserDetailsIP",
+    "VlocityDataPackType": "SObject",
+    "VlocityRecordSObjectType": "OmniProcess",
+    "VlocityRecordSourceKey": "OmniProcess/GetUserDetailsIP/GetUserDetailsIP/Procedure"
+}

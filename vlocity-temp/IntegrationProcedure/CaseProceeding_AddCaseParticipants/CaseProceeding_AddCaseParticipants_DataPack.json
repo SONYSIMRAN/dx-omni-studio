@@ -1,0 +1,30 @@
+{
+    "CustomJavaScript": "CaseProceeding_AddCaseParticipants_SampleInput.json",
+    "Description": "AddCaseParticipants",
+    "ElementTypeComponentMapping": "{\"ElementTypeToHTMLTemplateList\":[]}",
+    "IsIntegrationProcedure": true,
+    "IsManagedUsingStdDesigner": false,
+    "IsMetadataCacheDisabled": false,
+    "IsOmniScriptEmbeddable": false,
+    "IsTestProcedure": false,
+    "IsWebCompEnabled": false,
+    "Language": "Procedure",
+    "Name": "AddCaseParticipants",
+    "OmniProcessElement": [
+        "CaseProceeding_AddCaseParticipants_Element_DataMapperPostAction1.json",
+        "CaseProceeding_AddCaseParticipants_Element_SetValues5.json",
+        "CaseProceeding_AddCaseParticipants_Element_SetValues6.json",
+        "CaseProceeding_AddCaseParticipants_Element_ResponseAction2.json",
+        "CaseProceeding_AddCaseParticipants_Element_ResponseAction4.json"
+    ],
+    "OmniProcessKey": "CaseProceeding_AddCaseParticipants",
+    "OmniProcessType": "Integration Procedure",
+    "OverrideKey": "pss_caseprcd_org_flows__CaseProceeding_AddCaseParticipants_Procedure_1",
+    "PropertySetConfig": "CaseProceeding_AddCaseParticipants_PropertySetConfig.json",
+    "SubType": "AddCaseParticipants",
+    "Type": "CaseProceeding",
+    "UniqueName": "CaseProceeding_AddCaseParticipants_Procedure_1",
+    "VlocityDataPackType": "SObject",
+    "VlocityRecordSObjectType": "OmniProcess",
+    "VlocityRecordSourceKey": "OmniProcess/CaseProceeding/AddCaseParticipants/Procedure"
+}

@@ -1,0 +1,26 @@
+Org: target
+Version: 1.17.13
+Node: v22.15.0
+PackageVersion: '254.9'
+Namespace: omnistudio
+Job: VDX
+Action: Deploy
+ProjectPath: 'C:\Users\ssimran\dx-omni-deploy'
+TotalTime: 3m 46s
+Count:
+  Success: {}
+  Error: {}
+Errors:
+  - 'vlocity-temp/AccountDetailsDR -- DataPack >> AccountDetailsDR -- Error Message -- No Vlocity DataPack Configuration Set for DataPack Type: vlocity-temp'
+  - 'vlocity-temp/ContactChild -- DataPack >> ContactChild -- Error Message -- No Vlocity DataPack Configuration Set for DataPack Type: vlocity-temp'
+  - 'vlocity-temp/CaseSummaryD -- DataPack >> CaseSummaryD -- Error Message -- No Vlocity DataPack Configuration Set for DataPack Type: vlocity-temp'
+  - 'vlocity-temp/CaseProceeding_AddCaseParticipants_Procedure -- DataPack >> AddCaseParticipants -- Error Message -- No Vlocity DataPack Configuration Set for DataPack Type: vlocity-temp'
+  - 'vlocity-temp/Case_Create_English -- DataPack >> CreateCaseForContact -- Error Message -- No Vlocity DataPack Configuration Set for DataPack Type: vlocity-temp'
+Status:
+  Success: {}
+  Error: {}
+StatusCount:
+  Remaining: 0
+  Success: 27
+  Error: 5
+id: !<tag:yaml.org,2002:js/undefined> ''

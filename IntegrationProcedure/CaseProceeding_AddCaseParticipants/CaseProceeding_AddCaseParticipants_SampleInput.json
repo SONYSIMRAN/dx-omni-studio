@@ -1,0 +1,13 @@
+{
+    "CaseProceedingParticipantDetails": [
+        {
+            "caseParticipantId": "1caxx000000001fAAA",
+            "id": "001xx000003GZuNAAW",
+            "name": "a1",
+            "role": null,
+            "roleInCaseProceeding": "Judge",
+            "statusType": "Active"
+        }
+    ],
+    "ContextId": "11Fxx0000004CAeEAM"
+}

@@ -1,0 +1,44 @@
+{
+    "IsActive": true,
+    "IsOmniScriptEmbeddable": false,
+    "Name": "DataMapperPostAction1",
+    "OmniProcessId": {
+        "Name": "AddCaseParticipants",
+        "VlocityDataPackType": "VlocityMatchingKeyObject",
+        "VlocityMatchingRecordSourceKey": "OmniProcess/CaseProceeding/AddCaseParticipants/Procedure",
+        "VlocityRecordSObjectType": "OmniProcess"
+    },
+    "PropertySetConfig": {
+        "actionMessage": "",
+        "additionalInput": {
+            "CaseProceedingParticipantDetails": "=%CaseProceedingParticipantDetails%",
+            "ContextId": "=%ContextId%"
+        },
+        "additionalOutput": {
+            "CaseProceedingParticipant": "%DataMapperPostAction1:CaseProceedingParticipant_1:Id%"
+        },
+        "bundle": "PssAddCaseProceedingParticipants",
+        "chainOnStep": false,
+        "disOnTplt": false,
+        "executionConditionalFormula": "",
+        "failOnStepError": true,
+        "failureConditionalFormula": "",
+        "failureResponse": {
+            "": ""
+        },
+        "label": "DataMapperPostAction1",
+        "responseJSONNode": "",
+        "responseJSONPath": "",
+        "returnOnlyAdditionalOutput": true,
+        "returnOnlyFailureResponse": false,
+        "sendJSONNode": "",
+        "sendJSONPath": "",
+        "sendOnlyAdditionalInput": true,
+        "show": null,
+        "useFormulas": true
+    },
+    "Type": "DataRaptor Post Action",
+    "VlocityDataPackType": "SObject",
+    "VlocityRecordSObjectType": "OmniProcessElement",
+    "VlocityRecordSourceKey": "OmniProcessElement/OmniProcess/CaseProceeding/AddCaseParticipants/Procedure/DataMapperPostAction1"
+}

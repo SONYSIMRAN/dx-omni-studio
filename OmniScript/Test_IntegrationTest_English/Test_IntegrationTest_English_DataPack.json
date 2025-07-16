@@ -1,0 +1,24 @@
+{
+    "ElementTypeComponentMapping": "{\"ElementTypeToHTMLTemplateList\":[]}",
+    "IsIntegProcdSignatureAvl": false,
+    "IsIntegrationProcedure": false,
+    "IsManagedUsingStdDesigner": false,
+    "IsMetadataCacheDisabled": false,
+    "IsOmniScriptEmbeddable": false,
+    "IsTestProcedure": false,
+    "IsWebCompEnabled": true,
+    "Language": "English",
+    "Name": "TestPRGScript",
+    "OmniProcessElement": [
+        "Test_IntegrationTest_English_Element_Step1.json",
+        "Test_IntegrationTest_English_Element_DataMapperExtractAction1.json",
+        "Test_IntegrationTest_English_Element_TextBlock1.json"
+    ],
+    "OmniProcessType": "OmniScript",
+    "PropertySetConfig": "Test_IntegrationTest_English_PropertySetConfig.json",
+    "SubType": "IntegrationTest",
+    "Type": "Test",
+    "VlocityDataPackType": "SObject",
+    "VlocityRecordSObjectType": "OmniProcess",
+    "VlocityRecordSourceKey": "OmniProcess/Test/IntegrationTest/English"
+}

@@ -1,0 +1,14 @@
+projectPath: .
+sfdxUsername: target1
+jobName: DeploySelected
+autoRetryErrors: true
+deploy:
+  - IntegrationProcedure:
+      - CaseProceeding_AddCaseParticipants
+  - FlexCard:
+      - ContactChild
+  - DataRaptor:
+      - AccountDetailsDR
+      - CaseSummaryD
+  - OmniScript:
+      - Case_Create_English

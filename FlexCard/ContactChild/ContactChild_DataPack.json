@@ -1,0 +1,31 @@
+{
+    "AuthorName": "TGS",
+    "ClonedFromOmniUiCardKey": "",
+    "DataSourceConfig": {
+        "dataSource": {
+            "contextVariables": [
+            ],
+            "orderBy": {
+            },
+            "type": null,
+            "value": {
+            }
+        }
+    },
+    "Description": "",
+    "IsManagedUsingStdDesigner": false,
+    "IsTrackingEnabled": false,
+    "Name": "ContactChild",
+    "Namespace": "",
+    "OmniUiCardKey": "ContactChild/TGS/1.0",
+    "OmniUiCardType": "Child",
+    "OverrideKey": "",
+    "PropertySetConfig": "ContactChild.json",
+    "SampleDataSourceResponse": "",
+    "StylingConfiguration": "",
+    "UniqueName": "",
+    "VersionNumber": 1,
+    "VlocityDataPackType": "SObject",
+    "VlocityRecordSObjectType": "OmniUiCard",
+    "VlocityRecordSourceKey": "OmniUiCard/ContactChild"
+}

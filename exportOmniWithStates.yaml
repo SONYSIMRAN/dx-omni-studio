@@ -1,0 +1,10 @@
+export:
+  FlexCard:
+    queries:
+      - FlexCard
+  VlocityCard__CardState__c:
+    queries:
+      - VlocityCard__CardState__c
+
+exportPacks:
+  autoAddDependencies: true

@@ -1,7 +1,14 @@
-projectPath: ./vlocity-temp
 export:
   OmniScript:
-    queries: []
+    queries:
+      - OmniScript/Case_Create_English
   DataRaptor:
     queries:
+      - DataRaptor/AccountDetailsDR
       - DataRaptor/CaseSummaryD
+  IntegrationProcedure:
+    queries:
+      - IntegrationProcedure/CaseProceeding_AddCaseParticipants
+  FlexCard:
+    queries:
+      - FlexCard/ContactChild

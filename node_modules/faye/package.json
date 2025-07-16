@@ -12,7 +12,7 @@
                     "http"
           ],
           "license": "Apache-2.0",
-          "version": "1.4.0",
+          "version": "1.4.1",
           "engines": {
                     "node": ">=0.8.0"
           },
@@ -31,8 +31,8 @@
                     "mime": "~1.2.0",
                     "permessage-deflate": ">=0.1.0",
                     "promises-aplus-tests": "~2.1.0",
-                    "webpack": "*",
-                    "webpack-cli": "*",
+                    "webpack": "~4",
+                    "webpack-cli": "~4",
                     "imports-loader": "<1.0.0"
           },
           "scripts": {

@@ -1,0 +1,25 @@
+{
+    "ElementTypeComponentMapping": "{\"ElementTypeToHTMLTemplateList\":[]}",
+    "IsIntegProcdSignatureAvl": false,
+    "IsIntegrationProcedure": false,
+    "IsManagedUsingStdDesigner": false,
+    "IsMetadataCacheDisabled": false,
+    "IsOmniScriptEmbeddable": false,
+    "IsTestProcedure": false,
+    "IsWebCompEnabled": true,
+    "Language": "English",
+    "Name": "ContactScript",
+    "OmniProcessElement": [
+        "Interaction_Contact_English_Element_Step1.json",
+        "Interaction_Contact_English_Element_TextArea1.json",
+        "Interaction_Contact_English_Element_TextArea2.json",
+        "Interaction_Contact_English_Element_TextArea3.json"
+    ],
+    "OmniProcessType": "OmniScript",
+    "PropertySetConfig": "Interaction_Contact_English_PropertySetConfig.json",
+    "SubType": "Contact",
+    "Type": "Interaction",
+    "VlocityDataPackType": "SObject",
+    "VlocityRecordSObjectType": "OmniProcess",
+    "VlocityRecordSourceKey": "OmniProcess/Interaction/Contact/English"
+}

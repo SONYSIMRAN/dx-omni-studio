@@ -2,7 +2,7 @@ Org: trial1
 Version: 1.17.13
 PackageVersion: undefined
 Namespace: omnistudio
-Job: exportAllOmni.yaml
+Job: vlocity_temp\exportDeployGit.yaml
 Action: Export
-ProjectPath: .
+ProjectPath: C:\Users\ssimran\dx-omni-deploy
 Errors: None

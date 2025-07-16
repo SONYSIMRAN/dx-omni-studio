@@ -1,0 +1,14 @@
+<template>
+    <lightning-card title="OmniStudio Code Quality">
+        <template if:true={quality}>
+            <p><strong>Class:</strong> {quality.Apex_Class_Name__c}</p>
+            <p>Bugs: {quality.Bugs__c}</p>
+            <p>Vulnerabilities: {quality.Vulnerabilities__c}</p>
+            <p>Code Smells: {quality.Code_Smells__c}</p>
+            <p>Coverage: {quality.Coverage__c}%</p>
+        </template>
+        <template if:true={error}>
+            <p class="slds-text-color_error">{error}</p>
+        </template>
+    </lightning-card>
+</template>

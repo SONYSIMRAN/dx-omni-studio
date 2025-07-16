@@ -1,0 +1,21 @@
+{
+  "releaseId": "release-2025-07-16_15-58-37Z",
+  "releaseName": "July Hotfix",
+  "deployedAt": "2025-07-16T10:28:37.576Z",
+  "deployedAtFormatted": "Wednesday, 16 Jul 2025, 03:58 pm IST",
+  "deployedBy": "Omni Deployer",
+  "sourceAlias": "trial1",
+  "components": {
+    "FlexCard": [
+      "ContactChild",
+      "ContactData"
+    ],
+    "RegularMetadata": {
+      "ApexClass": [
+        "AccountDataController",
+        "InvoiceHelper"
+      ]
+    }
+  },
+  "gitBranch": "main"
+}

@@ -1,0 +1,7 @@
+export:
+  FlexCard:
+    ContactChild: {}
+    AccountTest: {}
+exportPacks:
+  autoAddDependencies: true
+  autoAddDependentFields: true

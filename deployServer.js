@@ -20,7 +20,10 @@ const AdmZip = require('adm-zip');
 const {
     saveComponentWithMetadata,
     fetchOmniComponentDates,
+    mergeSelectedComponents,
     formatDate,
+    // fetchAndStoreComponentsFromOrg,
+    diffComponents,
     getComponentStatus
 } = require('./storageHelper');
 const STORAGE_DIR = path.join(__dirname, 'storage');
@@ -807,26 +810,26 @@ app.post('/detect-dependencies', (req, res) => {
 
 
 // Trigger GitLab Pipeline
-async function triggerGitlabPipeline() {
-    const GITLAB_API_URL = `https://gitlab.com/api/v4/projects/${process.env.GITLAB_PROJECT_ID}/pipeline`;
+// async function triggerGitlabPipeline() {
+//     const GITLAB_API_URL = `https://gitlab.com/api/v4/projects/${process.env.GITLAB_PROJECT_ID}/pipeline`;
 
-    try {
-        const response = await axios.post(
-            GITLAB_API_URL,
-            { ref: process.env.GITLAB_BRANCH || 'main' },
-            {
-                headers: {
-                    'Private-Token': process.env.GITLAB_TOKEN,
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-        return response.data;
-    } catch (err) {
-        console.error('GitLab pipeline trigger failed:', err.response?.data || err.message);
-        throw err;
-    }
-}
+//     try {
+//         const response = await axios.post(
+//             GITLAB_API_URL,
+//             { ref: process.env.GITLAB_BRANCH || 'main' },
+//             {
+//                 headers: {
+//                     'Private-Token': process.env.GITLAB_TOKEN,
+//                     'Content-Type': 'application/json'
+//                 }
+//             }
+//         );
+//         return response.data;
+//     } catch (err) {
+//         console.error('GitLab pipeline trigger failed:', err.response?.data || err.message);
+//         throw err;
+//     }
+// }
 
 //** Deploying omni studio and sfdx fixed version*/
 
@@ -1935,7 +1938,27 @@ app.post('/deploy-and-git', async (req, res) => {
         const now = new Date();
         const pad = (n) => n.toString().padStart(2, '0');
         const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
-        const releaseId = `release-${timestamp}Z`;
+        // const releaseId = `release-${timestamp}Z`;
+        // const incomingReleaseId = req.body.releaseId; // from re-deploy
+        // const releaseId = incomingReleaseId || `release-${timestamp}Z`;
+
+        const incomingReleaseId = req.body.releaseId;
+        let releaseId;
+
+        if (incomingReleaseId) {
+        // 🔁 Re-deploy scenario
+        releaseId = incomingReleaseId;
+        console.log(`🔁 Re-deploying to existing releaseId: ${releaseId}`);
+        } else {
+        // ✅ New deploy scenario
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+        releaseId = `release-${timestamp}Z`;
+        console.log(`🆕 New release created: ${releaseId}`);
+        }
+
+
 
         const deployedAt = now.toISOString();
         const deployedAtFormatted = now.toLocaleString('en-IN', {
@@ -1950,8 +1973,9 @@ app.post('/deploy-and-git', async (req, res) => {
             timeZoneName: 'short'
         });
 
-        const safeReleaseName = releaseName ? releaseName.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-_]/g, '') : '';
-        const releaseFolderName = safeReleaseName ? `${safeReleaseName}__${releaseId}` : releaseId;
+        // const safeReleaseName = releaseName ? releaseName.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-_]/g, '') : '';
+        // const releaseFolderName = safeReleaseName ? `${safeReleaseName}__${releaseId}` : releaseId;
+        const releaseFolderName = releaseId;
         const releaseFolder = path.join(componentsDir, releaseFolderName);
         fsExtra.mkdirpSync(releaseFolder);
 
@@ -2003,9 +2027,16 @@ app.post('/deploy-and-git', async (req, res) => {
         fs.writeFileSync(path.join(releaseHistoryDir, `${releaseId}.json`), JSON.stringify(releaseMetadata, null, 2));
 
         //  ALSO write to local storage directory for /releases route
+        // const localReleaseDir = path.join(__dirname, 'storage', sourceAlias, 'releases');
+        // fs.mkdirSync(localReleaseDir, { recursive: true });
+        // fs.writeFileSync(path.join(localReleaseDir, `${releaseId}.json`), JSON.stringify(releaseMetadata, null, 2));
+        
         const localReleaseDir = path.join(__dirname, 'storage', sourceAlias, 'releases');
         fs.mkdirSync(localReleaseDir, { recursive: true });
-        fs.writeFileSync(path.join(localReleaseDir, `${releaseId}.json`), JSON.stringify(releaseMetadata, null, 2));
+        const localPath = path.join(localReleaseDir, `${releaseId}.json`);
+        fs.writeFileSync(localPath, JSON.stringify(releaseMetadata, null, 2));
+        console.log(`✅ Local release saved: ${localPath}`);
+        
 
         // Timestamp marker
         const metaDir = path.join(componentsDir, '.meta');
@@ -2021,24 +2052,44 @@ app.post('/deploy-and-git', async (req, res) => {
         await git.add('--all');
 
         const fullTagName = releaseFolderName;
+        // await git.commit(`Release: ${fullTagName} — ${commitMessage}`);
+        // await git.push('origin', gitBranch);
+        // await git.addTag(fullTagName);
+        // await git.pushTags('origin');
+
         await git.commit(`Release: ${fullTagName} — ${commitMessage}`);
         await git.push('origin', gitBranch);
+
+        // 🔁 Ensure safe re-tag if re-deploy
+        const existingTags = await git.tags();
+        if (existingTags.all.includes(fullTagName)) {
+            console.log(`♻️ Tag already exists, deleting: ${fullTagName}`);
+            await git.tag(['-d', fullTagName]);
+            await git.push(['origin', `:refs/tags/${fullTagName}`]);
+        }
+
         await git.addTag(fullTagName);
         await git.pushTags('origin');
 
-        const pipelineData = await triggerGitlabPipeline();
 
+        // const pipelineData = await triggerGitlabPipeline();
+
+        // return res.status(200).json({
+        //     status: 'success',
+        //     message: 'Selected OmniStudio + SFDX metadata exported to Git!',
+        //     release: releaseMetadata,
+        //     pipeline: {
+        //         id: pipelineData.id,
+        //         status: pipelineData.status,
+        //         url: pipelineData.web_url,
+        //         ref: pipelineData.ref,
+        //         created_at: pipelineData.created_at
+        //     }
+        // });
         return res.status(200).json({
             status: 'success',
             message: 'Selected OmniStudio + SFDX metadata exported to Git!',
-            release: releaseMetadata,
-            pipeline: {
-                id: pipelineData.id,
-                status: pipelineData.status,
-                url: pipelineData.web_url,
-                ref: pipelineData.ref,
-                created_at: pipelineData.created_at
-            }
+            release: releaseMetadata
         });
 
     } catch (err) {
@@ -2245,15 +2296,26 @@ app.post('/redeploy-rollback', async (req, res) => {
 
 
 
-app.get('/stored-components', (req, res) => {
+app.get('/stored-components', async(req, res) => {
     const { sourceAlias } = req.query;
+    console.log('/stored-components request received with sourceAlias:', sourceAlias);
+
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
 
     try {
+
         const index = storage.getIndex(sourceAlias);
+        console.log('storage.getIndex(trial1):', JSON.stringify(index, null, 2));
         if (!index || typeof index !== 'object') {
+            
             return res.status(404).send('No stored components found');
         }
+
+    // if (!index || typeof index !== 'object' || Object.keys(index).length === 0) {
+    //         console.log(`📥 Auto-fetching components for: ${sourceAlias}`);
+    //        const index = await fetchAndStoreComponentsFromOrg(sourceAlias); // ✅ Now valid
+    //     }
+
 
         const releasesPath = path.join(__dirname, 'storage', sourceAlias, 'releases');
         let latestRelease = null;
@@ -2449,44 +2511,44 @@ app.get('/releases', (req, res) => {
     }
 });
 
-app.post('/re-deploy-release', async (req, res) => {
-    const { sourceAlias, releaseId, overrideCommitMessage, overrideBranch } = req.body;
+// app.post('/re-deploy-release', async (req, res) => {
+//     const { sourceAlias, releaseId, overrideCommitMessage, overrideBranch } = req.body;
 
-    if (!sourceAlias || !releaseId) {
-        return res.status(400).json({ status: 'error', message: 'sourceAlias and releaseId are required' });
-    }
+//     if (!sourceAlias || !releaseId) {
+//         return res.status(400).json({ status: 'error', message: 'sourceAlias and releaseId are required' });
+//     }
 
-    const releasePath = path.join(__dirname, 'storage', sourceAlias, 'releases', `${releaseId}.json`);
+//     const releasePath = path.join(__dirname, 'storage', sourceAlias, 'releases', `${releaseId}.json`);
 
-    if (!fs.existsSync(releasePath)) {
-        return res.status(404).json({ status: 'error', message: 'Release not found' });
-    }
+//     if (!fs.existsSync(releasePath)) {
+//         return res.status(404).json({ status: 'error', message: 'Release not found' });
+//     }
 
-    try {
-        const release = JSON.parse(fs.readFileSync(releasePath, 'utf-8'));
+//     try {
+//         const release = JSON.parse(fs.readFileSync(releasePath, 'utf-8'));
 
-        const payload = {
-            sourceAlias,
-            selectedComponents: release.components,
-            gitBranch: overrideBranch || release.gitBranch || 'main',
-            commitMessage: overrideCommitMessage || `Re-deploying ${release.releaseName || release.releaseId}`,
-            releaseName: `${release.releaseName || release.releaseId} (Redeploy)`
-        };
+//         const payload = {
+//             sourceAlias,
+//             selectedComponents: release.components,
+//             gitBranch: overrideBranch || release.gitBranch || 'main',
+//             commitMessage: overrideCommitMessage || `Re-deploying ${release.releaseName || release.releaseId}`,
+//             releaseName: `${release.releaseName || release.releaseId} (Redeploy)`
+//         };
 
-        // Call /deploy-and-git internally
-        const axiosRes = await axios.post(`http://localhost:3000/deploy-and-git`, payload);
-        return res.status(200).json({
-            status: 'success',
-            originalRelease: releaseId,
-            newRelease: axiosRes.data.release,
-            pipeline: axiosRes.data.pipeline
-        });
+//         // Call /deploy-and-git internally
+//         const axiosRes = await axios.post(`http://localhost:3000/deploy-and-git`, payload);
+//         return res.status(200).json({
+//             status: 'success',
+//             originalRelease: releaseId,
+//             newRelease: axiosRes.data.release,
+//             pipeline: axiosRes.data.pipeline
+//         });
 
-    } catch (err) {
-        console.error('Error during re-deploy:', err.message);
-        return res.status(500).json({ status: 'error', message: 'Failed to re-deploy release' });
-    }
-});
+//     } catch (err) {
+//         console.error('Error during re-deploy:', err.message);
+//         return res.status(500).json({ status: 'error', message: 'Failed to re-deploy release' });
+//     }
+// });
 
 app.get('/commits', async (req, res) => {
     const branch = req.query.branch;
@@ -3013,6 +3075,194 @@ app.post('/test-methods', async (req, res) => {
     });
   }
 });
+
+// app.post('/re-deploy-release', async (req, res) => {
+//   const {
+//     sourceAlias,
+//     releaseId,
+//     additionalComponents = {},   // 👈 NEW (optional)
+//     overrideCommitMessage,
+//     overrideBranch
+//   } = req.body;
+
+//   if (!sourceAlias || !releaseId) {
+//     return res.status(400).json({
+//       status: 'error',
+//       message: 'sourceAlias and releaseId are required'
+//     });
+//   }
+
+//   const releasePath = path.join(
+//     __dirname,
+//     'storage',
+//     sourceAlias,
+//     'releases',
+//     `${releaseId}.json`
+//   );
+
+//   if (!fs.existsSync(releasePath)) {
+//     return res.status(404).json({
+//       status: 'error',
+//       message: `Release '${releaseId}' not found`
+//     });
+//   }
+
+//   try {
+//     // 1️⃣  Load the original release descriptor
+//     const release = JSON.parse(fs.readFileSync(releasePath, 'utf-8'));
+
+//     // 2️⃣  Merge with any new components
+//     const mergedComponents = mergeSelectedComponents(
+//       release.components,
+//       additionalComponents
+//     );
+
+//     // 3️⃣  Build the payload for /deploy-and-git
+//     const payload = {
+//       sourceAlias,
+//       selectedComponents : mergedComponents,
+//       gitBranch          : overrideBranch || release.gitBranch || 'main',
+//       commitMessage      :
+//         overrideCommitMessage ||
+//         `Re-deploying ${release.releaseName || release.releaseId}`,
+//       releaseName        : `${release.releaseName || release.releaseId} (Redeploy)`
+//     };
+
+//     // 4️⃣  Fire the deploy
+//     const axiosRes = await axios.post(
+//       'http://localhost:3000/deploy-and-git',
+//       payload
+//     );
+
+//     return res.status(200).json({
+//       status        : 'success',
+//       originalRelease : releaseId,
+//       newRelease      : axiosRes.data.release,
+//       pipeline        : axiosRes.data.pipeline
+//     });
+//   } catch (err) {
+//     console.error('Error during re-deploy:', err.message || err);
+//     return res.status(500).json({
+//       status : 'error',
+//       message: 'Failed to re-deploy release',
+//       details: err.message
+//     });
+//   }
+// });
+
+app.post('/re-deploy-release', async (req, res) => {
+  const {
+    sourceAlias,
+    releaseId,
+    additionalComponents = {},
+    overrideCommitMessage,
+    overrideBranch
+  } = req.body;
+
+  if (!sourceAlias || !releaseId) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'sourceAlias and releaseId are required'
+    });
+  }
+
+  const releasePath = path.join(__dirname, 'storage', sourceAlias, 'releases', `${releaseId}.json`);
+
+  if (!fs.existsSync(releasePath)) {
+    return res.status(404).json({
+      status: 'error',
+      message: `Release '${releaseId}' not found`
+    });
+  }
+
+  try {
+    const release = JSON.parse(fs.readFileSync(releasePath, 'utf-8'));
+
+    // Merge with new components
+    const mergedComponents = mergeSelectedComponents(release.components, additionalComponents);
+
+    // 🔁 Overwrite same release name and ID
+    const now = new Date();
+    const deployedAt = now.toISOString();
+    const deployedAtFormatted = now.toLocaleString('en-IN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Kolkata',
+      timeZoneName: 'short'
+    });
+
+    const newMetadata = {
+      releaseId,
+      releaseName: release.releaseName,
+      deployedAt,
+      deployedAtFormatted,
+      deployedBy: process.env.GIT_COMMIT_NAME || 'Omni Deployer',
+      sourceAlias,
+      components: mergedComponents,
+      gitBranch: overrideBranch || release.gitBranch || 'main'
+    };
+
+    const payload = {
+      sourceAlias,
+      selectedComponents: mergedComponents,
+      gitBranch: newMetadata.gitBranch,
+      commitMessage: overrideCommitMessage || `Re-releasing ${release.releaseName || releaseId}`,
+      releaseName: newMetadata.releaseName,
+      releaseId 
+    };
+
+    // 🔁 Deploy via original endpoint
+    const axiosRes = await axios.post('http://localhost:3000/deploy-and-git', payload);
+
+    // 🔧 Overwrite tag if needed (delete + recreate)
+    const gitExportDir = './git-export';
+    const git = simpleGit(gitExportDir);
+    await git.fetch();
+    // await git.tag(['-d', releaseId]); // delete local
+
+    await git.fetch('--tags');
+
+    // Only delete tag if it exists
+    const tags = await git.tags();
+    if (tags.all.includes(releaseId)) {
+    await git.tag(['-d', releaseId]); // delete local
+    await git.push(['origin', `:refs/tags/${releaseId}`]); // delete remote
+    }
+
+    // await git.push(['origin', `:refs/tags/${releaseId}`]); // delete remote
+    await git.addTag(releaseId);
+    await git.pushTags('origin');
+
+    // 🔁 Overwrite `release.json` with updated metadata
+    const componentsDir = path.join(gitExportDir, 'components');
+    const releaseFolder = path.join(componentsDir, releaseId);
+    const releaseFile = path.join(releaseFolder, 'release.json');
+    const storageReleaseFile = path.join(__dirname, 'storage', sourceAlias, 'releases', `${releaseId}.json`);
+
+    fs.writeFileSync(releaseFile, JSON.stringify(newMetadata, null, 2));
+    fs.writeFileSync(storageReleaseFile, JSON.stringify(newMetadata, null, 2));
+
+    return res.status(200).json({
+      status: 'success',
+      originalRelease: releaseId,
+      newRelease: newMetadata,
+      pipeline: axiosRes.data.pipeline
+    });
+  } catch (err) {
+    console.error('Error during re-deploy:', err.message || err);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Failed to re-deploy release',
+      details: err.message
+    });
+  }
+});
+
 
 
 

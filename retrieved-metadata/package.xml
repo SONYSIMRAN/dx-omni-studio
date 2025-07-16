@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<Package>
+  <types>
+    <name>ApexClass</name>
+    <members>*</members>
+  </types>
+  <types>
+    <name>ApexTrigger</name>
+    <members>*</members>
+  </types>
+  <types>
+    <name>LightningComponentBundle</name>
+    <members>*</members>
+  </types>
+  <version>59.0</version>
+</Package>

@@ -1,0 +1,23 @@
+{
+    "ElementTypeComponentMapping": "{\"ElementTypeToHTMLTemplateList\":[]}",
+    "IsIntegProcdSignatureAvl": false,
+    "IsIntegrationProcedure": false,
+    "IsManagedUsingStdDesigner": false,
+    "IsMetadataCacheDisabled": false,
+    "IsOmniScriptEmbeddable": false,
+    "IsTestProcedure": false,
+    "IsWebCompEnabled": true,
+    "Language": "English",
+    "Name": "GetAccountDetailsScript",
+    "OmniProcessElement": [
+        "Integration_AccountDetails_English_Element_Step1.json",
+        "Integration_AccountDetails_English_Element_Label1.json"
+    ],
+    "OmniProcessType": "OmniScript",
+    "PropertySetConfig": "Integration_AccountDetails_English_PropertySetConfig.json",
+    "SubType": "AccountDetails",
+    "Type": "Integration",
+    "VlocityDataPackType": "SObject",
+    "VlocityRecordSObjectType": "OmniProcess",
+    "VlocityRecordSourceKey": "OmniProcess/Integration/AccountDetails/English"
+}

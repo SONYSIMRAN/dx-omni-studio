@@ -1,0 +1,12 @@
+<template>
+    <template if:true={account}>
+        <div class="slds-box slds-theme_default">
+            <p><strong>Name:</strong> {account.Name}</p>
+            <p><strong>Phone:</strong> {account.Phone}</p>
+            <p><strong>Industry:</strong> {account.Industry}</p>
+        </div>
+    </template>
+    <template if:false={account}>
+        <p>No Account Data Found or Loading...</p>
+    </template>
+</template>

@@ -1,6 +1,6 @@
-Org: target1
-Version: 1.17.13
-PackageVersion: undefined
+Org: target
+Version: 0.0.1
+PackageVersion: 238.1
 Namespace: omnistudio
 Job: nojob
 Action: Deploy

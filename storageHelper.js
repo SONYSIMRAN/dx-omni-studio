@@ -424,6 +424,69 @@ function enrichWithDeploymentStatus(index, latestReleaseTimestamp) {
     return index;
 }
 
+function mergeSelectedComponents(base, extra) {
+  // Shallow deep-clone to avoid accidental mutation
+  const deepClone = obj => JSON.parse(JSON.stringify(obj || {}));
+  const merged = deepClone(base);
+
+  for (const [type, value] of Object.entries(extra || {})) {
+
+    // ── RegularMetadata (ApexClass, LWC, …) ─────────────────────────
+    if (type === 'RegularMetadata') {
+      if (!merged.RegularMetadata) merged.RegularMetadata = {};
+      for (const [subType, names] of Object.entries(value || {})) {
+        if (!merged.RegularMetadata[subType]) merged.RegularMetadata[subType] = [];
+        merged.RegularMetadata[subType].push(
+          ...names.filter(n => !merged.RegularMetadata[subType].includes(n))
+        );
+      }
+      continue;
+    }
+
+    // ── OmniStudio & other top-level types ──────────────────────────
+    if (!merged[type]) merged[type] = [];
+    merged[type].push(...value.filter(n => !merged[type].includes(n)));
+  }
+  return merged;
+}
+
+function diffComponents(oldBundle, currentIdx) {
+  const delta = {};
+
+  // RegularMetadata (nested)
+  if (currentIdx.RegularMetadata) {
+    for (const [sub, items] of Object.entries(currentIdx.RegularMetadata)) {
+      items.forEach(c => {
+        const name = typeof c === 'string' ? c : c.name;
+        const wasAlready = oldBundle?.RegularMetadata?.[sub]?.includes(name);
+        if (!wasAlready) {
+          delta.RegularMetadata ||= {};
+          delta.RegularMetadata[sub] ||= [];
+          delta.RegularMetadata[sub].push(name);
+        }
+      });
+    }
+  }
+
+  // OmniScript, DataRaptor, IntegrationProcedure, etc.
+  for (const type of Object.keys(currentIdx).filter(t => t !== 'RegularMetadata')) {
+    (currentIdx[type] || []).forEach(c => {
+      const name = typeof c === 'string' ? c : c.name;
+      const wasAlready = oldBundle?.[type]?.includes(name);
+      if (!wasAlready) {
+        delta[type] ||= [];
+        delta[type].push(name);
+      }
+    });
+  }
+
+  return delta;
+}
+
+
+
+
+
 
 // ---------- Export ----------
 module.exports = {
@@ -435,6 +498,8 @@ module.exports = {
     fetchMetadataDatesFromSalesforce,
     formatDate,
     fetchOmniComponentDates,
+    mergeSelectedComponents,
+    diffComponents,
     enrichWithDeploymentStatus
     //  getOmniStudioComponentDates,
     //  resolveOmniSObjectName,

@@ -1,0 +1,62 @@
+{
+  "DRBulk": {
+    "created": "2025-07-16T09:38:24.393Z",
+    "modified": "2025-07-16T09:38:24.393Z",
+    "hash": "66e059bda106379e9f3b6ec4eb04def5c5040379f99909f3d553b29e65fc3835"
+  },
+  "Interface_DRGenericTrigger": {
+    "created": "2025-07-16T09:38:24.396Z",
+    "modified": "2025-07-16T09:38:24.396Z",
+    "hash": "3f646f3cc73ede2b75b1d2a1f820c668c3d744107b4fc58e4f6f073774d65f67"
+  },
+  "VlocityDataPack": {
+    "created": "2025-07-16T09:38:24.397Z",
+    "modified": "2025-07-16T09:38:24.397Z",
+    "hash": "208001672270b60cf05c667a66ff54d7a1ca201d6f231d9db7df8fcd224685b1"
+  },
+  "VlocityScheduledJob": {
+    "created": "2025-07-16T09:38:24.398Z",
+    "modified": "2025-07-16T09:38:24.398Z",
+    "hash": "7c0ede466df8376621983658b324d754efc63c0983254a6f7dc4871140c1abcd"
+  },
+  "InvoiceTrigger": {
+    "created": "2025-07-16T09:38:24.399Z",
+    "modified": "2025-07-16T09:38:24.399Z",
+    "hash": "32fabfa1f1d59a961fd88fa12b109c6c1e84fdd5bf6232f0f0c016518141cf0a"
+  },
+  "AccountTrigger": {
+    "created": "2025-07-16T09:38:24.400Z",
+    "modified": "2025-07-16T09:38:24.400Z",
+    "hash": "6ba1491894cb8a5a9744a392e91eb713c9b5ab25d5157271277d9fe52549a33b"
+  },
+  "ContactTrigger": {
+    "created": "2025-07-16T09:38:24.401Z",
+    "modified": "2025-07-16T09:38:24.401Z",
+    "hash": "c855dc87ef5e6b9942d21069b3235c05af619c5fedd8d57b4afda96267bc172f"
+  },
+  "OpportunityTrigger": {
+    "created": "2025-07-16T09:38:24.401Z",
+    "modified": "2025-07-16T09:38:24.401Z",
+    "hash": "2f212b513cf3f69c9cc31237f8fd454a2239934b4b43e56759fbc6377e8f959f"
+  },
+  "CaseTrigger": {
+    "created": "2025-07-16T09:38:24.402Z",
+    "modified": "2025-07-16T09:38:24.402Z",
+    "hash": "c7009211e4bc29b3e2ec45337adb4a6aadd294fddfa273634f4f2c89cbe23eed"
+  },
+  "AccountAfterUpdate": {
+    "created": "2025-07-16T09:38:24.404Z",
+    "modified": "2025-07-16T09:38:24.404Z",
+    "hash": "25b232aa62d30662603fde7e9081d24d19df735b8ceecb75e26d3150b7420d91"
+  },
+  "CustomTaskTrigger": {
+    "created": "2025-07-16T09:38:24.404Z",
+    "modified": "2025-07-16T09:38:24.404Z",
+    "hash": "ca8203e484bdd0ba9f68d9072d92440624ec5d6624e208d973eb931147d5551d"
+  },
+  "LeadTrigger": {
+    "created": "2025-07-16T09:38:24.405Z",
+    "modified": "2025-07-16T09:38:24.405Z",
+    "hash": "264d9eee10ad1113df6f9beb4715df71fc2d14fa56b7b64651d841e2119369cd"
+  }
+}

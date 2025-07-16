@@ -1,5 +1,7 @@
-projectPath: .
 export:
-  DataRaptor:
+  FlexCard:
     queries:
-      - DataRaptor/CreateCaseDR
+      - FlexCard/ContactChild
+  ApexTrigger:
+    queries:
+      - ApexTrigger/InvoiceTrigger

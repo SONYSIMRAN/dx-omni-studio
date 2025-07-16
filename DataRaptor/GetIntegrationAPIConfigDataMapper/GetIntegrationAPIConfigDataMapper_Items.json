@@ -1,0 +1,66 @@
+[
+    {
+        "FilterGroup": 0,
+        "FilterOperator": "=",
+        "FilterValue": "developerName",
+        "GlobalKey": "GetIntegrationAPIConfigDataMapperCustom6780",
+        "InputFieldName": "DeveloperName",
+        "InputObjectName": "Integration_API_Config__mdt",
+        "InputObjectQuerySequence": 1,
+        "IsDisabled": false,
+        "IsRequiredForUpsert": false,
+        "IsUpsertKey": false,
+        "Name": "GetIntegrationAPIConfigDataMapper",
+        "OmniDataTransformationId": {
+            "Name": "GetIntegrationAPIConfigDataMapper",
+            "VlocityDataPackType": "VlocityMatchingKeyObject",
+            "VlocityMatchingRecordSourceKey": "OmniDataTransform/GetIntegrationAPIConfigDataMapper",
+            "VlocityRecordSObjectType": "OmniDataTransform"
+        },
+        "OutputCreationSequence": 0,
+        "OutputFieldName": "metaData",
+        "OutputObjectName": "json",
+        "VlocityDataPackType": "SObject",
+        "VlocityRecordSObjectType": "OmniDataTransformItem"
+    },
+    {
+        "GlobalKey": "GetIntegrationAPIConfigDataMapperCustom4528",
+        "InputFieldName": "metaData:DeveloperName",
+        "IsDisabled": false,
+        "IsRequiredForUpsert": false,
+        "IsUpsertKey": false,
+        "Name": "GetIntegrationAPIConfigDataMapper",
+        "OmniDataTransformationId": {
+            "Name": "GetIntegrationAPIConfigDataMapper",
+            "VlocityDataPackType": "VlocityMatchingKeyObject",
+            "VlocityMatchingRecordSourceKey": "OmniDataTransform/GetIntegrationAPIConfigDataMapper",
+            "VlocityRecordSObjectType": "OmniDataTransform"
+        },
+        "OutputCreationSequence": 1,
+        "OutputFieldFormat": "String",
+        "OutputFieldName": "devName",
+        "OutputObjectName": "json",
+        "VlocityDataPackType": "SObject",
+        "VlocityRecordSObjectType": "OmniDataTransformItem"
+    },
+    {
+        "GlobalKey": "GetIntegrationAPIConfigDataMapperCustom6422",
+        "InputFieldName": "metaData:Endpoint_URL__c",
+        "IsDisabled": false,
+        "IsRequiredForUpsert": false,
+        "IsUpsertKey": false,
+        "Name": "GetIntegrationAPIConfigDataMapper",
+        "OmniDataTransformationId": {
+            "Name": "GetIntegrationAPIConfigDataMapper",
+            "VlocityDataPackType": "VlocityMatchingKeyObject",
+            "VlocityMatchingRecordSourceKey": "OmniDataTransform/GetIntegrationAPIConfigDataMapper",
+            "VlocityRecordSObjectType": "OmniDataTransform"
+        },
+        "OutputCreationSequence": 1,
+        "OutputFieldFormat": "String",
+        "OutputFieldName": "endPointURL",
+        "OutputObjectName": "json",
+        "VlocityDataPackType": "SObject",
+        "VlocityRecordSObjectType": "OmniDataTransformItem"
+    }
+]

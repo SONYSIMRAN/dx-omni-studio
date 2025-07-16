@@ -1,0 +1,46 @@
+[
+    {
+        "FilterGroup": 0,
+        "FilterOperator": "<>",
+        "FilterValue": "\"$Vlocity.NULL\"",
+        "GlobalKey": "AccountDetailsDR9524272682496084",
+        "InputFieldName": "Id",
+        "InputObjectName": "Account",
+        "InputObjectQuerySequence": 1,
+        "IsDisabled": false,
+        "IsRequiredForUpsert": false,
+        "IsUpsertKey": false,
+        "Name": "AccountDetailsDR",
+        "OmniDataTransformationId": {
+            "Name": "AccountDetailsDR",
+            "VlocityDataPackType": "VlocityMatchingKeyObject",
+            "VlocityMatchingRecordSourceKey": "OmniDataTransform/AccountDetailsDR",
+            "VlocityRecordSObjectType": "OmniDataTransform"
+        },
+        "OutputCreationSequence": 0,
+        "OutputFieldName": "Account",
+        "OutputObjectName": "json",
+        "VlocityDataPackType": "SObject",
+        "VlocityRecordSObjectType": "OmniDataTransformItem"
+    },
+    {
+        "GlobalKey": "AccountDetailsDRCustom7445",
+        "InputFieldName": "Name",
+        "InputObjectName": "Account",
+        "IsDisabled": false,
+        "IsRequiredForUpsert": false,
+        "IsUpsertKey": false,
+        "Name": "AccountDetailsDR",
+        "OmniDataTransformationId": {
+            "Name": "AccountDetailsDR",
+            "VlocityDataPackType": "VlocityMatchingKeyObject",
+            "VlocityMatchingRecordSourceKey": "OmniDataTransform/AccountDetailsDR",
+            "VlocityRecordSObjectType": "OmniDataTransform"
+        },
+        "OutputCreationSequence": 1,
+        "OutputFieldName": "account",
+        "OutputObjectName": "Turbo Extract",
+        "VlocityDataPackType": "SObject",
+        "VlocityRecordSObjectType": "OmniDataTransformItem"
+    }
+]

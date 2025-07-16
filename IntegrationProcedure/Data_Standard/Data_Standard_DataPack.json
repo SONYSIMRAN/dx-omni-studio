@@ -1,0 +1,22 @@
+{
+    "CustomJavaScript": "Data_Standard_SampleInput.json",
+    "ElementTypeComponentMapping": "{\"ElementTypeToHTMLTemplateList\":[]}",
+    "IsIntegProcdSignatureAvl": false,
+    "IsIntegrationProcedure": true,
+    "IsManagedUsingStdDesigner": false,
+    "IsMetadataCacheDisabled": false,
+    "IsOmniScriptEmbeddable": false,
+    "IsTestProcedure": false,
+    "IsWebCompEnabled": false,
+    "Language": "Procedure",
+    "Name": "CreateCase_IP",
+    "OmniProcessElement": "Data_Standard_Element_CreateCaseAction.json",
+    "OmniProcessKey": "Data_Standard",
+    "OmniProcessType": "Integration Procedure",
+    "PropertySetConfig": "Data_Standard_PropertySetConfig.json",
+    "SubType": "Standard",
+    "Type": "Data",
+    "VlocityDataPackType": "SObject",
+    "VlocityRecordSObjectType": "OmniProcess",
+    "VlocityRecordSourceKey": "OmniProcess/Data/Standard/Procedure"
+}

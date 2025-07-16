@@ -1,0 +1,1982 @@
+Org: trial1
+Version: 1.17.13
+Node: v22.15.0
+PackageVersion: !<tag:yaml.org,2002:js/undefined> ''
+Namespace: omnistudio
+Job: VDX
+Action: Export
+ProjectPath: 'C:\Users\ssimran\dx-omni-deploy'
+TotalTime: 0m 14s
+Count:
+  Success:
+    OmniScript: 4
+    DataRaptor: 14
+    IntegrationProcedure: 2
+    FlexCard: 2
+Errors: []
+Status:
+  Success:
+    OmniScript:
+      - Case_Create_English
+      - Case_QuickEntry_English
+      - Case_WebInquiry_English
+      - Test_IntegrationTest_English
+    DataRaptor:
+      - AccountDetailsDR
+      - CaseSummaryD
+      - CreateCaseDR
+      - DM
+      - DMAccountExtract
+      - DMAccountLoad
+      - DMAccountTurbo
+      - DMLookupAccount
+      - DMSingleTransform
+      - DRExtractContactInfo
+      - DRExtractServiceRequests
+      - DRLoadNewRequest
+      - GetEmployeeIdFromRecord
+      - GetIntegrationAPIConfigDataMapper
+    IntegrationProcedure:
+      - CaseProceeding_AddCaseParticipants
+      - GetUserDetailsIP_GetUserDetailsIP
+    FlexCard:
+      - ContactChild
+      - Display_User_Details
+StatusCount:
+  Remaining: 0
+  Success: 26
+  Error: 0
+id: !<tag:yaml.org,2002:js/undefined> ''
+FullLog:
+  - ' Vlocity Build v1.17.13 '
+  - ' Verbose Logging Enabled '
+  - |2-
+     Commands >> [
+        "packExport"
+    ] 
+  - |2-
+     Original Options >> [
+        "-sfdx.username",
+        "trial1",
+        "packExport",
+        "-job",
+        "exportAllOmni.yaml",
+        "--all",
+        "--verbose",
+        "--ignoreAllErrors"
+    ] 
+  - ' DataPacksJob Data >> {} '
+  - ' Verbose mode enabled '
+  - ' Org >> trial1 '
+  - ' Vlocity Build v1.17.13 '
+  - ' Check Login '
+  - ' Using SFDX >> trial1 '
+  - |2-
+     Session Not Found >> Error: Refresh token is specified without oauth2 client information or refresh function
+        at Connection._establish (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\connection.js:300:19)
+        at new Connection (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\connection.js:281:14)
+        at UtilityService.sfdxLogin (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\lib\utilityservice.js:322:46)
+        at UtilityService.checkLogin (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\lib\utilityservice.js:384:24)
+        at Vlocity.checkLogin (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\lib\vlocity.js:1038:38)
+        at Vlocity.runDataPacksCommand (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\lib\vlocity.js:168:44)
+        at VlocityCLI.runJob (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\lib\vlocitycli.js:729:26)
+        at VlocityCLI.runCommands (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\lib\vlocitycli.js:616:34)
+        at VlocityCLI.runCLI (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\lib\vlocitycli.js:418:40)
+        at C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\lib\vlocitybuild.js:7:26 
+  - ' Refreshing SFDX Session >> trial1 '
+  - ' Command to be executed is  >> sf org display --target-org "trial1"  --verbose --json '
+  - ' SFDX login successful for user  >> ssimran@tgs.com '
+  - ' Get Namespace '
+  - ' Update Definitions '
+  - ' Running Job >> Export '
+  - ' Retrieving Vlocity '
+  - ' VlocityDataPackType >> AttributeAssignmentRule '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__AttributeAssignmentRule__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__AttributeAssignmentRule__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__AttributeAssignmentRule__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> CalculationProcedure '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__CalculationProcedure__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__CalculationProcedure__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__CalculationProcedure__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> ContextScope '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ContextScope__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ContextScope__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__ContextScope__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> ChargeMeasurement '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ChargeMeasurement__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ChargeMeasurement__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__ChargeMeasurement__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> ItemImplementation '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ItemImplementation__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ItemImplementation__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__ItemImplementation__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> InterfaceImplementation '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__InterfaceImplementation__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__InterfaceImplementation__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__InterfaceImplementation__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> DocumentClause '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__DocumentClause__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__DocumentClause__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__DocumentClause__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> ExpressionSetVersion '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM CalculationProcedureVersion '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM CalculationProcedureVersion
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'CalculationProcedureVersion' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> ContextDimension '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ContextDimension__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ContextDimension__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__ContextDimension__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> EntityFilter '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__EntityFilter__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__EntityFilter__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__EntityFilter__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> IntegrationRetryPolicy '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__IntegrationRetryPolicy__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__IntegrationRetryPolicy__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__IntegrationRetryPolicy__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> DecisionMatrixVersion '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM CalculationMatrixVersion '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM CalculationMatrixVersion
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'CalculationMatrixVersion' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> ContextAction '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ContextAction__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ContextAction__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__ContextAction__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' Found From Manifest >> 0jNNS0000004YhR2AU IntegrationProcedure CaseProceeding_AddCaseParticipants '
+  - ' Found From Manifest >> 0jNNS0000004i2T2AQ IntegrationProcedure GetUserDetailsIP_GetUserDetailsIP '
+  - ' VlocityDataPackType >> IntegrationProcedure '
+  - ' Query >> Select Id, Type, SubType,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM OmniProcess WHERE IsActive = true AND IsIntegrationProcedure = true '
+  - ' Records >> 2 '
+  - ' VlocityDataPackType >> ObjectClass '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ObjectClass__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ObjectClass__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__ObjectClass__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> CalculationMatrix '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__CalculationMatrix__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__CalculationMatrix__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__CalculationMatrix__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> DocumentTemplate '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__DocumentTemplate__c WHERE omnistudio__Status__c = ''Active'' '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__DocumentTemplate__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__DocumentTemplate__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> CpqConfigurationSetup '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__CpqConfigurationSetup__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__CpqConfigurationSetup__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__CpqConfigurationSetup__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> AttributeCategory '
+  - ' Query >> Select Id, Name, omnistudio__Code__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__AttributeCategory__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__AttributeCategory__c
+                                               ^
+    ERROR at Row:1:Column:110
+    sObject type 'omnistudio__AttributeCategory__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> CustomObjectMap '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__CustomObjectMap__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__CustomObjectMap__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__CustomObjectMap__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> ManualQueue '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ManualQueue__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ManualQueue__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__ManualQueue__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> ContentVersion '
+  - ' Query >> Select Id, Title, ExternalDocumentInfo2,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM ContentVersion WHERE ExternalDocumentInfo2 != null '
+  - ' Records >> 0 '
+  - ' VlocityDataPackType >> CustomFieldMap '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__CustomFieldMap__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__CustomFieldMap__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__CustomFieldMap__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> ObjectContextRule '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ObjectRuleAssignment__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ObjectRuleAssignment__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__ObjectRuleAssignment__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> GeneralSettings '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__GeneralSettings__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__GeneralSettings__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__GeneralSettings__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> DecisionMatrix '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM CalculationMatrix '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM CalculationMatrix
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'CalculationMatrix' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> Catalog '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c, omnistudio__CatalogCode__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__Catalog__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__Catalog__c
+                                               ^
+    ERROR at Row:1:Column:143
+    sObject type 'omnistudio__Catalog__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' Found From Manifest >> 0jINS0000002fQT2AY DataRaptor CaseSummaryD '
+  - ' Found From Manifest >> 0jINS0000002fWv2AI DataRaptor CreateCaseDR '
+  - ' Found From Manifest >> 0jINS0000002oK52AI DataRaptor AccountDetailsDR '
+  - ' Found From Manifest >> 0jINS0000002ufd2AA DataRaptor DM '
+  - ' Found From Manifest >> 0jINS0000002uir2AA DataRaptor DMAccountTurbo '
+  - ' Found From Manifest >> 0jINS0000002ukT2AQ DataRaptor DMAccountExtract '
+  - ' Found From Manifest >> 0jINS0000002um52AA DataRaptor DMAccountLoad '
+  - ' Found From Manifest >> 0jINS0000002uxN2AQ DataRaptor DMLookupAccount '
+  - ' Found From Manifest >> 0jINS0000002uyz2AA DataRaptor DMSingleTransform '
+  - ' Found From Manifest >> 0jINS00000033RB2AY DataRaptor DRExtractContactInfo '
+  - ' Found From Manifest >> 0jINS00000033Sn2AI DataRaptor DRExtractServiceRequests '
+  - ' Found From Manifest >> 0jINS00000033UP2AY DataRaptor DRLoadNewRequest '
+  - ' Found From Manifest >> 0jINS00000033kX2AQ DataRaptor GetIntegrationAPIConfigDataMapper '
+  - ' Found From Manifest >> 0jINS00000033m92AA DataRaptor GetEmployeeIdFromRecord '
+  - ' VlocityDataPackType >> DataRaptor '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM OmniDataTransform WHERE Type != ''Migration'' '
+  - ' Records >> 14 '
+  - ' VlocityDataPackType >> ObjectLayout '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ObjectLayout__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ObjectLayout__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__ObjectLayout__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> ExpressionSet '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM CalculationProcedure '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM CalculationProcedure
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'CalculationProcedure' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' Found From Manifest >> 0koNS0000002WBtYAM FlexCard ContactChild '
+  - ' Found From Manifest >> 0koNS0000002bmfYAA FlexCard Display_User_Details '
+  - ' VlocityDataPackType >> FlexCard '
+  - ' Query >> SELECT Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM OmniUiCard WHERE IsActive = true '
+  - ' Records >> 2 '
+  - ' VlocityDataPackType >> OfferMigrationPlan '
+  - ' Query >> Select Id, Name, omnistudio__Code__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__OfferMigrationPlan__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__OfferMigrationPlan__c
+                                               ^
+    ERROR at Row:1:Column:110
+    sObject type 'omnistudio__OfferMigrationPlan__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> ContractType '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ContractType__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ContractType__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__ContractType__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> DocumentTemplates '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM DocumentTemplate WHERE Status = ''Active'' '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM DocumentTemplate WHERE Status =
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'DocumentTemplate' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> OrchestrationPlanDefinition '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__OrchestrationPlanDefinition__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__OrchestrationPlanDefinition__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__OrchestrationPlanDefinition__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> PricingVariable '
+  - ' Query >> Select Id, Name, omnistudio__Code__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__PricingVariable__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__PricingVariable__c
+                                               ^
+    ERROR at Row:1:Column:110
+    sObject type 'omnistudio__PricingVariable__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> OrchestrationDependencyDefinition '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__OrchestrationDependencyDefinition__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__OrchestrationDependencyDefinition__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__OrchestrationDependencyDefinition__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> PricingPlan '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__PricingPlan__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__PricingPlan__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__PricingPlan__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> OrchestrationItemDefinition '
+  - ' Query >> Select Id, Name, omnistudio__OrchestrationPlanDefinitionId__r.Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__OrchestrationItemDefinition__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__OrchestrationItemDefinition__c
+                                               ^
+    ERROR at Row:1:Column:140
+    sObject type 'omnistudio__OrchestrationItemDefinition__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> OrchestrationQueueAssignmentRule '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__OrchestrationQueueAssignmentRule__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__OrchestrationQueueAssignmentRule__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__OrchestrationQueueAssignmentRule__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> PriceList '
+  - ' Query >> Select Id, Name, omnistudio__Code__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__PriceList__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__PriceList__c
+                                               ^
+    ERROR at Row:1:Column:110
+    sObject type 'omnistudio__PriceList__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' Found From Manifest >> 0jNNS0000004CiX2AU OmniScript Case_Create_English '
+  - ' Found From Manifest >> 0jNNS0000004Cll2AE OmniScript Case_WebInquiry_English '
+  - ' Found From Manifest >> 0jNNS0000004F0T2AU OmniScript Case_QuickEntry_English '
+  - ' Found From Manifest >> 0jNNS0000004NCX2A2 OmniScript Test_IntegrationTest_English '
+  - ' VlocityDataPackType >> OmniScript '
+  - ' Query >> Select Id, Type, SubType, Language, IsWebCompEnabled,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM OmniProcess WHERE IsActive = true AND IsIntegrationProcedure = false '
+  - ' Records >> 4 '
+  - ' VlocityDataPackType >> Product2 '
+  - ' Query >> Select Id, Name, ProductCode, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM Product2 '
+  - |2-
+     Query Error >> INVALID_FIELD: 
+    Select Id, Name, ProductCode, omnistudio__GlobalKey__c,CreatedBy.Name
+                                  ^
+    ERROR at Row:1:Column:31
+    No such column 'omnistudio__GlobalKey__c' on entity 'Product2'. If you are attempting to use a custom field, be sure to append the '__c' after the custom field name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> UIFacet '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__UIFacet__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__UIFacet__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__UIFacet__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> UISection '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__UISection__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__UISection__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__UISection__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> Project '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__Project__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__Project__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__Project__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> TimePlan '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__TimePlan__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__TimePlan__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__TimePlan__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VlocityScheduledJob '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityScheduledJob__c '
+  - ' Records >> 0 '
+  - ' VlocityDataPackType >> VlocitySearchWidgetSetup '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocitySearchWidgetSetup__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocitySearchWidgetSetup__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__VlocitySearchWidgetSetup__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VlocityDataStore '
+  - ' Query >> SELECT Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__Datastore__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__Datastore__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__Datastore__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> String '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__String__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__String__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__String__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> Promotion '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__Promotion__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__Promotion__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__Promotion__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VlocityPicklist '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__Picklist__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__Picklist__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__Picklist__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VlocityFunction '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityFunction__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityFunction__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__VlocityFunction__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> Rule '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__Rule__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__Rule__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__Rule__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> RelationshipGraph '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__RelationshipGraph__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__RelationshipGraph__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__RelationshipGraph__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> ThorOrchestrationQueue '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ThorOrchestrationQueue__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__ThorOrchestrationQueue__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__ThorOrchestrationQueue__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> System '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__System__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__System__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__System__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> TimePolicy '
+  - ' Query >> Select Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__TimePolicy__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__TimePolicy__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__TimePolicy__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> RateBand '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__RateBand__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__RateBand__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__RateBand__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> SpecTemplateMapping '
+  - ' Query >> Select Id, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__SpecTemplateMapping__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__SpecTemplateMapping__c
+                                               ^
+    ERROR at Row:1:Column:109
+    sObject type 'omnistudio__SpecTemplateMapping__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VlocityAttachment '
+  - ' Query >> SELECT Id, Name, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityAttachment__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityAttachment__c
+                                               ^
+    ERROR at Row:1:Column:115
+    sObject type 'omnistudio__VlocityAttachment__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> QueryBuilder '
+  - ' Query >> Select Id,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__QueryBuilder__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__QueryBuilder__c
+                                               ^
+    ERROR at Row:1:Column:83
+    sObject type 'omnistudio__QueryBuilder__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VlocityCard '
+  - ' Query >> SELECT Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityCard__c WHERE omnistudio__Active__c = true '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityCard__c WHERE
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__VlocityCard__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VlocityAction '
+  - ' Query >> SELECT Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityAction__c WHERE omnistudio__IsActive__c = true '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityAction__c WHERE
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__VlocityAction__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> StoryObjectConfiguration '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__StoryObjectConfiguration__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__StoryObjectConfiguration__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__StoryObjectConfiguration__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VlocityUITemplate '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityUITemplate__c WHERE omnistudio__Active__c = true '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityUITemplate__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__VlocityUITemplate__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VqResource '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VqResource__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VqResource__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__VqResource__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VlocityStateModel '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityStateModel__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityStateModel__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__VlocityStateModel__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VlocityWebTrackingConfiguration '
+  - ' Query >> Select Id, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityWebTrackingConfiguration__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityWebTrackingConfiguration__c
+                                               ^
+    ERROR at Row:1:Column:109
+    sObject type 'omnistudio__VlocityWebTrackingConfiguration__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VlocityTrackingGroup '
+  - ' Query >> Select Id, omnistudio__GlobalKey__c,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityTrackingGroup__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityTrackingGroup__c
+                                               ^
+    ERROR at Row:1:Column:109
+    sObject type 'omnistudio__VlocityTrackingGroup__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VlocityUILayout '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityUILayout__c WHERE omnistudio__Active__c = true '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityUILayout__c WHERE
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__VlocityUILayout__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - ' VlocityDataPackType >> VqMachine '
+  - ' Query >> Select Id, Name,CreatedBy.Name, CreatedDate, LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VqMachine__c '
+  - |2-
+     Query Error >> INVALID_TYPE: 
+    LastModifiedBy.Name, LastModifiedDate FROM omnistudio__VqMachine__c
+                                               ^
+    ERROR at Row:1:Column:89
+    sObject type 'omnistudio__VqMachine__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.
+        at HttpApi.getError (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:292:56)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\http-api.js:127:33
+        at async Query._execute (C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:373:22)
+        at async C:\Users\ssimran\AppData\Roaming\npm\node_modules\vlocity\node_modules\jsforce\lib\query.js:305:17 
+  - |2-
+     [
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__AttributeAssignmentRule__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__AttributeAssignmentRule__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__CalculationProcedure__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__CalculationProcedure__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__ContextScope__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__ContextScope__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__ChargeMeasurement__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__ChargeMeasurement__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__ItemImplementation__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__ItemImplementation__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__InterfaceImplementation__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__InterfaceImplementation__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__DocumentClause__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__DocumentClause__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM CalculationProcedureVersion\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'CalculationProcedureVersion' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__ContextDimension__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__ContextDimension__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__EntityFilter__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__EntityFilter__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__IntegrationRetryPolicy__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__IntegrationRetryPolicy__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM CalculationMatrixVersion\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'CalculationMatrixVersion' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__ContextAction__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__ContextAction__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__ObjectClass__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__ObjectClass__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__CalculationMatrix__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__CalculationMatrix__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__DocumentTemplate__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__DocumentTemplate__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__CpqConfigurationSetup__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__CpqConfigurationSetup__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__AttributeCategory__c\n                                           ^\nERROR at Row:1:Column:110\nsObject type 'omnistudio__AttributeCategory__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__CustomObjectMap__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__CustomObjectMap__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__ManualQueue__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__ManualQueue__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__CustomFieldMap__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__CustomFieldMap__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__ObjectRuleAssignment__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__ObjectRuleAssignment__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__GeneralSettings__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__GeneralSettings__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM CalculationMatrix\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'CalculationMatrix' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__Catalog__c\n                                           ^\nERROR at Row:1:Column:143\nsObject type 'omnistudio__Catalog__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__ObjectLayout__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__ObjectLayout__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM CalculationProcedure\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'CalculationProcedure' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__OfferMigrationPlan__c\n                                           ^\nERROR at Row:1:Column:110\nsObject type 'omnistudio__OfferMigrationPlan__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__ContractType__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__ContractType__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM DocumentTemplate WHERE Status =\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'DocumentTemplate' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__OrchestrationPlanDefinition__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__OrchestrationPlanDefinition__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__PricingVariable__c\n                                           ^\nERROR at Row:1:Column:110\nsObject type 'omnistudio__PricingVariable__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__OrchestrationDependencyDefinition__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__OrchestrationDependencyDefinition__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__PricingPlan__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__PricingPlan__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__OrchestrationItemDefinition__c\n                                           ^\nERROR at Row:1:Column:140\nsObject type 'omnistudio__OrchestrationItemDefinition__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__OrchestrationQueueAssignmentRule__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__OrchestrationQueueAssignmentRule__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__PriceList__c\n                                           ^\nERROR at Row:1:Column:110\nsObject type 'omnistudio__PriceList__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nSelect Id, Name, ProductCode, omnistudio__GlobalKey__c,CreatedBy.Name\n                              ^\nERROR at Row:1:Column:31\nNo such column 'omnistudio__GlobalKey__c' on entity 'Product2'. If you are attempting to use a custom field, be sure to append the '__c' after the custom field name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_FIELD"
+            },
+            "errorCode": "INVALID_FIELD",
+            "name": "INVALID_FIELD"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__UIFacet__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__UIFacet__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__UISection__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__UISection__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__Project__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__Project__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__TimePlan__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__TimePlan__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocitySearchWidgetSetup__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__VlocitySearchWidgetSetup__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__Datastore__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__Datastore__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__String__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__String__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__Promotion__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__Promotion__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__Picklist__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__Picklist__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityFunction__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__VlocityFunction__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__Rule__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__Rule__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__RelationshipGraph__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__RelationshipGraph__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__ThorOrchestrationQueue__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__ThorOrchestrationQueue__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__System__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__System__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__TimePolicy__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__TimePolicy__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__RateBand__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__RateBand__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__SpecTemplateMapping__c\n                                           ^\nERROR at Row:1:Column:109\nsObject type 'omnistudio__SpecTemplateMapping__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityAttachment__c\n                                           ^\nERROR at Row:1:Column:115\nsObject type 'omnistudio__VlocityAttachment__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__QueryBuilder__c\n                                           ^\nERROR at Row:1:Column:83\nsObject type 'omnistudio__QueryBuilder__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityCard__c WHERE\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__VlocityCard__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityAction__c WHERE\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__VlocityAction__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__StoryObjectConfiguration__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__StoryObjectConfiguration__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityUITemplate__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__VlocityUITemplate__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__VqResource__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__VqResource__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityStateModel__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__VlocityStateModel__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityWebTrackingConfiguration__c\n                                           ^\nERROR at Row:1:Column:109\nsObject type 'omnistudio__VlocityWebTrackingConfiguration__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityTrackingGroup__c\n                                           ^\nERROR at Row:1:Column:109\nsObject type 'omnistudio__VlocityTrackingGroup__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__VlocityUILayout__c WHERE\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__VlocityUILayout__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        },
+        {
+            "data": {
+                "message": "\nLastModifiedBy.Name, LastModifiedDate FROM omnistudio__VqMachine__c\n                                           ^\nERROR at Row:1:Column:89\nsObject type 'omnistudio__VqMachine__c' is not supported. If you are attempting to use a custom object, be sure to append the '__c' after the entity name. Please reference your WSDL or the describe call for the appropriate names.",
+                "errorCode": "INVALID_TYPE"
+            },
+            "errorCode": "INVALID_TYPE",
+            "name": "INVALID_TYPE"
+        }
+    ] 
+  - ' Initializing Project '
+  - |2-
+     Found import paths >> [
+        ".git",
+        ".sfdx",
+        "DataRaptor",
+        "FlexCard",
+        "IntegrationProcedure",
+        "node_modules",
+        "OmniScript",
+        "storage",
+        "vlocity-temp"
+    ] 
+  - ' Found datapack candidates >> .git 175 '
+  - ' Found datapack candidates >> .sfdx 0 '
+  - ' Found datapack candidates >> DataRaptor 14 '
+  - ' Found datapack candidates >> FlexCard 3 '
+  - ' Found datapack candidates >> IntegrationProcedure 2 '
+  - ' Found datapack candidates >> node_modules 147 '
+  - ' Found datapack candidates >> OmniScript 4 '
+  - ' Found datapack candidates >> storage 21 '
+  - ' Found datapack candidates >> vlocity-temp 13 '
+  - ' Adding to File >> DataRaptor/AccountDetailsDR - AccountDetailsDR   '
+  - ' Adding to File >> DataRaptor/CaseSummaryD - CaseSummaryD   '
+  - ' Adding to File >> DataRaptor/CreateCaseDR - CreateCaseDR   '
+  - ' Adding to File >> DataRaptor/DM - DM   '
+  - ' Adding to File >> DataRaptor/DMAccountExtract - DMAccountExtract   '
+  - ' Adding to File >> DataRaptor/DMAccountLoad - DMAccountLoad   '
+  - ' Adding to File >> DataRaptor/DMAccountTurbo - DMAccountTurbo   '
+  - ' Adding to File >> DataRaptor/DMLookupAccount - DMLookupAccount   '
+  - ' Adding to File >> DataRaptor/DMSingleTransform - DMSingleTransform   '
+  - ' Adding to File >> DataRaptor/DRExtractContactInfo - DRExtractContactInfo   '
+  - ' Adding to File >> DataRaptor/DRExtractServiceRequests - DRExtractServiceRequests   '
+  - ' Adding to File >> DataRaptor/DRLoadNewRequest - DRLoadNewRequest   '
+  - ' Adding to File >> DataRaptor/GetEmployeeIdFromRecord - GetEmployeeIdFromRecord   '
+  - ' Adding to File >> DataRaptor/GetIntegrationAPIConfigDataMapper - GetIntegrationAPIConfigDataMapper   '
+  - ' Adding to File >> FlexCard/AccountSummaryCard - AccountSummaryCard   '
+  - ' Adding to File >> FlexCard/ContactChild - ContactChild   '
+  - ' Adding to File >> FlexCard/Display_User_Details - Display_User_Details   '
+  - ' Adding to File >> IntegrationProcedure/CaseProceeding_AddCaseParticipants - CaseProceeding_AddCaseParticipants   '
+  - ' Adding to File >> IntegrationProcedure/GetUserDetailsIP_GetUserDetailsIP - GetUserDetailsIP_GetUserDetailsIP   '
+  - ' Adding to File >> OmniScript/Case_Create_English - Case_Create_English   '
+  - ' Adding to File >> OmniScript/Case_QuickEntry_English - Case_QuickEntry_English   '
+  - ' Adding to File >> OmniScript/Case_WebInquiry_English - Case_WebInquiry_English   '
+  - ' Adding to File >> OmniScript/Test_IntegrationTest_English - Test_IntegrationTest_English   '
+  - ' Adding to File >> vlocity-temp/AccountDetailsDR - AccountDetailsDR   '
+  - ' Adding to File >> vlocity-temp/CaseSummaryD - CaseSummaryD   '
+  - ' Adding to File >> vlocity-temp/ContactChild - ContactChild   '
+  - ' Adding to File >> vlocity-temp/CaseProceeding_AddCaseParticipants_Procedure - CaseProceeding_AddCaseParticipants   '
+  - ' Adding to File >> vlocity-temp/Case_Create_English - Case_Create_English   '
+  - ' Export >> 28 Items '
+  - ' Saving File Start '
+  - ' Saving File End >> 8 '
+  - ' Exporting >> DataRaptor CaseSummaryD '
+  - ' Exporting >> DataRaptor CreateCaseDR '
+  - ' Exporting >> DataRaptor AccountDetailsDR '
+  - ' Exporting >> DataRaptor DM '
+  - ' Exporting >> DataRaptor DMAccountTurbo '
+  - ' Exporting >> DataRaptor DMAccountExtract '
+  - ' Exporting >> DataRaptor DMAccountLoad '
+  - ' Exporting >> DataRaptor DMLookupAccount '
+  - ' Exporting >> DataRaptor DMSingleTransform '
+  - ' Exporting >> DataRaptor DRExtractContactInfo '
+  - ' Exporting >> DataRaptor DRExtractServiceRequests '
+  - ' Exporting >> DataRaptor DRLoadNewRequest '
+  - ' Exporting >> DataRaptor GetIntegrationAPIConfigDataMapper '
+  - ' Exporting >> DataRaptor GetEmployeeIdFromRecord '
+  - ' Exporting >> FlexCard ContactChild '
+  - ' Exporting >> FlexCard Display_User_Details '
+  - ' Exporting >> IntegrationProcedure CaseProceeding_AddCaseParticipants '
+  - ' Exporting >> IntegrationProcedure GetUserDetailsIP_GetUserDetailsIP '
+  - ' Exporting >> OmniScript Case_Create_English '
+  - ' Exporting >> OmniScript Case_WebInquiry_English '
+  - ' Exporting >> OmniScript Case_QuickEntry_English '
+  - ' Exporting >> OmniScript Test_IntegrationTest_English '
+  - ' Salesforce Org >> trial1 '
+  - ' Version Info >> v1.17.13 omnistudio  '
+  - ' Log File >> vlocity-temp\logs\exportAllOmni-yaml-2025-06-02T16-04-05-479Z-Export.yaml '
+  - ' Current Status >> Export '
+  - ' Remaining >> 22 '
+  - ' Success >> 0 '
+  - ' Error >> 0 '
+  - ' Elapsed Time >> 0m 11s '
+  - ' Result >> {"Finished":0,"Total":1,"Message":"Ready","Status":"Ready","VlocityDataPackId":"0ncNS00000036qUYAQ","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":0,"Total":2,"Message":"Ready","Status":"Ready","VlocityDataPackId":"0ncNS00000037RZYAY","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":0,"Total":1,"Message":"Ready","Status":"Ready","VlocityDataPackId":"0ncNS00000037TBYAY","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":0,"Total":1,"Message":"Ready","Status":"Ready","VlocityDataPackId":"0ncNS00000037UnYAI","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":0,"Total":10,"Message":"Ready","Status":"Ready","VlocityDataPackId":"0ncNS00000037ZdYAI","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":0,"Total":1,"Message":"Ready","Status":"Ready","VlocityDataPackId":"0ncNS00000037Y1YAI","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":0,"Total":1,"Message":"Ready","Status":"Ready","VlocityDataPackId":"0ncNS00000037bFYAQ","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":0,"Total":4,"Message":"Ready","Status":"Ready","VlocityDataPackId":"0ncNS00000037crYAA","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":0,"Total":1,"Message":"Ready","Status":"Ready","VlocityDataPackId":"0ncNS00000037WPYAY","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":0,"Total":3,"Message":"InProgress","Status":"InProgress","VlocityDataPackId":"0ncNS00000036qUYAQ","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":1,"Total":3,"Message":"InProgress","Status":"InProgress","VlocityDataPackId":"0ncNS00000037RZYAY","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":1,"Total":1,"Message":"Complete","Status":"Complete","VlocityDataPackId":"0ncNS00000037UnYAI","VlocityDataPackProcess":"Export"} '
+  - ' Export Finished >> 0ncNS00000037UnYAI Complete '
+  - ' Result >> {"Finished":0,"Total":2,"Message":"InProgress","Status":"InProgress","VlocityDataPackId":"0ncNS00000037Y1YAI","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":1,"Total":1,"Message":"Complete","Status":"Complete","VlocityDataPackId":"0ncNS00000037bFYAQ","VlocityDataPackProcess":"Export"} '
+  - ' Export Finished >> 0ncNS00000037bFYAQ Complete '
+  - ' Result >> {"Finished":0,"Total":2,"Message":"InProgress","Status":"InProgress","VlocityDataPackId":"0ncNS00000037TBYAY","VlocityDataPackProcess":"Export"} '
+  - ' Result >> {"Finished":1,"Total":1,"Message":"Complete","Status":"Complete","VlocityDataPackId":"0ncNS00000037WPYAY","VlocityDataPackProcess":"Export"} '
+  - ' Export Finished >> 0ncNS00000037WPYAY Complete '
+  - ' Start Expand '
+  - ' Result >> {"Finished":4,"Total":4,"Message":"Complete","Status":"Complete","VlocityDataPackId":"0ncNS00000037crYAA","VlocityDataPackProcess":"Export"} '
+  - ' Export Finished >> 0ncNS00000037crYAA Complete '
+  - ' Result >> {"Finished":10,"Total":10,"Message":"Complete","Status":"Complete","VlocityDataPackId":"0ncNS00000037ZdYAI","VlocityDataPackProcess":"Export"} '
+  - ' Export Finished >> 0ncNS00000037ZdYAI Complete '
+  - ' Start Expand '
+  - ' Expanding All '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Test_IntegrationTest_English\Test_IntegrationTest_English_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Test_IntegrationTest_English\Test_IntegrationTest_English_Element_Step1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Test_IntegrationTest_English\Test_IntegrationTest_English_Element_TextBlock1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Test_IntegrationTest_English\Test_IntegrationTest_English_DataPack.json '
+  - ' Start Expand '
+  - ' Expanding All '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_WebInquiry_English\Case_WebInquiry_English_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_WebInquiry_English\Case_WebInquiry_English_DataPack.json '
+  - ' Expanding All '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_QuickEntry_English\Case_QuickEntry_English_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_QuickEntry_English\Case_QuickEntry_English_Element_Step1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_QuickEntry_English\Case_QuickEntry_English_Element_Text1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_QuickEntry_English\Case_QuickEntry_English_DataPack.json '
+  - ' Result >> {"Finished":2,"Total":5,"Message":"InProgress","Status":"InProgress","VlocityDataPackId":"0ncNS00000037RZYAY","VlocityDataPackProcess":"Export"} '
+  - ' Start Expand '
+  - ' Result >> {"Finished":1,"Total":1,"Message":"Complete","Status":"Complete","VlocityDataPackId":"0ncNS00000037Y1YAI","VlocityDataPackProcess":"Export"} '
+  - ' Export Finished >> 0ncNS00000037Y1YAI Complete '
+  - ' Result >> {"Finished":3,"Total":3,"Message":"Complete","Status":"Complete","VlocityDataPackId":"0ncNS00000036qUYAQ","VlocityDataPackProcess":"Export"} '
+  - ' Export Finished >> 0ncNS00000036qUYAQ Complete '
+  - ' Start Expand '
+  - ' Expanding All '
+  - ' Result >> {"Finished":2,"Total":2,"Message":"Complete","Status":"Complete","VlocityDataPackId":"0ncNS00000037TBYAY","VlocityDataPackProcess":"Export"} '
+  - ' Export Finished >> 0ncNS00000037TBYAY Complete '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DM\DM_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRExtractContactInfo\DRExtractContactInfo_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountTurbo\DMAccountTurbo_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountExtract\DMAccountExtract_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CreateCaseDR\CreateCaseDR_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMLookupAccount\DMLookupAccount_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMSingleTransform\DMSingleTransform_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountLoad\DMAccountLoad_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\AccountDetailsDR\AccountDetailsDR_ParentKeys.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CaseSummaryD\CaseSummaryD_ParentKeys.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DM\DM_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRExtractContactInfo\DRExtractContactInfo_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountTurbo\DMAccountTurbo_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountExtract\DMAccountExtract_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMLookupAccount\DMLookupAccount_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMSingleTransform\DMSingleTransform_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CreateCaseDR\CreateCaseDR_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountLoad\DMAccountLoad_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\AccountDetailsDR\AccountDetailsDR_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CaseSummaryD\CaseSummaryD_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMLookupAccount\DMLookupAccount_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMSingleTransform\DMSingleTransform_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountLoad\DMAccountLoad_InputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CreateCaseDR\CreateCaseDR_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CaseSummaryD\CaseSummaryD_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\AccountDetailsDR\AccountDetailsDR_SampleInputJson.json '
+  - ' Start Expand '
+  - ' Expanding All '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountLoad\DMAccountLoad_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\AccountDetailsDR\AccountDetailsDR_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CaseSummaryD\CaseSummaryD_DataPack.json '
+  - ' Expanding All '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRLoadNewRequest\DRLoadNewRequest_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRExtractServiceRequests\DRExtractServiceRequests_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_SampleInput.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRExtractServiceRequests\DRExtractServiceRequests_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRLoadNewRequest\DRLoadNewRequest_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_Element_DataMapperPostAction1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRExtractServiceRequests\DRExtractServiceRequests_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_Element_SetValues5.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_Element_SetValues6.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_Element_ResponseAction2.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_Element_ResponseAction4.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_DataPack.json '
+  - ' Result >> {"Status":"Deleted","VlocityDataPackId":"0ncNS00000037bFYAQ"} '
+  - ' Salesforce Org >> trial1 '
+  - ' Version Info >> v1.17.13 omnistudio  '
+  - ' Log File >> vlocity-temp\logs\exportAllOmni-yaml-2025-06-02T16-04-05-479Z-Export.yaml '
+  - ' Current Status >> Export '
+  - ' Remaining >> 4 '
+  - ' Success >> 18 '
+  - ' Error >> 0 '
+  - ' Elapsed Time >> 0m 13s '
+  - ' Retrieved 18 items >> Exporting '
+  - ' Result >> {"Status":"Deleted","VlocityDataPackId":"0ncNS00000037WPYAY"} '
+  - ' Salesforce Org >> trial1 '
+  - ' Version Info >> v1.17.13 omnistudio  '
+  - ' Log File >> vlocity-temp\logs\exportAllOmni-yaml-2025-06-02T16-04-05-479Z-Export.yaml '
+  - ' Current Status >> Export '
+  - ' Remaining >> 4 '
+  - ' Success >> 18 '
+  - ' Error >> 0 '
+  - ' Elapsed Time >> 0m 13s '
+  - ' Retrieved 18 items >> Exporting '
+  - ' Result >> {"Finished":5,"Total":5,"Message":"Complete","Status":"Complete","VlocityDataPackId":"0ncNS00000037RZYAY","VlocityDataPackProcess":"Export"} '
+  - ' Export Finished >> 0ncNS00000037RZYAY Complete '
+  - ' Start Expand '
+  - ' Expanding All '
+  - ' Result >> {"Status":"Deleted","VlocityDataPackId":"0ncNS00000037UnYAI"} '
+  - ' Salesforce Org >> trial1 '
+  - ' Version Info >> v1.17.13 omnistudio  '
+  - ' Log File >> vlocity-temp\logs\exportAllOmni-yaml-2025-06-02T16-04-05-479Z-Export.yaml '
+  - ' Current Status >> Export '
+  - ' Remaining >> 3 '
+  - ' Success >> 21 '
+  - ' Error >> 0 '
+  - ' Elapsed Time >> 0m 13s '
+  - ' Retrieved 21 items >> Exporting '
+  - ' Start Expand '
+  - ' Expanding All '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CreateCaseDR\CreateCaseDR_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_ParentKeys.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CreateCaseDR\CreateCaseDR_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_ParentKeys.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CreateCaseDR\CreateCaseDR_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_SampleInput.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_GetAPIConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_Element_Case-Details.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_GetEmployeeId.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_Element_Description.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_GetUserDetailsFromAPI.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_Element_Subject.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_ResponseAction1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_Element_Priority.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_Element_CreateCasePost.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_DataPack.json '
+  - ' Result >> {"Status":"Deleted","VlocityDataPackId":"0ncNS00000037Y1YAI"} '
+  - ' Salesforce Org >> trial1 '
+  - ' Version Info >> v1.17.13 omnistudio  '
+  - ' Log File >> vlocity-temp\logs\exportAllOmni-yaml-2025-06-02T16-04-05-479Z-Export.yaml '
+  - ' Current Status >> Export '
+  - ' Remaining >> 2 '
+  - ' Success >> 23 '
+  - ' Error >> 0 '
+  - ' Elapsed Time >> 0m 13s '
+  - ' Retrieved 23 items >> Exporting '
+  - ' Result >> {"Status":"Deleted","VlocityDataPackId":"0ncNS00000037ZdYAI"} '
+  - ' Salesforce Org >> trial1 '
+  - ' Version Info >> v1.17.13 omnistudio  '
+  - ' Log File >> vlocity-temp\logs\exportAllOmni-yaml-2025-06-02T16-04-05-479Z-Export.yaml '
+  - ' Current Status >> Export '
+  - ' Remaining >> 2 '
+  - ' Success >> 23 '
+  - ' Error >> 0 '
+  - ' Elapsed Time >> 0m 13s '
+  - ' Retrieved 23 items >> Exporting '
+  - ' Result >> {"Status":"Deleted","VlocityDataPackId":"0ncNS00000037crYAA"} '
+  - ' Salesforce Org >> trial1 '
+  - ' Version Info >> v1.17.13 omnistudio  '
+  - ' Log File >> vlocity-temp\logs\exportAllOmni-yaml-2025-06-02T16-04-05-479Z-Export.yaml '
+  - ' Current Status >> Export '
+  - ' Remaining >> 2 '
+  - ' Success >> 23 '
+  - ' Error >> 0 '
+  - ' Elapsed Time >> 0m 13s '
+  - ' Retrieved 23 items >> Exporting '
+  - ' Start Expand '
+  - ' Expanding All '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\FlexCard\ContactChild\ContactChild.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\FlexCard\Display_User_Details\Display_User_Details.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\FlexCard\ContactChild\ContactChild_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\FlexCard\Display_User_Details\Display_User_Details_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_ParentKeys.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_SampleInput.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_GetAPIConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_GetEmployeeId.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_GetUserDetailsFromAPI.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_ResponseAction1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_DataPack.json '
+  - ' Result >> {"Status":"Deleted","VlocityDataPackId":"0ncNS00000037TBYAY"} '
+  - ' Salesforce Org >> trial1 '
+  - ' Version Info >> v1.17.13 omnistudio  '
+  - ' Log File >> vlocity-temp\logs\exportAllOmni-yaml-2025-06-02T16-04-05-479Z-Export.yaml '
+  - ' Current Status >> Export '
+  - ' Remaining >> 0 '
+  - ' Success >> 26 '
+  - ' Error >> 0 '
+  - ' Elapsed Time >> 0m 14s '
+  - ' Retrieved 26 items >> Exporting '
+  - ' Result >> {"Status":"Deleted","VlocityDataPackId":"0ncNS00000036qUYAQ"} '
+  - ' Salesforce Org >> trial1 '
+  - ' Version Info >> v1.17.13 omnistudio  '
+  - ' Log File >> vlocity-temp\logs\exportAllOmni-yaml-2025-06-02T16-04-05-479Z-Export.yaml '
+  - ' Current Status >> Export '
+  - ' Remaining >> 0 '
+  - ' Success >> 26 '
+  - ' Error >> 0 '
+  - ' Elapsed Time >> 0m 14s '
+  - ' Retrieved 26 items >> Exporting '
+  - ' Result >> {"Status":"Deleted","VlocityDataPackId":"0ncNS00000037RZYAY"} '
+  - ' Salesforce Org >> trial1 '
+  - ' Version Info >> v1.17.13 omnistudio  '
+  - ' Log File >> vlocity-temp\logs\exportAllOmni-yaml-2025-06-02T16-04-05-479Z-Export.yaml '
+  - ' Current Status >> Export '
+  - ' Remaining >> 0 '
+  - ' Success >> 26 '
+  - ' Error >> 0 '
+  - ' Elapsed Time >> 0m 14s '
+  - ' Retrieved 26 items >> Exporting '
+  - ' Salesforce Org >> trial1 '
+  - ' Version Info >> v1.17.13 omnistudio  '
+  - ' Log File >> vlocity-temp\logs\exportAllOmni-yaml-2025-06-02T16-04-05-479Z-Export.yaml '
+  - ' Current Status >> Export '
+  - ' Remaining >> 0 '
+  - ' Success >> 26 '
+  - ' Error >> 0 '
+  - ' Elapsed Time >> 0m 14s '
+  - ' Retrieved 26 items >> Exporting '
+  - ' Start Expand '
+  - ' Expanding All '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRLoadNewRequest\DRLoadNewRequest_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_WebInquiry_English\Case_WebInquiry_English_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountExtract\DMAccountExtract_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountTurbo\DMAccountTurbo_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DM\DM_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\FlexCard\ContactChild\ContactChild.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRExtractContactInfo\DRExtractContactInfo_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\FlexCard\Display_User_Details\Display_User_Details.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRExtractServiceRequests\DRExtractServiceRequests_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CreateCaseDR\CreateCaseDR_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMLookupAccount\DMLookupAccount_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CreateCaseDR\CreateCaseDR_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMSingleTransform\DMSingleTransform_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_QuickEntry_English\Case_QuickEntry_English_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Test_IntegrationTest_English\Test_IntegrationTest_English_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountLoad\DMAccountLoad_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\AccountDetailsDR\AccountDetailsDR_ParentKeys.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CaseSummaryD\CaseSummaryD_ParentKeys.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRLoadNewRequest\DRLoadNewRequest_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DM\DM_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountExtract\DMAccountExtract_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\FlexCard\ContactChild\ContactChild_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_WebInquiry_English\Case_WebInquiry_English_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountTurbo\DMAccountTurbo_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\FlexCard\Display_User_Details\Display_User_Details_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRExtractContactInfo\DRExtractContactInfo_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRExtractServiceRequests\DRExtractServiceRequests_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CreateCaseDR\CreateCaseDR_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CreateCaseDR\CreateCaseDR_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMLookupAccount\DMLookupAccount_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMSingleTransform\DMSingleTransform_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_QuickEntry_English\Case_QuickEntry_English_Element_Step1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Test_IntegrationTest_English\Test_IntegrationTest_English_Element_Step1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountLoad\DMAccountLoad_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\AccountDetailsDR\AccountDetailsDR_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CaseSummaryD\CaseSummaryD_Items.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_ParentKeys.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_ParentKeys.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_ParentKeys.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DRExtractServiceRequests\DRExtractServiceRequests_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CreateCaseDR\CreateCaseDR_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetEmployeeIdFromRecord\GetEmployeeIdFromRecord_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CreateCaseDR\CreateCaseDR_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMLookupAccount\DMLookupAccount_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMSingleTransform\DMSingleTransform_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\GetIntegrationAPIConfigDataMapper\GetIntegrationAPIConfigDataMapper_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_QuickEntry_English\Case_QuickEntry_English_Element_Text1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Test_IntegrationTest_English\Test_IntegrationTest_English_Element_TextBlock1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountLoad\DMAccountLoad_InputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_SampleInput.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CaseSummaryD\CaseSummaryD_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\AccountDetailsDR\AccountDetailsDR_SampleInputJson.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_PropertySetConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_QuickEntry_English\Case_QuickEntry_English_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Test_IntegrationTest_English\Test_IntegrationTest_English_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_Element_DataMapperPostAction1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\CaseSummaryD\CaseSummaryD_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\DMAccountLoad\DMAccountLoad_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_SampleInput.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\DataRaptor\AccountDetailsDR\AccountDetailsDR_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_SampleInput.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_Element_Case-Details.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_Element_SetValues5.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_GetAPIConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_Element_Description.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_GetAPIConfig.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_Element_SetValues6.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_Element_Subject.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_GetEmployeeId.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_GetEmployeeId.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_Element_ResponseAction2.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_Element_Priority.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_GetUserDetailsFromAPI.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_GetUserDetailsFromAPI.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_Element_ResponseAction4.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_ResponseAction1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_Element_ResponseAction1.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_Element_CreateCasePost.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\CaseProceeding_AddCaseParticipants\CaseProceeding_AddCaseParticipants_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\OmniScript\Case_Create_English\Case_Create_English_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_DataPack.json '
+  - ' Creating file >> C:\Users\ssimran\dx-omni-deploy\IntegrationProcedure\GetUserDetailsIP_GetUserDetailsIP\GetUserDetailsIP_GetUserDetailsIP_DataPack.json '
+  - ' Finishing Retrieve '
+  - ' Salesforce Org >> trial1 '
+  - ' Version Info >> v1.17.13 omnistudio  '
+  - ' Log File >> vlocity-temp\logs\exportAllOmni-yaml-2025-06-02T16-04-05-479Z-Export.yaml '
+  - ' Current Status >> Export '
+  - ' Remaining >> 0 '
+  - ' Success >> 26 '
+  - ' Error >> 0 '
+  - ' Elapsed Time >> 0m 14s '
+  - ' Retrieved 26 items >> Exporting '

@@ -1,5 +1,6 @@
 {
     "ElementTypeComponentMapping": "{\"ElementTypeToHTMLTemplateList\":[]}",
+    "IsIntegProcdSignatureAvl": false,
     "IsIntegrationProcedure": false,
     "IsManagedUsingStdDesigner": false,
     "IsMetadataCacheDisabled": false,

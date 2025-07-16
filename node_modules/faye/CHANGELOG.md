@@ -1,3 +1,7 @@
+### 1.4.1 / 2025-06-17
+
+- Remove binding to the deprecated `unload` event
+
 ### 1.4.0 / 2020-07-31
 
 - Implement TLS certificate verification and enable it by default in the Ruby

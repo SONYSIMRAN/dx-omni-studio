@@ -1,0 +1,19 @@
+{
+    "ElementTypeComponentMapping": "{\"ElementTypeToHTMLTemplateList\":[]}",
+    "IsIntegProcdSignatureAvl": false,
+    "IsIntegrationProcedure": false,
+    "IsManagedUsingStdDesigner": false,
+    "IsMetadataCacheDisabled": false,
+    "IsOmniScriptEmbeddable": false,
+    "IsTestProcedure": false,
+    "IsWebCompEnabled": true,
+    "Language": "English",
+    "Name": "SubmitContactInquiry",
+    "OmniProcessType": "OmniScript",
+    "PropertySetConfig": "Case_WebInquiry_English_PropertySetConfig.json",
+    "SubType": "WebInquiry",
+    "Type": "Case",
+    "VlocityDataPackType": "SObject",
+    "VlocityRecordSObjectType": "OmniProcess",
+    "VlocityRecordSourceKey": "OmniProcess/Case/WebInquiry/English"
+}

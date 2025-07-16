@@ -1,12 +1,12 @@
-Org: target1
-Version: 1.17.13
+Org: target
+Version: 0.0.1
 Node: v22.15.0
-PackageVersion: !<tag:yaml.org,2002:js/undefined> ''
+PackageVersion: '238.1'
 Namespace: omnistudio
 Job: VDX
 Action: Deploy
 ProjectPath: 'C:\Users\ssimran\dx-omni-deploy\vlocity-temp'
-TotalTime: 0m 7s
+TotalTime: 1m 13s
 Count:
   Success: {}
 Errors: []
@@ -14,6 +14,6 @@ Status:
   Success: {}
 StatusCount:
   Remaining: 0
-  Success: 1
+  Success: 5
   Error: 0
 id: !<tag:yaml.org,2002:js/undefined> ''

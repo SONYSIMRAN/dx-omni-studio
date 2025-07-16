@@ -1,0 +1,43 @@
+{
+    "AuthorName": "TGS",
+    "ClonedFromOmniUiCardKey": "",
+    "DataSourceConfig": {
+        "dataSource": {
+            "contextVariables": [
+                {
+                    "id": 0,
+                    "name": "%ContactId%",
+                    "val": "003NS00000lJ7XSYA0"
+                }
+            ],
+            "orderBy": {
+                "isReverse": "",
+                "name": ""
+            },
+            "type": "DataRaptor",
+            "value": {
+                "bundle": "GetContactDetails",
+                "bundleType": "",
+                "dsDelay": "",
+                "jsonMap": "{\"%ContactId%\":\"{%ContactId%}\"}",
+                "resultVar": ""
+            }
+        }
+    },
+    "Description": "",
+    "IsManagedUsingStdDesigner": false,
+    "IsTrackingEnabled": false,
+    "Name": "ContactData",
+    "Namespace": "",
+    "OmniUiCardKey": "ContactData/TGS/1.0",
+    "OmniUiCardType": "Parent",
+    "OverrideKey": "",
+    "PropertySetConfig": "ContactData.json",
+    "SampleDataSourceResponse": "[]",
+    "StylingConfiguration": "",
+    "UniqueName": "",
+    "VersionNumber": 1,
+    "VlocityDataPackType": "SObject",
+    "VlocityRecordSObjectType": "OmniUiCard",
+    "VlocityRecordSourceKey": "OmniUiCard/ContactData"
+}
