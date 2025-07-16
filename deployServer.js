@@ -3076,80 +3076,6 @@ app.post('/test-methods', async (req, res) => {
   }
 });
 
-// app.post('/re-deploy-release', async (req, res) => {
-//   const {
-//     sourceAlias,
-//     releaseId,
-//     additionalComponents = {},   // 👈 NEW (optional)
-//     overrideCommitMessage,
-//     overrideBranch
-//   } = req.body;
-
-//   if (!sourceAlias || !releaseId) {
-//     return res.status(400).json({
-//       status: 'error',
-//       message: 'sourceAlias and releaseId are required'
-//     });
-//   }
-
-//   const releasePath = path.join(
-//     __dirname,
-//     'storage',
-//     sourceAlias,
-//     'releases',
-//     `${releaseId}.json`
-//   );
-
-//   if (!fs.existsSync(releasePath)) {
-//     return res.status(404).json({
-//       status: 'error',
-//       message: `Release '${releaseId}' not found`
-//     });
-//   }
-
-//   try {
-//     // 1️⃣  Load the original release descriptor
-//     const release = JSON.parse(fs.readFileSync(releasePath, 'utf-8'));
-
-//     // 2️⃣  Merge with any new components
-//     const mergedComponents = mergeSelectedComponents(
-//       release.components,
-//       additionalComponents
-//     );
-
-//     // 3️⃣  Build the payload for /deploy-and-git
-//     const payload = {
-//       sourceAlias,
-//       selectedComponents : mergedComponents,
-//       gitBranch          : overrideBranch || release.gitBranch || 'main',
-//       commitMessage      :
-//         overrideCommitMessage ||
-//         `Re-deploying ${release.releaseName || release.releaseId}`,
-//       releaseName        : `${release.releaseName || release.releaseId} (Redeploy)`
-//     };
-
-//     // 4️⃣  Fire the deploy
-//     const axiosRes = await axios.post(
-//       'http://localhost:3000/deploy-and-git',
-//       payload
-//     );
-
-//     return res.status(200).json({
-//       status        : 'success',
-//       originalRelease : releaseId,
-//       newRelease      : axiosRes.data.release,
-//       pipeline        : axiosRes.data.pipeline
-//     });
-//   } catch (err) {
-//     console.error('Error during re-deploy:', err.message || err);
-//     return res.status(500).json({
-//       status : 'error',
-//       message: 'Failed to re-deploy release',
-//       details: err.message
-//     });
-//   }
-// });
-
 app.post('/re-deploy-release', async (req, res) => {
   const {
     sourceAlias,
@@ -3216,10 +3142,16 @@ app.post('/re-deploy-release', async (req, res) => {
       releaseId 
     };
 
+    if (fs.existsSync('./git-export')) {
+    fs.rmSync('./git-export', { recursive: true, force: true });
+    }
+
     // 🔁 Deploy via original endpoint
     const axiosRes = await axios.post('http://localhost:3000/deploy-and-git', payload);
 
     // 🔧 Overwrite tag if needed (delete + recreate)
+
+
     const gitExportDir = './git-export';
     const git = simpleGit(gitExportDir);
     await git.fetch();
