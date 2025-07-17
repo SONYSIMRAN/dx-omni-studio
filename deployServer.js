@@ -3282,7 +3282,10 @@ app.get('/commits', async (req, res) => {
                 .split('\n')
                 .filter(line => line.trim() && !line.startsWith('commit'));
 
-            const inferredComponents = inferComponentDetails(filesChanged);
+                const inferredComponents = inferComponentDetails(filesChanged)
+                 .filter(c => c.type !== 'Unknown'); // ⬅️ Filtering unknowns
+
+            // const inferredComponents = inferComponentDetails(filesChanged);
 
             commitsWithComponents.push({
                 hash: commit.hash,

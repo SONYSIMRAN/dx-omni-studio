@@ -38,29 +38,87 @@ function timeAgo(dateString) {
     return `${Math.floor(diff / 86400)}d ago`;
 }
 
+// function inferComponentDetails(files) {
+//     return files.map(filePath => {
+//         const ext = path.extname(filePath);
+//         const baseName = path.basename(filePath, ext);
+//         const parts = filePath.split(path.sep);
+
+//         // Try to infer type from folders like classes/, triggers/, lwc/, omniscripts/
+//         let typeGuess = 'Unknown';
+//         if (filePath.includes('classes')) typeGuess = 'ApexClass';
+//         else if (filePath.includes('triggers')) typeGuess = 'ApexTrigger';
+//         else if (filePath.includes('lwc')) typeGuess = 'LWC';
+//         else if (filePath.includes('OmniScript')) typeGuess = 'OmniScript';
+//         else if (filePath.includes('FlexCard')) typeGuess = 'FlexCard';
+//         else if (filePath.includes('DataRaptor')) typeGuess = 'DataRaptor';
+//         else if (filePath.includes('IntegrationProcedure')) typeGuess = 'IntegrationProcedure';
+
+//         return {
+//             file: filePath,
+//             type: typeGuess,
+//             name: baseName
+//         };
+//     });
+// }
+
 function inferComponentDetails(files) {
-    return files.map(filePath => {
-        const ext = path.extname(filePath);
-        const baseName = path.basename(filePath, ext);
-        const parts = filePath.split(path.sep);
+    const components = [];
 
-        // Try to infer type from folders like classes/, triggers/, lwc/, omniscripts/
-        let typeGuess = 'Unknown';
-        if (filePath.includes('classes')) typeGuess = 'ApexClass';
-        else if (filePath.includes('triggers')) typeGuess = 'ApexTrigger';
-        else if (filePath.includes('lwc')) typeGuess = 'LWC';
-        else if (filePath.includes('OmniScript')) typeGuess = 'OmniScript';
-        else if (filePath.includes('FlexCard')) typeGuess = 'FlexCard';
-        else if (filePath.includes('DataRaptor')) typeGuess = 'DataRaptor';
-        else if (filePath.includes('IntegrationProcedure')) typeGuess = 'IntegrationProcedure';
+    for (const file of files) {
+        const normalized = file.replace(/\\/g, '/'); // Normalize Windows paths
+        let type = 'Unknown';
+        let name = 'Unknown';
 
-        return {
-            file: filePath,
-            type: typeGuess,
-            name: baseName
-        };
-    });
+        // Skip non-component files
+        if (
+            normalized.endsWith('.gitlab-ci.yml') ||
+            normalized.includes('/.meta/') ||
+            normalized.endsWith('sfdx-project.json') ||
+            normalized.endsWith('release.json') ||
+            normalized.endsWith('.rollback-marker') ||
+            normalized.endsWith('README.md')
+        ) {
+            continue;
+        }
+
+        // OmniStudio: OmniScript, DataRaptor, FlexCard
+        let match;
+        if ((match = normalized.match(/\/(OmniScript|DataRaptor|FlexCard)\/([^/]+)\//))) {
+            type = match[1];
+            name = match[2];
+        }
+
+        // ApexClass
+        else if ((match = normalized.match(/\/classes\/([^/]+)\.cls$/))) {
+            type = 'ApexClass';
+            name = match[1];
+        }
+
+        // ApexTrigger
+        else if ((match = normalized.match(/\/triggers\/([^/]+)\.trigger$/))) {
+            type = 'ApexTrigger';
+            name = match[1];
+        }
+
+        // LWC
+        else if ((match = normalized.match(/\/lwc\/([^/]+)\//))) {
+            type = 'LWC';
+            name = match[1];
+        }
+
+        // Fallback: Use file name as component name (last segment before extension)
+        else {
+            const ext = path.extname(normalized);
+            name = path.basename(normalized, ext);
+        }
+
+        components.push({ file, type, name });
+    }
+
+    return components;
 }
+
 
 
 
