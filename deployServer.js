@@ -28,7 +28,8 @@ const {
 } = require('./storageHelper');
 const {
     timeAgo,
-    inferComponentDetails
+    inferComponentDetails,
+    getLatestPipelineInfo
 } = require('./dxUtils');
 const STORAGE_DIR = path.join(__dirname, 'storage');
 const repoUrl = process.env.GITLAB_REPO_URL;
@@ -2064,10 +2065,10 @@ app.post('/deploy-and-git', async (req, res) => {
         await git.commit(`Release: ${fullTagName} — ${commitMessage}`);
         await git.push('origin', gitBranch);
 
-        // 🔁 Ensure safe re-tag if re-deploy
+        // Ensure safe re-tag if re-deploy
         const existingTags = await git.tags();
         if (existingTags.all.includes(fullTagName)) {
-            console.log(`♻️ Tag already exists, deleting: ${fullTagName}`);
+            console.log(`Tag already exists, deleting: ${fullTagName}`);
             await git.tag(['-d', fullTagName]);
             await git.push(['origin', `:refs/tags/${fullTagName}`]);
         }
@@ -2090,10 +2091,21 @@ app.post('/deploy-and-git', async (req, res) => {
         //         created_at: pipelineData.created_at
         //     }
         // });
+
+        const pipelineData = await getLatestPipelineInfo(gitBranch);
+        console.log(` pipelineData : ${pipelineData}`);
+
         return res.status(200).json({
             status: 'success',
             message: 'Selected OmniStudio + SFDX metadata exported to Git!',
-            release: releaseMetadata
+            release: releaseMetadata,
+              pipeline: pipelineData ? {
+                id: pipelineData.id,
+                status: pipelineData.status,
+                url: pipelineData.web_url,
+                ref: pipelineData.ref,
+                created_at: pipelineData.created_at
+            } : null
         });
 
     } catch (err) {
@@ -3130,7 +3142,7 @@ app.post('/re-deploy-release', async (req, res) => {
     // Merge with new components
     const mergedComponents = mergeSelectedComponents(release.components, additionalComponents);
 
-    // 🔁 Overwrite same release name and ID
+    // Overwrite same release name and ID
     const now = new Date();
     const deployedAt = now.toISOString();
     const deployedAtFormatted = now.toLocaleString('en-IN', {
@@ -3169,10 +3181,10 @@ app.post('/re-deploy-release', async (req, res) => {
     fs.rmSync('./git-export', { recursive: true, force: true });
     }
 
-    // 🔁 Deploy via original endpoint
+    // Deploy via original endpoint
     const axiosRes = await axios.post('http://localhost:3000/deploy-and-git', payload);
 
-    // 🔧 Overwrite tag if needed (delete + recreate)
+    // Overwrite tag if needed (delete + recreate)
 
 
     const gitExportDir = './git-export';
@@ -3193,7 +3205,7 @@ app.post('/re-deploy-release', async (req, res) => {
     await git.addTag(releaseId);
     await git.pushTags('origin');
 
-    // 🔁 Overwrite `release.json` with updated metadata
+    // Overwrite `release.json` with updated metadata
     const componentsDir = path.join(gitExportDir, 'components');
     const releaseFolder = path.join(componentsDir, releaseId);
     const releaseFile = path.join(releaseFolder, 'release.json');
@@ -3217,7 +3229,6 @@ app.post('/re-deploy-release', async (req, res) => {
     });
   }
 });
-
 
 
 app.get('/commits', async (req, res) => {
@@ -3283,7 +3294,7 @@ app.get('/commits', async (req, res) => {
                 .filter(line => line.trim() && !line.startsWith('commit'));
 
                 const inferredComponents = inferComponentDetails(filesChanged)
-                 .filter(c => c.type !== 'Unknown'); // ⬅️ Filtering unknowns
+                 .filter(c => c.type !== 'Unknown'); // ⬅Filtering unknowns
 
             // const inferredComponents = inferComponentDetails(filesChanged);
 
