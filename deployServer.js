@@ -26,6 +26,10 @@ const {
     diffComponents,
     getComponentStatus
 } = require('./storageHelper');
+const {
+    timeAgo,
+    inferComponentDetails
+} = require('./dxUtils');
 const STORAGE_DIR = path.join(__dirname, 'storage');
 const repoUrl = process.env.GITLAB_REPO_URL;
 const simpleGit = require('simple-git');
@@ -2550,80 +2554,99 @@ app.get('/releases', (req, res) => {
 //     }
 // });
 
-app.get('/commits', async (req, res) => {
-    const branch = req.query.branch;
-    const gitExportDir = './git-export';
-    const repoUrl = process.env.GITLAB_REPO_URL;
+// app.get('/commits', async (req, res) => {
+//     const branch = req.query.branch;
+//     const gitExportDir = './git-export';
+//     const repoUrl = process.env.GITLAB_REPO_URL;
 
-    if (!branch) {
-        return res.status(400).json({ status: 'error', message: 'Missing branch param' });
-    }
+//     if (!branch) {
+//         return res.status(400).json({ status: 'error', message: 'Missing branch param' });
+//     }
 
-    try {
-        if (fs.existsSync(gitExportDir)) {
-            fs.rmSync(gitExportDir, { recursive: true, force: true });
-        }
+//     try {
+//         if (fs.existsSync(gitExportDir)) {
+//             fs.rmSync(gitExportDir, { recursive: true, force: true });
+//         }
 
-        await simpleGit().clone(repoUrl, gitExportDir);
-        const git = simpleGit(gitExportDir);
-        await git.fetch();
+//         await simpleGit().clone(repoUrl, gitExportDir);
+//         const git = simpleGit(gitExportDir);
+//         await git.fetch();
 
-        const branches = await git.branch(['-a']);
-        const isLocal = Object.keys(branches.branches).includes(branch);
-        const remoteBranchName = `remotes/origin/${branch}`;
-        const isRemote = Object.keys(branches.branches).includes(remoteBranchName);
+//         const branches = await git.branch(['-a']);
+//         const isLocal = Object.keys(branches.branches).includes(branch);
+//         const remoteBranchName = `remotes/origin/${branch}`;
+//         const isRemote = Object.keys(branches.branches).includes(remoteBranchName);
 
-        if (isLocal) {
-            await git.checkout(branch);
-        } else if (isRemote) {
-            await git.checkoutBranch(branch, remoteBranchName);
-        } else {
-            return res.status(404).json({
-                status: 'error',
-                message: `Branch '${branch}' not found in local or remote`
-            });
-        }
+//         if (isLocal) {
+//             await git.checkout(branch);
+//         } else if (isRemote) {
+//             await git.checkoutBranch(branch, remoteBranchName);
+//         } else {
+//             return res.status(404).json({
+//                 status: 'error',
+//                 message: `Branch '${branch}' not found in local or remote`
+//             });
+//         }
 
-        // Fetch large enough log to capture all rollbacks
-        const log = await git.log({ n: 100 });
+//         // Fetch large enough log to capture all rollbacks
+//         const log = await git.log({ n: 100 });
 
-        const rolledBackShortHashes = new Set();
+//         const rolledBackShortHashes = new Set();
 
-        // First pass: collect rolled-back short hashes
-        for (const commit of log.all) {
-            const match = commit.message.match(/Rollback of commit (\w{7,40})/);
-            if (match) {
-                rolledBackShortHashes.add(match[1]);
-            }
-        }
+//         // First pass: collect rolled-back short hashes
+//         for (const commit of log.all) {
+//             const match = commit.message.match(/Rollback of commit (\w{7,40})/);
+//             if (match) {
+//                 rolledBackShortHashes.add(match[1]);
+//             }
+//         }
+        
 
-        // Second pass: filter out commits whose full hash starts with any rolled-back short hash
-        const filteredCommits = log.all.filter(commit => {
-            return !Array.from(rolledBackShortHashes).some(shortHash =>
-                commit.hash.startsWith(shortHash)
-            );
-        }).map(commit => ({
-            hash: commit.hash,
-            shortHash: commit.hash.substring(0, 8),
-            message: commit.message,
-            author: commit.author_name,
-            date: commit.date
-        }));
+//         // Second pass: filter out commits whose full hash starts with any rolled-back short hash
+//         const filteredCommits = log.all.filter(commit => {
+//             return !Array.from(rolledBackShortHashes).some(shortHash =>
+//                 commit.hash.startsWith(shortHash)
+//             );
+//         // }).map(commit => ({
+//         //     hash: commit.hash,
+//         //     shortHash: commit.hash.substring(0, 8),
+//         //     message: commit.message,
+//         //     author: commit.author_name,
+//         //     date: commit.date
+//         // }));
 
-        return res.status(200).json({
-            status: 'success',
-            branch,
-            commits: filteredCommits
-        });
+//         }).map(commit => {
+//             const componentMatch = commit.message.match(/(?:Added|Updated|Removed)\s+(\w+):\s+([A-Za-z0-9_]+)/);
+//             return {
+//                 hash: commit.hash,
+//                 shortHash: commit.hash.substring(0, 8),
+//                 message: commit.message,
+//                 body: commit.body,
+//                 author: commit.author_name,
+//                 email: commit.author_email,
+//                 date: commit.date,
+//                 relativeDate: timeAgo(commit.date),
+//                 refs: commit.refs,
+//                 parentHashes: commit.parentHashes,
+//                 isRollback: /Rollback of commit (\w{7,40})/.test(commit.message),
+//                 componentType: componentMatch ? componentMatch[1] : null,
+//                 componentName: componentMatch ? componentMatch[2] : null
+//             };
+//         });
+//         return res.status(200).json({
+//             status: 'success',
+//             branch,
+//             commits: filteredCommits
+//         });
 
-    } catch (err) {
-        console.error('Error fetching commits:', err.message || err);
-        return res.status(500).json({
-            status: 'error',
-            message: err.message || 'Failed to fetch commits'
-        });
-    }
-});
+//     } catch (err) {
+//         console.error('Error fetching commits:', err.message || err);
+//         return res.status(500).json({
+//             status: 'error',
+//             message: err.message || 'Failed to fetch commits'
+//         });
+//     }
+// });
 
 
 app.get('/components', async (req, res) => {
@@ -3195,6 +3218,102 @@ app.post('/re-deploy-release', async (req, res) => {
   }
 });
 
+
+
+app.get('/commits', async (req, res) => {
+    const branch = req.query.branch;
+    const gitExportDir = './git-export';
+    const repoUrl = process.env.GITLAB_REPO_URL;
+
+    if (!branch) {
+        return res.status(400).json({ status: 'error', message: 'Missing branch param' });
+    }
+
+    try {
+        if (fs.existsSync(gitExportDir)) {
+            fs.rmSync(gitExportDir, { recursive: true, force: true });
+        }
+
+        await simpleGit().clone(repoUrl, gitExportDir);
+        const git = simpleGit(gitExportDir);
+        await git.fetch();
+
+        const branches = await git.branch(['-a']);
+        const isLocal = Object.keys(branches.branches).includes(branch);
+        const remoteBranchName = `remotes/origin/${branch}`;
+        const isRemote = Object.keys(branches.branches).includes(remoteBranchName);
+
+        if (isLocal) {
+            await git.checkout(branch);
+        } else if (isRemote) {
+            await git.checkoutBranch(branch, remoteBranchName);
+        } else {
+            return res.status(404).json({
+                status: 'error',
+                message: `Branch '${branch}' not found in local or remote`
+            });
+        }
+
+        const log = await git.log({ n: 100 });
+
+        const rolledBackShortHashes = new Set();
+
+        // Collect rolled-back short hashes
+        for (const commit of log.all) {
+            const match = commit.message.match(/Rollback of commit (\w{7,40})/);
+            if (match) {
+                rolledBackShortHashes.add(match[1]);
+            }
+        }
+
+        // Filter out rollback commits
+        const filteredCommits = log.all.filter(commit => {
+            return !Array.from(rolledBackShortHashes).some(shortHash =>
+                commit.hash.startsWith(shortHash)
+            );
+        });
+
+        // Process commits and extract component info
+        const commitsWithComponents = [];
+
+        for (const commit of filteredCommits) {
+            const showOutput = await git.show([commit.hash, '--name-only']);
+            const filesChanged = showOutput
+                .split('\n')
+                .filter(line => line.trim() && !line.startsWith('commit'));
+
+            const inferredComponents = inferComponentDetails(filesChanged);
+
+            commitsWithComponents.push({
+                hash: commit.hash,
+                shortHash: commit.hash.substring(0, 8),
+                message: commit.message,
+                body: commit.body,
+                author: commit.author_name,
+                email: commit.author_email,
+                date: commit.date,
+                relativeDate: timeAgo(commit.date),
+                refs: commit.refs,
+                parentHashes: commit.parentHashes,
+                isRollback: /Rollback of commit (\w{7,40})/.test(commit.message),
+                components: inferredComponents
+            });
+        }
+
+        return res.status(200).json({
+            status: 'success',
+            branch,
+            commits: commitsWithComponents
+        });
+
+    } catch (err) {
+        console.error('Error fetching commits:', err.message || err);
+        return res.status(500).json({
+            status: 'error',
+            message: err.message || 'Failed to fetch commits'
+        });
+    }
+});
 
 
 
