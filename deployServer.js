@@ -2079,34 +2079,34 @@ app.post('/deploy-and-git', async (req, res) => {
 
         const pipelineData = await triggerGitlabPipeline();
 
-        return res.status(200).json({
-            status: 'success',
-            message: 'Selected OmniStudio + SFDX metadata exported to Git!',
-            release: releaseMetadata,
-            pipeline: {
-                id: pipelineData.id,
-                status: pipelineData.status,
-                url: pipelineData.web_url,
-                ref: pipelineData.ref,
-                created_at: pipelineData.created_at
-            }
-        });
-
-        // const pipelineData = await getLatestPipelineInfo(gitBranch);
-        // console.log(` pipelineData : ${pipelineData}`);
-
         // return res.status(200).json({
         //     status: 'success',
         //     message: 'Selected OmniStudio + SFDX metadata exported to Git!',
         //     release: releaseMetadata,
-        //       pipeline: pipelineData ? {
+        //     pipeline: {
         //         id: pipelineData.id,
         //         status: pipelineData.status,
         //         url: pipelineData.web_url,
         //         ref: pipelineData.ref,
         //         created_at: pipelineData.created_at
-        //     } : null
+        //     }
         // });
+
+        // const pipelineData = await getLatestPipelineInfo(gitBranch);
+        console.log(` pipelineData : ${pipelineData}`);
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Selected OmniStudio + SFDX metadata exported to Git!',
+            release: releaseMetadata,
+              pipeline: pipelineData ? {
+                id: pipelineData.id,
+                status: pipelineData.status,
+                url: pipelineData.web_url,
+                ref: pipelineData.ref,
+                created_at: pipelineData.created_at
+            } : null
+        });
 
     } catch (err) {
         console.error('deploy-and-git error:', err.message || err);
