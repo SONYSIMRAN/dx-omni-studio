@@ -815,26 +815,26 @@ app.post('/detect-dependencies', (req, res) => {
 
 
 // Trigger GitLab Pipeline
-// async function triggerGitlabPipeline() {
-//     const GITLAB_API_URL = `https://gitlab.com/api/v4/projects/${process.env.GITLAB_PROJECT_ID}/pipeline`;
+async function triggerGitlabPipeline() {
+    const GITLAB_API_URL = `https://gitlab.com/api/v4/projects/${process.env.GITLAB_PROJECT_ID}/pipeline`;
 
-//     try {
-//         const response = await axios.post(
-//             GITLAB_API_URL,
-//             { ref: process.env.GITLAB_BRANCH || 'main' },
-//             {
-//                 headers: {
-//                     'Private-Token': process.env.GITLAB_TOKEN,
-//                     'Content-Type': 'application/json'
-//                 }
-//             }
-//         );
-//         return response.data;
-//     } catch (err) {
-//         console.error('GitLab pipeline trigger failed:', err.response?.data || err.message);
-//         throw err;
-//     }
-// }
+    try {
+        const response = await axios.post(
+            GITLAB_API_URL,
+            { ref: process.env.GITLAB_BRANCH || 'main' },
+            {
+                headers: {
+                    'Private-Token': process.env.GITLAB_TOKEN,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        return response.data;
+    } catch (err) {
+        console.error('GitLab pipeline trigger failed:', err.response?.data || err.message);
+        throw err;
+    }
+}
 
 //** Deploying omni studio and sfdx fixed version*/
 
@@ -1951,16 +1951,16 @@ app.post('/deploy-and-git', async (req, res) => {
         let releaseId;
 
         if (incomingReleaseId) {
-        // 🔁 Re-deploy scenario
+        // Re-deploy scenario
         releaseId = incomingReleaseId;
-        console.log(`🔁 Re-deploying to existing releaseId: ${releaseId}`);
+        console.log(`Re-deploying to existing releaseId: ${releaseId}`);
         } else {
-        // ✅ New deploy scenario
+        // New deploy scenario
         const now = new Date();
         const pad = (n) => n.toString().padStart(2, '0');
         const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
         releaseId = `release-${timestamp}Z`;
-        console.log(`🆕 New release created: ${releaseId}`);
+        console.log(`New release created: ${releaseId}`);
         }
 
 
@@ -2040,7 +2040,7 @@ app.post('/deploy-and-git', async (req, res) => {
         fs.mkdirSync(localReleaseDir, { recursive: true });
         const localPath = path.join(localReleaseDir, `${releaseId}.json`);
         fs.writeFileSync(localPath, JSON.stringify(releaseMetadata, null, 2));
-        console.log(`✅ Local release saved: ${localPath}`);
+        console.log(`Local release saved: ${localPath}`);
         
 
         // Timestamp marker
@@ -2077,36 +2077,36 @@ app.post('/deploy-and-git', async (req, res) => {
         await git.pushTags('origin');
 
 
-        // const pipelineData = await triggerGitlabPipeline();
-
-        // return res.status(200).json({
-        //     status: 'success',
-        //     message: 'Selected OmniStudio + SFDX metadata exported to Git!',
-        //     release: releaseMetadata,
-        //     pipeline: {
-        //         id: pipelineData.id,
-        //         status: pipelineData.status,
-        //         url: pipelineData.web_url,
-        //         ref: pipelineData.ref,
-        //         created_at: pipelineData.created_at
-        //     }
-        // });
-
-        const pipelineData = await getLatestPipelineInfo(gitBranch);
-        console.log(` pipelineData : ${pipelineData}`);
+        const pipelineData = await triggerGitlabPipeline();
 
         return res.status(200).json({
             status: 'success',
             message: 'Selected OmniStudio + SFDX metadata exported to Git!',
             release: releaseMetadata,
-              pipeline: pipelineData ? {
+            pipeline: {
                 id: pipelineData.id,
                 status: pipelineData.status,
                 url: pipelineData.web_url,
                 ref: pipelineData.ref,
                 created_at: pipelineData.created_at
-            } : null
+            }
         });
+
+        // const pipelineData = await getLatestPipelineInfo(gitBranch);
+        // console.log(` pipelineData : ${pipelineData}`);
+
+        // return res.status(200).json({
+        //     status: 'success',
+        //     message: 'Selected OmniStudio + SFDX metadata exported to Git!',
+        //     release: releaseMetadata,
+        //       pipeline: pipelineData ? {
+        //         id: pipelineData.id,
+        //         status: pipelineData.status,
+        //         url: pipelineData.web_url,
+        //         ref: pipelineData.ref,
+        //         created_at: pipelineData.created_at
+        //     } : null
+        // });
 
     } catch (err) {
         console.error('deploy-and-git error:', err.message || err);
