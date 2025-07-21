@@ -1,4 +1,4 @@
-// ✅ dxUtils.js
+// dxUtils.js
 
 const { execSync } = require('child_process');
 const axios = require('axios');
@@ -122,13 +122,46 @@ function inferComponentDetails(files) {
 }
 
 
+// async function getLatestPipelineInfo(ref) {
+//     const projectId = process.env.GITLAB_PROJECT_ID; //
+//     const token = process.env.GITLAB_TOKEN;
+
+//     if (!projectId) throw new Error('GITLAB_PROJECT_ID is not defined in .env');
+
+//     const url = `https://gitlab.com/api/v4/projects/${projectId}/pipelines?ref=${encodeURIComponent(ref)}&order_by=id&sort=desc`;
+
+//     try {
+//         const response = await axios.get(url, {
+//             headers: {
+//                 'PRIVATE-TOKEN': token
+//             }
+//         });
+
+//         return response.data?.[0] || null;
+//     } catch (error) {
+//         console.error('  Failed to fetch latest pipeline from GitLab:');
+//         console.error('  ↳ Status:', error.response?.status || error.code);
+//         console.error('  ↳ URL:', url);
+//         console.error('  ↳ Response:', error.response?.data || error.message);
+//         throw new Error(`GitLab API error: ${error.response?.status || error.message}`);
+//     }
+// }
+
+
+
+/**
+ * Fetches the most recent pipeline for the given branch (ref) from GitLab.
+ * @param {string} ref - Git branch name
+ * @returns {Promise<Object|null>} - Latest pipeline data or null if not found
+ */
 async function getLatestPipelineInfo(ref) {
-    const projectId = process.env.GITLAB_PROJECT_ID; //
+    const projectId = process.env.GITLAB_PROJECT_ID; // Example: 'tgs8102628%2Fomnideploy'
     const token = process.env.GITLAB_TOKEN;
 
     if (!projectId) throw new Error('GITLAB_PROJECT_ID is not defined in .env');
+    if (!token) throw new Error('GITLAB_TOKEN is not defined in .env');
 
-    const url = `https://gitlab.com/api/v4/projects/${projectId}/pipelines?ref=${encodeURIComponent(ref)}&order_by=id&sort=desc`;
+    const url = `https://gitlab.com/api/v4/projects/${encodeURIComponent(projectId)}/pipelines?ref=${encodeURIComponent(ref)}&order_by=updated_at&sort=desc&per_page=1`;
 
     try {
         const response = await axios.get(url, {
@@ -137,15 +170,26 @@ async function getLatestPipelineInfo(ref) {
             }
         });
 
-        return response.data?.[0] || null;
+        const pipeline = response.data?.[0];
+
+        if (!pipeline) return null;
+
+        // Optional: Enrich with full details
+        const detailUrl = `https://gitlab.com/api/v4/projects/${encodeURIComponent(projectId)}/pipelines/${pipeline.id}`;
+        const detailRes = await axios.get(detailUrl, {
+            headers: { 'PRIVATE-TOKEN': token }
+        });
+
+        return detailRes.data;
     } catch (error) {
-        console.error('  Failed to fetch latest pipeline from GitLab:');
-        console.error('  ↳ Status:', error.response?.status || error.code);
-        console.error('  ↳ URL:', url);
-        console.error('  ↳ Response:', error.response?.data || error.message);
+        console.error('Failed to fetch latest pipeline from GitLab:');
+        console.error('↳ URL:', url);
+        console.error('↳ Status:', error.response?.status || error.code);
+        console.error('↳ Response:', error.response?.data || error.message);
         throw new Error(`GitLab API error: ${error.response?.status || error.message}`);
     }
 }
+
 
 
 
