@@ -1,0 +1,22 @@
+{
+  "releaseId": "release-2025-07-16_16-24-02Z",
+  "releaseName": "July Hotfix (Redeploy)",
+  "deployedAt": "2025-07-16T10:54:02.857Z",
+  "deployedAtFormatted": "Wednesday, 16 Jul 2025, 04:24 pm IST",
+  "deployedBy": "Omni Deployer",
+  "sourceAlias": "trial1",
+  "components": {
+    "FlexCard": [
+      "ContactChild",
+      "AccountTest"
+    ],
+    "RegularMetadata": {
+      "ApexClass": [
+        "AccountDataController",
+        "AccountHelper",
+        "InvoiceHelper"
+      ]
+    }
+  },
+  "gitBranch": "main"
+}

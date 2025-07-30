@@ -1,0 +1,19 @@
+{
+  "releaseId": "release-2025-07-17_18-40-37Z",
+  "releaseName": "Logs Data Fix",
+  "deployedAt": "2025-07-17T13:10:37.400Z",
+  "deployedAtFormatted": "Thursday, 17 Jul 2025, 06:40 pm IST",
+  "deployedBy": "Omni Deployer",
+  "sourceAlias": "trial1",
+  "components": {
+    "FlexCard": [
+      "ContactChild"
+    ],
+    "RegularMetadata": {
+      "ApexClass": [
+        "AccountDataController"
+      ]
+    }
+  },
+  "gitBranch": "main"
+}

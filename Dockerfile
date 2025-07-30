@@ -1,41 +1,33 @@
 # Use official Node 18 image
 FROM node:18
 
-# Install Git (required for cloning Vlocity)
+# Install Git and other dependencies
 RUN apt-get update && apt-get install -y git
 
-# Install SF CLI (latest stable)
+# Install Salesforce CLI
 RUN npm install --global @salesforce/cli
 
-# Clone and install Vlocity CLI
+# Clone and install Vlocity Build Tool
 RUN git clone https://github.com/vlocityinc/vlocity_build.git && \
     cd vlocity_build && npm install && npm link
 
 # Set working directory
 WORKDIR /app
 
-# Copy your project files
+# Copy app source code
 COPY . .
 
-# Install project dependencies
-RUN npm install
+# Install Node.js dependencies
+RUN npm cache clean --force && npm install --legacy-peer-deps
 
-# Set environment variable to ensure SF CLI uses correct behavior
+# Write key file from env at runtime (handled in deployServer.js)
+# No longer copying static server.key directly here
+
+# Disable SF CLI progress bar
 ENV SF_USE_PROGRESS_BAR=false
 
-# Expose app port
-EXPOSE 3000
+# Expose for Cloud Run
+EXPOSE 8080
 
-# Runtime command:
-# 1. Save private key from env
-# 2. Authenticate to Salesforce via JWT
-# 3. Start your deployment server
-CMD sh -c 'echo "$SF_JWT_KEY" > jwt.key && \
-    sf auth:jwt:grant \
-      --client-id "$SF_CLIENT_ID" \
-      --jwt-key-file jwt.key \
-      --username "$SF_USERNAME" \
-      --instance-url "$SF_LOGIN_URL" \
-      --alias trial1 && \
-    sf org list && \
-    node deployServer.js'
+# Start the app
+CMD ["node", "deployServer.js"]

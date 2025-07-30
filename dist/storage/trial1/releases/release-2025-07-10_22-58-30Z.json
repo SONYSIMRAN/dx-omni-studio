@@ -1,0 +1,19 @@
+{
+  "releaseId": "release-2025-07-10_22-58-30Z",
+  "releaseName": "",
+  "deployedAt": "2025-07-10T17:28:30.352Z",
+  "deployedAtFormatted": "Thursday, 10 Jul 2025, 10:58 pm IST",
+  "deployedBy": "Omni Deployer",
+  "sourceAlias": "trial1",
+  "components": {
+    "FlexCard": [
+      "ContactChild"
+    ],
+    "RegularMetadata": {
+      "ApexClass": [
+        "InvoiceHelper"
+      ]
+    }
+  },
+  "gitBranch": "main"
+}

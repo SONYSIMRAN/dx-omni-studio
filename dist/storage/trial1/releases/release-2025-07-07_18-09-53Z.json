@@ -1,0 +1,19 @@
+{
+  "releaseId": "release-2025-07-07_18-09-53Z",
+  "releaseName": "Test Fix Release",
+  "deployedAt": "2025-07-07T12:39:53.660Z",
+  "deployedAtFormatted": "Monday, 7 Jul 2025, 06:09 pm IST",
+  "deployedBy": "Omni Deployer",
+  "sourceAlias": "trial1",
+  "components": {
+    "FlexCard": [
+      "ContactChild"
+    ],
+    "RegularMetadata": {
+      "ApexClass": [
+        "AccountDataController"
+      ]
+    }
+  },
+  "gitBranch": "main"
+}

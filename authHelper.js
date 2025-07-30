@@ -22,15 +22,39 @@ function getKeyInput(value) {
 /**
  * Authenticates using JWT-based flow.
  */
+// async function authenticateWithJWT(alias, clientId, username, loginUrl, jwtKey) {
+//     const keyPath = getKeyInput(jwtKey);
+//     const normalizedKeyPath = path.normalize(keyPath);
+
+//     const cmd = `sfdx auth:jwt:grant --client-id ${clientId} --username ${username} --jwt-key-file "${normalizedKeyPath}" --instance-url ${loginUrl} --alias ${alias}`;
+//     console.log(`🔐 Authenticating ${alias} using JWT...`);
+//     console.log(`Running command: ${cmd}`);
+
+//     execSync(cmd, { stdio: 'inherit' });
+// }
+
 async function authenticateWithJWT(alias, clientId, username, loginUrl, jwtKey) {
     const keyPath = getKeyInput(jwtKey);
     const normalizedKeyPath = path.normalize(keyPath);
 
-    const cmd = `sfdx auth:jwt:grant --client-id ${clientId} --username ${username} --jwt-key-file "${normalizedKeyPath}" --instance-url ${loginUrl} --alias ${alias}`;
+    // Fallback if loginUrl is missing
+    const instanceUrl = loginUrl || 'https://login.salesforce.com';
+    if (!clientId || !username || !jwtKey) {
+        throw new Error('Missing one of: clientId, username, jwtKey');
+    }
+
+    const cmd = `sfdx auth:jwt:grant \
+        --client-id "${clientId}" \
+        --username "${username}" \
+        --jwt-key-file "${normalizedKeyPath}" \
+        --instance-url "${instanceUrl}" \
+        --alias "${alias}"`;
+
     console.log(`🔐 Authenticating ${alias} using JWT...`);
     console.log(`Running command: ${cmd}`);
 
     execSync(cmd, { stdio: 'inherit' });
 }
+
 
 module.exports = { authenticateWithJWT };

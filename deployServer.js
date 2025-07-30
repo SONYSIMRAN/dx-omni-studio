@@ -1,5 +1,5 @@
 require('dotenv').config();
-
+const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 const tmp = require('tmp'); 
 const express = require('express');
 const { exec, execSync } = require('child_process');
@@ -50,6 +50,67 @@ const allTypes = [
     'VlocityUILayout',
     'VlocityUITemplate',
 ];
+
+
+
+const dotenv = require('dotenv');
+
+async function loadSecrets() {
+    const envPath = path.resolve(__dirname, '.env');
+    console.log(`Checking for local .env file at: ${envPath}`);
+
+    if (fs.existsSync(envPath)) {
+        dotenv.config({ path: envPath });
+        console.log('Loaded .env from file (local fallback)');
+        return;
+    }
+
+    console.log('ℹ.env file not found. Attempting to load from Secret Manager...');
+
+    //  GCP Cloud Run: Load from Secret Manager
+    try {
+        const secretName = 'projects/tgs-internal-dataloader-dev-01/secrets/dx-omni-env/versions/latest';
+        console.log(`Fetching secret: ${secretName}`);
+
+        const client = new SecretManagerServiceClient();
+        const [version] = await client.accessSecretVersion({ name: secretName });
+
+        const payload = version.payload.data.toString('utf8');
+        console.log(`Secret payload received (length: ${payload.length})`);
+
+        const parsed = dotenv.parse(payload);
+        console.log('Parsed keys from secret:');
+        Object.keys(parsed).forEach(k => console.log(`   - ${k}`));
+
+        for (const [key, value] of Object.entries(parsed)) {
+            process.env[key] = value;
+        }
+
+        console.log('Loaded env vars from Secret Manager (dx-omni-env.txt)');
+    } catch (err) {
+        console.error('Failed to load secrets from Secret Manager:', err.message);
+        console.error('Stack trace:', err.stack);
+        process.exit(1); // optional: crash container if secrets missing
+    }
+}
+
+
+
+// Loads RSA private key (inline or file)
+function loadJwtKey(envVarName) {
+    let key = process.env[envVarName] || '';
+    if (key.startsWith('-----BEGIN')) {
+        return key.includes('\\n') ? key.replace(/\\n/g, '\n') : key;
+    }
+
+    // Treat as file path
+    const keyPath = path.resolve(key);
+    if (!fs.existsSync(keyPath)) {
+        throw new Error(` ${envVarName} file path not found: ${keyPath}`);
+    }
+    return fs.readFileSync(keyPath, 'utf8');
+}
+
 
 
 /**working /comp for regular latest code */
@@ -2661,7 +2722,7 @@ app.get('/releases', (req, res) => {
 //     }
 // });
 
-
+/*now using*/
 app.get('/components', async (req, res) => {
     const { sourceAlias } = req.query;
     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
@@ -2733,6 +2794,7 @@ app.get('/components', async (req, res) => {
 
     try {
         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+        
         execSync(exportCmd, { encoding: 'utf-8', stdio: 'pipe' });
 
         for (const type of safeTypes) {
@@ -2940,6 +3002,175 @@ app.get('/components', async (req, res) => {
     storage.saveIndex(sourceAlias, summary);
     return res.json(summary);
 });
+
+
+
+// app.get('/components', async (req, res) => {
+//     const { sourceAlias } = req.query;
+//     if (!sourceAlias) return res.status(400).send('sourceAlias is required');
+
+//     const safeTypes = [
+//         'OmniScript', 'FlexCard', 'DataRaptor', 'IntegrationProcedure',
+//         'OmniStudioTrackingService', 'VlocityUILayout', 'VlocityUITemplate',
+//         'CalculationMatrix', 'CalculationProcedure'
+//     ];
+
+//     const regularMetadataTypes = [
+//         { name: 'ApexClass', members: ['*'] },
+//         { name: 'ApexTrigger', members: ['*'] },
+//         { name: 'LightningComponentBundle', members: ['*'] }
+//     ];
+
+//     const summary = {};
+//     const omniScriptKeyMap = {};
+
+//     const storagePath = path.join(__dirname, 'storage', sourceAlias);
+//     for (const type of safeTypes) {
+//         const folder = path.join(storagePath, type);
+//         if (fs.existsSync(folder)) fs.rmSync(folder, { recursive: true, force: true });
+//     }
+
+//     const regTypes = ['ApexClass', 'ApexTrigger', 'LightningComponentBundle'];
+//     for (const regType of regTypes) {
+//         const folder = path.join(storagePath, 'RegularMetadata', regType);
+//         if (fs.existsSync(folder)) fs.rmSync(folder, { recursive: true, force: true });
+//     }
+
+//     const releasesDir = path.join(__dirname, 'storage', sourceAlias, 'releases');
+//     let latestReleaseTime = null;
+//     let latestReleaseComponents = {};
+//     if (fs.existsSync(releasesDir)) {
+//         const releaseFiles = fs.readdirSync(releasesDir)
+//             .filter(f => f.endsWith('.json'))
+//             .map(f => path.join(releasesDir, f))
+//             .sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime);
+//         if (releaseFiles.length > 0) {
+//             const latestRelease = JSON.parse(fs.readFileSync(releaseFiles[0], 'utf-8'));
+//             latestReleaseTime = new Date(latestRelease.deployedAt);
+//             latestReleaseComponents = latestRelease.components || {};
+//         }
+//     }
+
+//     safeTypes.forEach(type => {
+//         const dirPath = path.join(__dirname, type);
+//         if (fs.existsSync(dirPath)) fs.rmSync(dirPath, { recursive: true, force: true });
+//     });
+
+//     const yamlContent = {
+//         export: {},
+//         exportPacks: {
+//             autoAddDependentFields: true,
+//             autoAddDependencies: true
+//         }
+//     };
+//     safeTypes.forEach(type => yamlContent.export[type] = {});
+//     fs.writeFileSync('exportAllOmni.yaml', require('js-yaml').dump(yamlContent));
+
+//     // 🔐 JWT AUTH FIX BEFORE VLOCITY
+//     try {
+//         console.log(`🔐 Authenticating with JWT...`);
+//         execSync(`sf org login jwt --client-id ${process.env.SF_CLIENT_ID} --username ${process.env.SF_USERNAME} --jwt-key-file ${process.env.SF_JWT_KEY} --alias ${sourceAlias} --instance-url ${process.env.SF_LOGIN_URL}`, {
+//             encoding: 'utf-8',
+//             stdio: 'inherit'
+//         });
+//     } catch (authErr) {
+//         console.error('❌ JWT authentication failed:', authErr.message);
+//         return res.status(500).send('JWT login failed');
+//     }
+
+//     try {
+//         const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job exportAllOmni.yaml --all --ignoreAllErrors`;
+//         execSync(exportCmd, { encoding: 'utf-8', stdio: 'pipe' });
+
+//         for (const type of safeTypes) {
+//             const typeDir = path.join(__dirname, type);
+//             if (!fs.existsSync(typeDir)) continue;
+
+//             const entries = fs.readdirSync(typeDir).filter(entry =>
+//                 fs.statSync(path.join(typeDir, entry)).isDirectory()
+//             );
+//             summary[type] = entries;
+
+//             for (const name of entries) {
+//                 const jsonPath = path.join(typeDir, name, `${name}_DataPack.json`);
+//                 if (!fs.existsSync(jsonPath)) continue;
+
+//                 const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+//                 storage.saveComponentWithMetadata(sourceAlias, type, name, data);
+
+//                 if (type === 'OmniScript') {
+//                     const isOmni = data?.OmniProcessType === 'OmniScript';
+//                     const omniName = data?.Name;
+//                     const lang = data?.Language;
+//                     const subType = data?.SubType;
+//                     const omniType = data?.Type;
+
+//                     if (isOmni && omniName && lang && subType && omniType) {
+//                         const key = `${omniType}_${subType}_${lang}`;
+//                         omniScriptKeyMap[key] = omniName;
+//                     }
+//                 }
+//             }
+//         }
+//     } catch (err) {
+//         console.error('OmniStudio export failed:', err.message);
+//     }
+
+//     let accessToken, instanceUrl;
+//     try {
+//         const authInfo = JSON.parse(execSync(`sf org display --target-org ${sourceAlias} --json`, { encoding: 'utf-8' }));
+//         accessToken = authInfo.result.accessToken;
+//         instanceUrl = authInfo.result.instanceUrl;
+//     } catch (err) {
+//         console.error('Auth error:', err.message);
+//     }
+
+//     try {
+//         for (const type of safeTypes) {
+//             if (summary[type] && summary[type].length > 0) {
+//                 const timestampMap = (type === 'OmniScript')
+//                     ? await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type], omniScriptKeyMap)
+//                     : await storage.fetchOmniComponentDates(instanceUrl, accessToken, type, summary[type]);
+
+//                 summary[type] = summary[type].map(name => {
+//                     const raw = timestampMap[name] || {};
+//                     const modDate = raw.lastModifiedDate ? new Date(raw.lastModifiedDate) : null;
+//                     const wasDeployed = latestReleaseComponents[type]?.includes(name);
+//                     const modifiedAfterDeployment = modDate && latestReleaseTime ? modDate > latestReleaseTime : true;
+//                     const include = !wasDeployed || modifiedAfterDeployment;
+
+//                     const formatted = {
+//                         name,
+//                         type,
+//                         createdDate: raw.createdDate,
+//                         lastModifiedDate: raw.lastModifiedDate,
+//                         createdDateFormatted: formatDate(raw.createdDate),
+//                         lastModifiedDateFormatted: formatDate(raw.lastModifiedDate),
+//                         wasPreviouslyDeployed: wasDeployed,
+//                         modifiedAfterDeployment
+//                     };
+
+//                     if (include) {
+//                         storage.saveComponentWithMetadata(sourceAlias, type, name, formatted);
+//                         return formatted;
+//                     }
+//                     return null;
+//                 }).filter(Boolean);
+//             }
+//         }
+//     } catch (err) {
+//         console.warn('Failed to fetch OmniStudio component dates:', err.message);
+//     }
+
+//     // 🔁 REGULAR METADATA RETRIEVE (No changes here...)
+//     // Keep the remaining part of the method exactly as it is in your original code
+//     // It includes the retrieve + timestamp logic for ApexClass, ApexTrigger, LWC
+
+//     summary.timestamp = new Date().toISOString();
+//     summary.sourceAlias = sourceAlias;
+//     storage.saveIndex(sourceAlias, summary);
+//     return res.json(summary);
+// });
 
 /**correct one for apex clas */
 app.post('/analyze-class', async (req, res) => {
@@ -3331,8 +3562,109 @@ app.get('/commits', async (req, res) => {
 });
 
 
+const fetch = require('node-fetch');
 
-// Start server
-app.listen(3000, () => {
-    console.log('Deployment API running at http://localhost:3000');
+
+app.get('/test-connection', async (req, res) => {
+    try {
+        const response = await fetch('https://login.salesforce.com');
+        return res.send(`HTTP Status from inside Cloud Run: ${response.status}`);
+    } catch (err) {
+        return res.status(500).send(`Fetch Error: ${err.message}`);
+    }
 });
+
+
+(async () => {
+    try {
+        await loadSecrets();
+        const PORT = process.env.PORT || 8080;
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`Server running on http://0.0.0.0:${PORT}`);
+            authenticateWithSalesforce();
+        });
+    } catch (err) {
+        console.error('Startup failed:', err.message);
+        process.exit(1);
+    }
+})();
+
+
+
+
+async function authenticateWithSalesforce() {
+    console.log(' Starting Salesforce JWT authentication process...');
+
+    try {
+        // Load private key
+        console.log('Loading private key from environment variable: SF_JWT_KEY');
+        const privateKey = loadJwtKey('SF_JWT_KEY');
+        console.log('Private key retrieved (length:', privateKey?.length || 0, ')');
+
+        // Validate key format
+        if (!privateKey || !privateKey.includes('BEGIN RSA PRIVATE KEY')) {
+            console.error(' Private key is either missing or incorrectly formatted.');
+            throw new Error('Private key is missing or malformed');
+        }
+
+        // Write key to file
+        const jwtPath = path.join(__dirname, 'temp.key');
+        console.log(`Writing key to temporary file at: ${jwtPath}`);
+        fs.writeFileSync(jwtPath, privateKey, { mode: 0o600 });
+        console.log('Private key written to file with 0600 permissions');
+
+        // Prepare CLI command
+        const clientId = process.env.SF_CLIENT_ID;
+        const username = process.env.SF_USERNAME;
+        const loginUrl = process.env.SF_LOGIN_URL;
+
+        console.log(' CLI parameters:');
+        console.log(`   Client ID   : ${clientId}`);
+        console.log(`   Username    : ${username}`);
+        console.log(`   Login URL   : ${loginUrl}`);
+        console.log(`   Alias       : trial1`);
+
+        const cliCommand = `sf auth:jwt:grant \
+          --client-id "${clientId}" \
+          --jwt-key-file "${jwtPath}" \
+          --username "${username}" \
+          --instance-url "${loginUrl}" \
+          --alias trial1`;
+
+        // Execute CLI command
+        console.log('Executing CLI command:');
+        console.log(cliCommand);
+        // execSync(cliCommand, { stdio: 'inherit' });
+        try {
+            const output = execSync(cliCommand, { stdio: 'pipe' ,
+                 timeout: 120000 
+             });
+            
+            console.log('CLI Output:\n', output.toString());
+        } catch (cliErr) {
+            console.error('CLI Command Failed');
+            console.error('stderr:\n', cliErr.stderr?.toString() || 'No stderr');
+            console.error('stdout:\n', cliErr.stdout?.toString() || 'No stdout');
+            console.error('message:', cliErr.message);
+            throw cliErr;
+        }
+
+
+        console.log('Salesforce JWT authentication completed successfully');
+
+    } catch (err) {
+        console.error('SF auth failed:', err.message);
+        console.error('Stack trace:', err.stack);
+    } finally {
+        // Cleanup temp key file
+        const jwtPath = path.join(__dirname, 'temp.key');
+        try {
+            fs.unlinkSync(jwtPath);
+            console.log('Temp key file deleted:', jwtPath);
+        } catch (cleanupErr) {
+            console.warn('Failed to delete temp key file:', cleanupErr.message);
+        }
+
+        console.log('🔚 Finished Salesforce auth process');
+    }
+}

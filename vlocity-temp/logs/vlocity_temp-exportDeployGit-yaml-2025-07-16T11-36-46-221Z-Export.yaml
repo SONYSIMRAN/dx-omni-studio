@@ -1,0 +1,56 @@
+Org: trial1
+Version: 1.17.13
+Node: v22.15.0
+PackageVersion: !<tag:yaml.org,2002:js/undefined> ''
+Namespace: omnistudio
+Job: VDX
+Action: Export
+ProjectPath: 'C:\Users\ssimran\dx-omni-deploy'
+TotalTime: 0m 15s
+Count:
+  Success:
+    IntegrationProcedure: 3
+    OmniScript: 6
+    DataRaptor: 16
+    FlexCard: 4
+Errors: []
+Status:
+  Success:
+    IntegrationProcedure:
+      - CaseProceeding_AddCaseParticipants
+      - Data_Standard
+      - GetUserDetailsIP_GetUserDetailsIP
+    OmniScript:
+      - Case_Create_English
+      - Case_QuickEntry_English
+      - Case_WebInquiry_English
+      - Integration_AccountDetails_English
+      - Interaction_Contact_English
+      - Test_IntegrationTest_English
+    DataRaptor:
+      - AccountDetailsDR
+      - CaseSummaryD
+      - CreateCaseDR
+      - DM
+      - DMAccountExtract
+      - DMAccountLoad
+      - DMAccountTurbo
+      - DMLookupAccount
+      - DMSingleTransform
+      - DRExtractContactInfo
+      - DRExtractServiceRequests
+      - DRLoadNewRequest
+      - GetContactDetails
+      - GetEmployeeIdFromRecord
+      - GetIntegrationAPIConfigDataMapper
+      - UpdateContact
+    FlexCard:
+      - AccountTest
+      - ContactChild
+      - ContactData
+      - Display_User_Details
+StatusCount:
+  Remaining: 0
+  Success: 35
+  Error: 0
+id: !<tag:yaml.org,2002:js/undefined> ''
