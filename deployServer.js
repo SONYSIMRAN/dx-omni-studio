@@ -3112,14 +3112,135 @@ app.post('/test-methods', async (req, res) => {
   }
 });
 
+// app.post('/re-deploy-release', async (req, res) => {
+//   const {
+//     sourceAlias,
+//     releaseId,
+//     additionalComponents = {},
+//     overrideCommitMessage,
+//     overrideBranch
+//   } = req.body;
+
+//   if (!sourceAlias || !releaseId) {
+//     return res.status(400).json({
+//       status: 'error',
+//       message: 'sourceAlias and releaseId are required'
+//     });
+//   }
+
+//   const releasePath = path.join(__dirname, 'storage', sourceAlias, 'releases', `${releaseId}.json`);
+
+//   if (!fs.existsSync(releasePath)) {
+//     return res.status(404).json({
+//       status: 'error',
+//       message: `Release '${releaseId}' not found`
+//     });
+//   }
+
+//   try {
+//     const release = JSON.parse(fs.readFileSync(releasePath, 'utf-8'));
+
+//     // Merge with new components
+//     const mergedComponents = mergeSelectedComponents(release.components, additionalComponents);
+
+//     // Overwrite same release name and ID
+//     const now = new Date();
+//     const deployedAt = now.toISOString();
+//     const deployedAtFormatted = now.toLocaleString('en-IN', {
+//       weekday: 'long',
+//       year: 'numeric',
+//       month: 'short',
+//       day: 'numeric',
+//       hour: '2-digit',
+//       minute: '2-digit',
+//       hour12: true,
+//       timeZone: 'Asia/Kolkata',
+//       timeZoneName: 'short'
+//     });
+
+//     const newMetadata = {
+//       releaseId,
+//       releaseName: release.releaseName,
+//       deployedAt,
+//       deployedAtFormatted,
+//       deployedBy: process.env.GIT_COMMIT_NAME || 'Omni Deployer',
+//       sourceAlias,
+//       components: mergedComponents,
+//       gitBranch: overrideBranch || release.gitBranch || 'main'
+//     };
+
+//     const payload = {
+//       sourceAlias,
+//       selectedComponents: mergedComponents,
+//       gitBranch: newMetadata.gitBranch,
+//       commitMessage: overrideCommitMessage || `Re-releasing ${release.releaseName || releaseId}`,
+//       releaseName: newMetadata.releaseName,
+//       releaseId 
+//     };
+
+//     if (fs.existsSync('./git-export')) {
+//     fs.rmSync('./git-export', { recursive: true, force: true });
+//     }
+
+//     // Deploy via original endpoint
+//     const axiosRes = await axios.post('http://localhost:3000/deploy-and-git', payload);
+
+//     // Overwrite tag if needed (delete + recreate)
+
+
+//     const gitExportDir = './git-export';
+//     const git = simpleGit(gitExportDir);
+//     await git.fetch();
+//     // await git.tag(['-d', releaseId]); // delete local
+
+//     await git.fetch('--tags');
+
+//     // Only delete tag if it exists
+//     const tags = await git.tags();
+//     if (tags.all.includes(releaseId)) {
+//     await git.tag(['-d', releaseId]); // delete local
+//     await git.push(['origin', `:refs/tags/${releaseId}`]); // delete remote
+//     }
+
+//     // await git.push(['origin', `:refs/tags/${releaseId}`]); // delete remote
+//     await git.addTag(releaseId);
+//     await git.pushTags('origin');
+
+//     // Overwrite `release.json` with updated metadata
+//     const componentsDir = path.join(gitExportDir, 'components');
+//     const releaseFolder = path.join(componentsDir, releaseId);
+//     const releaseFile = path.join(releaseFolder, 'release.json');
+//     const storageReleaseFile = path.join(__dirname, 'storage', sourceAlias, 'releases', `${releaseId}.json`);
+
+//     fs.writeFileSync(releaseFile, JSON.stringify(newMetadata, null, 2));
+//     fs.writeFileSync(storageReleaseFile, JSON.stringify(newMetadata, null, 2));
+
+//     return res.status(200).json({
+//       status: 'success',
+//       originalRelease: releaseId,
+//       newRelease: newMetadata,
+//       pipeline: axiosRes.data.pipeline
+//     });
+//   } catch (err) {
+//     console.error('Error during re-deploy:', err.message || err);
+//     return res.status(500).json({
+//       status: 'error',
+//       message: 'Failed to re-deploy release',
+//       details: err.message
+//     });
+//   }
+// });
+
+
+/**working now**/
 app.post('/re-deploy-release', async (req, res) => {
-  const {
-    sourceAlias,
-    releaseId,
-    additionalComponents = {},
-    overrideCommitMessage,
-    overrideBranch
-  } = req.body;
+const {
+sourceAlias,
+releaseId,
+additionalComponents = {},
+overrideCommitMessage,
+overrideBranch
+} = req.body;
 
   if (!sourceAlias || !releaseId) {
     return res.status(400).json({
@@ -3230,6 +3351,7 @@ app.post('/re-deploy-release', async (req, res) => {
     });
   }
 });
+
 
 
 app.get('/commits', async (req, res) => {
