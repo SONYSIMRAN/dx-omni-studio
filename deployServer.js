@@ -3454,6 +3454,224 @@ app.get('/commits', async (req, res) => {
 
 
 
+/**
+ * ===============================================
+ * Deploy Git Release → Sandbox
+ * ===============================================
+ */
+app.post('/deploy-to-sandbox', async (req, res) => {
+  const { sourceAlias, targetAlias, releaseId } = req.body;
+
+  if (!sourceAlias || !targetAlias || !releaseId) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'sourceAlias, targetAlias and releaseId are required'
+    });
+  }
+
+  const gitExportDir = './git-export';
+  const releasePath = path.join(gitExportDir, 'components', releaseId);
+  const releaseMetaPath = path.join(releasePath, 'release.json');
+
+  try {
+    // 1. Clone Git repo fresh
+    if (fs.existsSync(gitExportDir)) fs.rmSync(gitExportDir, { recursive: true, force: true });
+    await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
+
+    if (!fs.existsSync(releasePath)) {
+      return res.status(404).json({
+        status: 'error',
+        message: `Release folder '${releaseId}' not found in Git repo`
+      });
+    }
+
+    // 2. JWT auth both orgs
+    await authenticateWithJWT(
+      sourceAlias,
+      process.env.SF_CLIENT_ID,
+      process.env.SF_USERNAME,
+      process.env.SF_LOGIN_URL,
+      process.env.SF_JWT_KEY
+    );
+    await authenticateWithJWT(
+      targetAlias,
+      process.env.TARGET_CLIENT_ID,
+      process.env.TARGET_USERNAME,
+      process.env.TARGET_LOGIN_URL,
+      process.env.TARGET_JWT_KEY
+    );
+
+    // 3. Deploy OmniStudio components
+    const omniYamlPath = path.join(releasePath, 'deployFromGit.yaml');
+    const omniYaml = {
+      export: {},
+      exportPacks: {
+        autoAddDependencies: true,
+        autoAddDependentFields: true
+      }
+    };
+    fs.writeFileSync(omniYamlPath, yaml.dump(omniYaml));
+
+    const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job ${omniYamlPath} --projectPath ${releasePath} --ignoreAllErrors`;
+    console.log('▶ Running OmniStudio Deploy:', deployCmd);
+    execSync(deployCmd, { cwd: releasePath, stdio: 'inherit' });
+
+    // 4. Deploy SFDX metadata if exists
+    const sfdxPath = path.join(releasePath, 'sfdx');
+    if (fs.existsSync(sfdxPath)) {
+      const deployCmdSfdx = `sf project deploy start --source-dir ${sfdxPath} --target-org ${targetAlias}`;
+      console.log('▶ Running SFDX Deploy:', deployCmdSfdx);
+      execSync(deployCmdSfdx, { stdio: 'inherit' });
+    }
+
+    // 5. Update release.json with deployment log
+    if (fs.existsSync(releaseMetaPath)) {
+      const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
+      if (!Array.isArray(releaseMeta.deployments)) releaseMeta.deployments = [];
+
+      releaseMeta.deployments.push({
+        targetAlias,
+        deployedAt: new Date().toISOString(),
+        status: 'success',
+        details: `Deployed successfully to ${targetAlias}`
+      });
+
+      fs.writeFileSync(releaseMetaPath, JSON.stringify(releaseMeta, null, 2));
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: `Release '${releaseId}' deployed successfully to ${targetAlias}`
+    });
+  } catch (err) {
+    console.error('deploy-to-sandbox failed:', err.message);
+
+    // Append failed deployment log
+    try {
+      if (fs.existsSync(releaseMetaPath)) {
+        const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
+        if (!Array.isArray(releaseMeta.deployments)) releaseMeta.deployments = [];
+
+        releaseMeta.deployments.push({
+          targetAlias,
+          deployedAt: new Date().toISOString(),
+          status: 'error',
+          details: err.message
+        });
+
+        fs.writeFileSync(releaseMetaPath, JSON.stringify(releaseMeta, null, 2));
+      }
+    } catch (logErr) {
+      console.error('Failed to update release.json with error:', logErr.message);
+    }
+
+    return res.status(500).json({
+      status: 'error',
+      message: err.message || 'Deployment failed'
+    });
+  }
+});
+
+
+/**
+ * ===============================================
+ * Diff Git Release vs Sandbox
+ * ===============================================
+ */
+app.post('/diff-release', async (req, res) => {
+  const { targetAlias, releaseId } = req.body;
+
+  if (!targetAlias || !releaseId) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'targetAlias and releaseId are required'
+    });
+  }
+
+  const gitExportDir = './git-export';
+  const releasePath = path.join(gitExportDir, 'components', releaseId);
+  const releaseMetaPath = path.join(releasePath, 'release.json');
+
+  try {
+    // Clone repo fresh
+    if (fs.existsSync(gitExportDir)) fs.rmSync(gitExportDir, { recursive: true, force: true });
+    await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
+
+    if (!fs.existsSync(releaseMetaPath)) {
+      return res.status(404).json({
+        status: 'error',
+        message: `release.json not found for '${releaseId}'`
+      });
+    }
+
+    // Read release metadata
+    const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
+
+    // Compare components (using your storageHelper.diffComponents)
+    const diffs = await diffComponents(targetAlias, releaseMeta.components);
+
+    return res.status(200).json({
+      status: 'success',
+      releaseId,
+      diffs
+    });
+  } catch (err) {
+    console.error('diff-release failed:', err.message);
+    return res.status(500).json({
+      status: 'error',
+      message: err.message || 'Diff failed'
+    });
+  }
+});
+
+
+/**
+ * ===============================================
+ * Release History (where deployed)
+ * ===============================================
+ */
+app.get('/release-history', async (req, res) => {
+  const { releaseId } = req.query;
+
+  if (!releaseId) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'releaseId is required'
+    });
+  }
+
+  const gitExportDir = './git-export';
+  const releaseMetaPath = path.join(gitExportDir, 'components', releaseId, 'release.json');
+
+  try {
+    // Clone repo fresh
+    if (fs.existsSync(gitExportDir)) fs.rmSync(gitExportDir, { recursive: true, force: true });
+    await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
+
+    if (!fs.existsSync(releaseMetaPath)) {
+      return res.status(404).json({
+        status: 'error',
+        message: `release.json not found for '${releaseId}'`
+      });
+    }
+
+    const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
+
+    return res.status(200).json({
+      status: 'success',
+      releaseId,
+      deployments: releaseMeta.deployments || []
+    });
+  } catch (err) {
+    console.error('release-history failed:', err.message);
+    return res.status(500).json({
+      status: 'error',
+      message: err.message || 'Failed to fetch release history'
+    });
+  }
+});
+
+
 // Start server
 app.listen(3000, () => {
     console.log('Deployment API running at http://localhost:3000');
