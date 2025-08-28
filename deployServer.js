@@ -3460,6 +3460,7 @@ app.get('/commits', async (req, res) => {
  * ===============================================
  */
 
+
 const toPosix = p => p.replace(/\\/g, '/');
 
 app.post('/deploy-to-sandbox', async (req, res) => {
@@ -3502,13 +3503,13 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     // 3. Read release.json
     const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
 
-    // 4. Build Omni job file
+    // 4. Build Omni job file (always write, even if empty)
     const omniYaml = { export: {}, exportPacks: { autoAddDependencies: true, autoAddDependentFields: true } };
     for (const [type, comps] of Object.entries(releaseMeta.components || {})) {
-      if (type === 'RegularMetadata') continue;
+      if (type === 'RegularMetadata') continue; // SFDX handles this
       if (!Array.isArray(comps) || comps.length === 0) continue;
       omniYaml.export[type] = {};
-      comps.forEach(name => omniYaml.export[type][name] = {});
+      comps.forEach(name => (omniYaml.export[type][name] = {}));
     }
 
     const omniYamlPath = path.join(releasePath, 'deployFromGit.yaml');
@@ -3517,13 +3518,13 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     const omniYamlPathPosix = toPosix(omniYamlPath);
     const releasePathPosix = toPosix(releasePath);
 
-    // 5. Deploy OmniStudio
+    // 5. Deploy OmniStudio (only if there are Omni components)
     if (Object.keys(omniYaml.export).length > 0) {
       const deployCmd = `npx vlocity packDeploy -sfdx.username ${targetAlias} -job "${omniYamlPathPosix}" --projectPath "${releasePathPosix}" --ignoreAllErrors --verbose`;
       console.log('▶ Omni Deploy:', deployCmd);
       execSync(deployCmd, { cwd: releasePath, stdio: 'inherit', shell: true });
     } else {
-      console.log('ℹ No Omni components found; skipping Omni deploy.');
+      console.log('ℹ No Omni components found in this release; skipping Omni deploy.');
     }
 
     // 6. Deploy Regular Metadata (SFDX)
