@@ -3464,6 +3464,8 @@ app.get('/commits', async (req, res) => {
 
 
 
+// --- FULLY FIXED: Deploy a Git "release" to a target sandbox/org ---
+// helper
 const toPosix = p => p.replace(/\\/g, '/');
 
 app.post('/deploy-to-sandbox', async (req, res) => {
@@ -3476,16 +3478,19 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     });
   }
 
+  const repoUrl = process.env.GITLAB_REPO_URL;
   const gitExportDir = './git-export';
   const releasePath = path.join(gitExportDir, 'components', releaseId);
   const releaseMetaPath = path.join(releasePath, 'release.json');
 
+  let omniDeployed = false;
+  let regularDeployed = false;
+
   try {
-    // 1. Fresh clone
-    if (fs.existsSync(gitExportDir)) {
-      fs.rmSync(gitExportDir, { recursive: true, force: true });
-    }
-    await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
+    // 1) Fresh clone
+    if (!repoUrl) throw new Error('GITLAB_REPO_URL is not set');
+    if (fs.existsSync(gitExportDir)) fs.rmSync(gitExportDir, { recursive: true, force: true });
+    await simpleGit().clone(repoUrl, gitExportDir);
 
     if (!fs.existsSync(releaseMetaPath)) {
       return res.status(404).json({
@@ -3494,7 +3499,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       });
     }
 
-    // 2. JWT auth for target org
+    // 2) JWT auth target org
     await authenticateWithJWT(
       targetAlias,
       process.env.TARGET_CLIENT_ID,
@@ -3503,75 +3508,71 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       process.env.TARGET_JWT_KEY
     );
 
-    // 3. Read release.json
+    // 3) Read release metadata
     const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
 
-    // 4. Build Omni job file (always write, even if empty)
+    // 4) Build Omni job file (always write, even if empty)
     const omniYaml = { export: {}, exportPacks: { autoAddDependencies: true, autoAddDependentFields: true } };
     for (const [type, comps] of Object.entries(releaseMeta.components || {})) {
-      if (type === 'RegularMetadata') continue; // handled separately
+      if (type === 'RegularMetadata') continue; // Regular handled below
       if (!Array.isArray(comps) || comps.length === 0) continue;
       omniYaml.export[type] = {};
-      comps.forEach(name => (omniYaml.export[type][name] = {}));
+      comps.forEach(name => { omniYaml.export[type][name] = {}; });
     }
 
-    const omniYamlPath = path.join(releasePath, 'deployFromGit.yaml');
-    fs.writeFileSync(omniYamlPath, yaml.dump(omniYaml));
+    const jobPath = path.join(releasePath, 'deployFromGit.yaml');
+    fs.writeFileSync(jobPath, yaml.dump(omniYaml));
 
-    // 5. Deploy OmniStudio (only if components present)
+    // 5) Omni deploy (only if components exist)
     if (Object.keys(omniYaml.export).length > 0) {
-      const deployCmd = `npx vlocity packDeploy -sfdx.username ${targetAlias} -job "./deployFromGit.yaml" --projectPath "." --ignoreAllErrors --verbose`;
-      console.log('▶ Omni Deploy:', deployCmd, '\n  cwd =', releasePath);
-      execSync(deployCmd, { cwd: releasePath, stdio: 'inherit', shell: true });
+      const cmd = `npx vlocity packDeploy -sfdx.username ${targetAlias} -job "./deployFromGit.yaml" --projectPath "." --ignoreAllErrors --verbose`;
+      console.log('▶ Omni Deploy:', cmd, '\n  cwd =', releasePath);
+      execSync(cmd, { cwd: releasePath, stdio: 'inherit', shell: true });
+      omniDeployed = true;
     } else {
       console.log('ℹ No Omni components found; skipping Omni deploy.');
     }
 
-    // 6. Deploy Regular Metadata (SFDX or MDAPI)
-    const sfdxPath = path.join(releasePath, 'sfdx');
-    if (fs.existsSync(sfdxPath)) {
-      const projectJson = path.join(sfdxPath, 'sfdx-project.json');
-      if (fs.existsSync(projectJson)) {
-        // Case A: valid SFDX project
-        const cmd = `sf project deploy start --source-dir "." --target-org ${targetAlias}`;
-        console.log('▶ SFDX Deploy (project mode):', cmd, '\n  cwd =', sfdxPath);
-        execSync(cmd, { cwd: sfdxPath, stdio: 'inherit', shell: true });
-      } else {
-        // Case B: plain source → convert to MDAPI
-        const mdapiOut = path.join(releasePath, 'mdapi');
-        if (fs.existsSync(mdapiOut)) fs.rmSync(mdapiOut, { recursive: true, force: true });
+    // 6) Regular metadata deploy (always via MDAPI)
+    const sfdxSrc = path.join(releasePath, 'sfdx');
+    if (fs.existsSync(sfdxSrc)) {
+      const mdapiOut = path.join(releasePath, 'mdapi');
+      if (fs.existsSync(mdapiOut)) fs.rmSync(mdapiOut, { recursive: true, force: true });
 
-        const convertCmd = `sf project convert source --root-dir "${toPosix(sfdxPath)}" --output-dir "${toPosix(mdapiOut)}"`;
-        console.log('▶ Convert to MDAPI:', convertCmd);
-        execSync(convertCmd, { stdio: 'inherit', shell: true });
+      const convertCmd = `sf project convert source --root-dir "${toPosix(sfdxSrc)}" --output-dir "${toPosix(mdapiOut)}"`;
+      console.log('▶ Convert to MDAPI:', convertCmd);
+      execSync(convertCmd, { stdio: 'inherit', shell: true });
 
-        const deployMdapiCmd = `sf deploy metadata --metadata-dir "${toPosix(mdapiOut)}" --target-org ${targetAlias}`;
-        console.log('▶ MDAPI Deploy:', deployMdapiCmd);
-        execSync(deployMdapiCmd, { stdio: 'inherit', shell: true });
-      }
+      const deployMdapiCmd = `sf deploy metadata --metadata-dir "${toPosix(mdapiOut)}" --target-org ${targetAlias}`;
+      console.log('▶ MDAPI Deploy:', deployMdapiCmd);
+      execSync(deployMdapiCmd, { stdio: 'inherit', shell: true });
+
+      regularDeployed = true;
     } else {
       console.log('ℹ No SFDX folder found; skipping Regular metadata deploy.');
     }
 
-    // 7. Update release.json log
+    // 7) Log success
     if (!Array.isArray(releaseMeta.deployments)) releaseMeta.deployments = [];
     releaseMeta.deployments.push({
       targetAlias,
       deployedAt: new Date().toISOString(),
       status: 'success',
-      details: `Deployed successfully to ${targetAlias}`
+      details: `Deployed to ${targetAlias} | Omni:${omniDeployed ? 'yes' : 'no'} | Regular:${regularDeployed ? 'yes' : 'no'}`
     });
     fs.writeFileSync(releaseMetaPath, JSON.stringify(releaseMeta, null, 2));
 
     return res.status(200).json({
       status: 'success',
-      message: `Release '${releaseId}' deployed successfully to ${targetAlias}`
+      message: `Release '${releaseId}' deployed to ${targetAlias}`,
+      omniDeployed,
+      regularDeployed
     });
 
   } catch (err) {
     console.error('deploy-to-sandbox failed:', err?.stack || err);
 
-    // Best-effort error logging
+    // best-effort: append error to release.json
     try {
       if (fs.existsSync(releaseMetaPath)) {
         const meta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
@@ -3592,6 +3593,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     });
   }
 });
+
 
 
 /**
