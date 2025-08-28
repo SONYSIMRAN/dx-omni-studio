@@ -3539,15 +3539,26 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     const mdapiOut = path.join(releasePath, 'mdapi');
     if (fs.existsSync(mdapiOut)) fs.rmSync(mdapiOut, { recursive: true, force: true });
 
-    const convertCmd = `sf project convert source --root-dir "${toPosix(sfdxPath)}" --output-dir "${toPosix(mdapiOut)}"`;
-    console.log('▶ Convert to MDAPI:', convertCmd);
-    execSync(convertCmd, { stdio: 'inherit', shell: true });
+    try {
+        const convertCmd = `sf project convert source --root-dir "${toPosix(sfdxPath)}" --output-dir "${toPosix(mdapiOut)}"`;
+        console.log('▶ Convert to MDAPI:', convertCmd);
+        execSync(convertCmd, { stdio: 'inherit', shell: true });
 
-    const deployMdapiCmd = `sf deploy metadata --metadata-dir "${toPosix(mdapiOut)}" --target-org ${targetAlias}`;
-    console.log('▶ MDAPI Deploy:', deployMdapiCmd);
-    execSync(deployMdapiCmd, { stdio: 'inherit', shell: true });
+        // sanity check: did conversion actually create a package?
+        const pkgXml = path.join(mdapiOut, 'package.xml');
+        if (!fs.existsSync(pkgXml)) {
+        throw new Error(`MDAPI conversion produced no package.xml at ${pkgXml} — nothing to deploy.`);
+        }
 
-    console.log('✅ Regular metadata deployed via MDAPI');
+        const deployMdapiCmd = `sf deploy metadata --metadata-dir "${toPosix(mdapiOut)}" --target-org ${targetAlias}`;
+        console.log('▶ MDAPI Deploy:', deployMdapiCmd);
+        execSync(deployMdapiCmd, { stdio: 'inherit', shell: true });
+
+        console.log('✅ Regular metadata deployed via MDAPI');
+    } catch (e) {
+        console.error('❌ Regular metadata deploy failed:', e?.message || e);
+        throw e; // bubble up to your main catch (so it logs into release.json and returns 500)
+    }
     } else {
     console.log('ℹ No SFDX folder found; skipping Regular metadata deploy.');
     }
