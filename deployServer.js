@@ -3461,6 +3461,7 @@ app.get('/commits', async (req, res) => {
  */
 
 
+
 const toPosix = p => p.replace(/\\/g, '/');
 
 app.post('/deploy-to-sandbox', async (req, res) => {
@@ -3478,10 +3479,8 @@ app.post('/deploy-to-sandbox', async (req, res) => {
   const releaseMetaPath = path.join(releasePath, 'release.json');
 
   try {
-    // 1. Fresh clone
-    if (fs.existsSync(gitExportDir)) {
-      fs.rmSync(gitExportDir, { recursive: true, force: true });
-    }
+    // 1) Fresh clone
+    if (fs.existsSync(gitExportDir)) fs.rmSync(gitExportDir, { recursive: true, force: true });
     await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
 
     if (!fs.existsSync(releaseMetaPath)) {
@@ -3491,7 +3490,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       });
     }
 
-    // 2. JWT auth for target org
+    // 2) JWT auth target
     await authenticateWithJWT(
       targetAlias,
       process.env.TARGET_CLIENT_ID,
@@ -3500,34 +3499,42 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       process.env.TARGET_JWT_KEY
     );
 
-    // 3. Read release.json
+    // 3) Read release.json
     const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
 
-    // 4. Build Omni job file (always write, even if empty)
+    // 4) Build Omni job file (always write, even if empty)
     const omniYaml = { export: {}, exportPacks: { autoAddDependencies: true, autoAddDependentFields: true } };
     for (const [type, comps] of Object.entries(releaseMeta.components || {})) {
       if (type === 'RegularMetadata') continue; // SFDX handles this
       if (!Array.isArray(comps) || comps.length === 0) continue;
       omniYaml.export[type] = {};
-      comps.forEach(name => (omniYaml.export[type][name] = {}));
+      comps.forEach(name => { omniYaml.export[type][name] = {}; });
     }
 
     const omniYamlPath = path.join(releasePath, 'deployFromGit.yaml');
     fs.writeFileSync(omniYamlPath, yaml.dump(omniYaml));
 
-    const omniYamlPathPosix = toPosix(omniYamlPath);
-    const releasePathPosix = toPosix(releasePath);
-
-    // 5. Deploy OmniStudio (only if there are Omni components)
-    if (Object.keys(omniYaml.export).length > 0) {
-      const deployCmd = `npx vlocity packDeploy -sfdx.username ${targetAlias} -job "${omniYamlPathPosix}" --projectPath "${releasePathPosix}" --ignoreAllErrors --verbose`;
-      console.log('▶ Omni Deploy:', deployCmd);
-      execSync(deployCmd, { cwd: releasePath, stdio: 'inherit', shell: true });
-    } else {
-      console.log('ℹ No Omni components found in this release; skipping Omni deploy.');
+    // 🔎 Preflight: confirm file exists where Vlocity will look
+    if (!fs.existsSync(omniYamlPath)) {
+      throw new Error(`Internal error: failed to write job file at ${omniYamlPath}`);
     }
 
-    // 6. Deploy Regular Metadata (SFDX)
+    // 5) Deploy OmniStudio ONLY if there are Omni components
+    const hasOmni = Object.keys(omniYaml.export).length > 0;
+    if (hasOmni) {
+      // With cwd = releasePath, point Vlocity at local job path & local project path
+      const jobArg = './deployFromGit.yaml'; // relative to releasePath
+      const projectArg = '.';                 // relative to releasePath
+
+      const deployCmd = `npx vlocity packDeploy -sfdx.username ${targetAlias} -job "${jobArg}" --projectPath "${projectArg}" --ignoreAllErrors --verbose`;
+
+      console.log('▶ Omni Deploy:', deployCmd, '\n  cwd =', releasePath);
+      execSync(deployCmd, { cwd: releasePath, stdio: 'inherit', shell: true });
+    } else {
+      console.log('ℹ No Omni components found; skipping Omni deploy.');
+    }
+
+    // 6) Deploy Regular Metadata (SFDX)
     const sfdxPath = path.join(releasePath, 'sfdx');
     if (fs.existsSync(sfdxPath)) {
       const deployCmdSfdx = `sf project deploy start --source-dir "${toPosix(sfdxPath)}" --target-org ${targetAlias}`;
@@ -3537,7 +3544,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       console.log('ℹ No SFDX folder found; skipping SFDX deploy.');
     }
 
-    // 7. Update release.json log
+    // 7) Update release.json log
     if (!Array.isArray(releaseMeta.deployments)) releaseMeta.deployments = [];
     releaseMeta.deployments.push({
       targetAlias,
@@ -3549,28 +3556,28 @@ app.post('/deploy-to-sandbox', async (req, res) => {
 
     return res.status(200).json({
       status: 'success',
-      message: `Release '${releaseId}' deployed successfully to ${targetAlias}`
+      message: `Release '${releaseId}' deployed successfully to ${targetAlias}`,
+      omniDeployed: hasOmni,
+      sfdxDeployed: fs.existsSync(sfdxPath)
     });
 
   } catch (err) {
     console.error('deploy-to-sandbox failed:', err?.stack || err);
 
-    // log failure in release.json
+    // best-effort: log failure in release.json
     try {
       if (fs.existsSync(releaseMetaPath)) {
-        const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
-        if (!Array.isArray(releaseMeta.deployments)) releaseMeta.deployments = [];
-        releaseMeta.deployments.push({
+        const meta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
+        if (!Array.isArray(meta.deployments)) meta.deployments = [];
+        meta.deployments.push({
           targetAlias,
           deployedAt: new Date().toISOString(),
           status: 'error',
           details: err.message || String(err)
         });
-        fs.writeFileSync(releaseMetaPath, JSON.stringify(releaseMeta, null, 2));
+        fs.writeFileSync(releaseMetaPath, JSON.stringify(meta, null, 2));
       }
-    } catch (logErr) {
-      console.error('Failed to update release.json with error:', logErr?.message || logErr);
-    }
+    } catch {}
 
     return res.status(500).json({
       status: 'error',
@@ -3578,6 +3585,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     });
   }
 });
+
 
 /**
  * ===============================================
