@@ -3459,13 +3459,14 @@ app.get('/commits', async (req, res) => {
  * Deploy Git Release → Sandbox
  * ===============================================
  */
+//  Deploy a Git release folder to a sandbox
 app.post('/deploy-to-sandbox', async (req, res) => {
-  const { sourceAlias, targetAlias, releaseId } = req.body;
+  const { targetAlias, releaseId } = req.body;
 
-  if (!sourceAlias || !targetAlias || !releaseId) {
+  if (!targetAlias || !releaseId) {
     return res.status(400).json({
       status: 'error',
-      message: 'sourceAlias, targetAlias and releaseId are required'
+      message: 'targetAlias and releaseId are required'
     });
   }
 
@@ -3474,8 +3475,10 @@ app.post('/deploy-to-sandbox', async (req, res) => {
   const releaseMetaPath = path.join(releasePath, 'release.json');
 
   try {
-    // 1. Clone Git repo fresh
-    if (fs.existsSync(gitExportDir)) fs.rmSync(gitExportDir, { recursive: true, force: true });
+    // 1. Clean & clone repo
+    if (fs.existsSync(gitExportDir)) {
+      fs.rmSync(gitExportDir, { recursive: true, force: true });
+    }
     await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
 
     if (!fs.existsSync(releaseMetaPath)) {
@@ -3485,14 +3488,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       });
     }
 
-    // 2. JWT auth both orgs
-    await authenticateWithJWT(
-      sourceAlias,
-      process.env.SF_CLIENT_ID,
-      process.env.SF_USERNAME,
-      process.env.SF_LOGIN_URL,
-      process.env.SF_JWT_KEY
-    );
+    // 2. JWT auth for target org
     await authenticateWithJWT(
       targetAlias,
       process.env.TARGET_CLIENT_ID,
@@ -3501,41 +3497,37 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       process.env.TARGET_JWT_KEY
     );
 
-    // 3. Load release.json to build deployFromGit.yaml
+    // 3. Read release.json
     const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
-    const omniYaml = {
-      export: {},
-      exportPacks: {
-        autoAddDependencies: true,
-        autoAddDependentFields: true
-      }
-    };
 
+    // 4. Prepare Omni deploy yaml
+    const omniYaml = { export: {}, exportPacks: { autoAddDependencies: true, autoAddDependentFields: true } };
     for (const [type, comps] of Object.entries(releaseMeta.components)) {
-      if (type === 'RegularMetadata') continue; // handled separately
+      if (type === 'RegularMetadata') continue;
       omniYaml.export[type] = {};
-      comps.forEach(name => {
+      (Array.isArray(comps) ? comps : []).forEach(name => {
         omniYaml.export[type][name] = {};
       });
     }
-
-    const omniYamlPath = path.posix.join(releasePath, 'deployFromGit.yaml');
+    const omniYamlPath = path.join(releasePath, 'deployFromGit.yaml');
     fs.writeFileSync(omniYamlPath, yaml.dump(omniYaml));
 
-    // 4. Deploy OmniStudio components
-    const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job ${omniYamlPath} --projectPath ${releasePath} --ignoreAllErrors`;
-    console.log('▶ Running OmniStudio Deploy:', deployCmd);
-    execSync(deployCmd, { cwd: releasePath, stdio: 'inherit' });
+    // 5. Deploy OmniStudio
+    if (Object.keys(omniYaml.export).length > 0) {
+      const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job ${omniYamlPath} --projectPath ${releasePath} --ignoreAllErrors`;
+      console.log('▶ Omni Deploy:', deployCmd);
+      execSync(deployCmd, { cwd: releasePath, stdio: 'inherit' });
+    }
 
-    // 5. Deploy SFDX metadata if exists
+    // 6. Deploy SFDX metadata
     const sfdxPath = path.join(releasePath, 'sfdx');
     if (fs.existsSync(sfdxPath)) {
       const deployCmdSfdx = `sf project deploy start --source-dir ${sfdxPath} --target-org ${targetAlias}`;
-      console.log('▶ Running SFDX Deploy:', deployCmdSfdx);
+      console.log('▶ SFDX Deploy:', deployCmdSfdx);
       execSync(deployCmdSfdx, { stdio: 'inherit' });
     }
 
-    // 6. Update release.json with deployment log
+    // 7. Update release.json log
     if (!Array.isArray(releaseMeta.deployments)) releaseMeta.deployments = [];
     releaseMeta.deployments.push({
       targetAlias,
@@ -3553,7 +3545,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
   } catch (err) {
     console.error('deploy-to-sandbox failed:', err.message);
 
-    // Append failed deployment log
+    // Append error log
     try {
       if (fs.existsSync(releaseMetaPath)) {
         const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
@@ -3567,7 +3559,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
         fs.writeFileSync(releaseMetaPath, JSON.stringify(releaseMeta, null, 2));
       }
     } catch (logErr) {
-      console.error('Failed to update release.json with error:', logErr.message);
+      console.error('Failed to log deploy error:', logErr.message);
     }
 
     return res.status(500).json({
@@ -3576,6 +3568,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     });
   }
 });
+
 
 
 
