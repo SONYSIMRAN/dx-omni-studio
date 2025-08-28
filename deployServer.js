@@ -3459,7 +3459,6 @@ app.get('/commits', async (req, res) => {
  * Deploy Git Release → Sandbox
  * ===============================================
  */
-const { spawnSync, execSync } = require('child_process');
 const toPosix = p => p.replace(/\\/g, '/');
 
 app.post('/deploy-to-sandbox', async (req, res) => {
@@ -3517,35 +3516,16 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     const omniYamlPathPosix = toPosix(omniYamlPath);
     const releasePathPosix = toPosix(releasePath);
 
-    // 4. Deploy OmniStudio
+    // 4. Deploy OmniStudio (execSync instead of spawnSync)
     if (Object.keys(omniYaml.export).length > 0) {
-      const vlocityArgs = [
-        'vlocity',
-        'packDeploy',                     // ✅ command comes here
-        '-sfdx.username', targetAlias,
-        '-job', omniYamlPathPosix,
-        '--projectPath', releasePathPosix,
-        '--ignoreAllErrors',
-        '--verbose'
-      ];
+      const deployCmd = `npx vlocity packDeploy -sfdx.username ${targetAlias} -job "${omniYamlPathPosix}" --projectPath "${releasePathPosix}" --ignoreAllErrors --verbose`;
 
-      console.log('▶ Omni Deploy:', ['npx', ...vlocityArgs].join(' '));
+      console.log('▶ Running Omni Deploy:', deployCmd);
 
-      let run = spawnSync('npx', vlocityArgs, {
-        cwd: releasePath,
-        stdio: 'inherit',
-        shell: process.platform === 'win32' // ✅ helps on Windows
-      });
-
-      if (run.error || run.status !== 0) {
-        console.warn('⚠ spawnSync failed, retrying with execSync...');
-        try {
-          const deployCmd = `npx vlocity packDeploy -sfdx.username ${targetAlias} -job "${omniYamlPathPosix}" --projectPath "${releasePathPosix}" --ignoreAllErrors --verbose`;
-          console.log('▶ Exec fallback:', deployCmd);
-          execSync(deployCmd, { cwd: releasePath, stdio: 'inherit', shell: true });
-        } catch (e) {
-          throw new Error(`Vlocity packDeploy failed: ${e.message}`);
-        }
+      try {
+        execSync(deployCmd, { cwd: releasePath, stdio: 'inherit', shell: true });
+      } catch (e) {
+        throw new Error(`Vlocity packDeploy failed: ${e.message}`);
       }
     } else {
       console.log('ℹ No Omni components found; skipping Omni deploy.');
@@ -3554,7 +3534,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     // 5. Deploy SFDX metadata
     const sfdxPath = path.join(releasePath, 'sfdx');
     if (fs.existsSync(sfdxPath)) {
-      const deployCmdSfdx = `sf project deploy start --source-dir ${toPosix(sfdxPath)} --target-org ${targetAlias}`;
+      const deployCmdSfdx = `sf project deploy start --source-dir "${toPosix(sfdxPath)}" --target-org ${targetAlias}`;
       console.log('▶ SFDX Deploy:', deployCmdSfdx);
       execSync(deployCmdSfdx, { stdio: 'inherit', shell: true });
     } else {
