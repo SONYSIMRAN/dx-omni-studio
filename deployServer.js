@@ -3533,24 +3533,25 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       console.log('ℹ No Omni components found; skipping Omni deploy.');
     }
 
-    // 6) Regular metadata deploy (always via MDAPI)
-    const sfdxSrc = path.join(releasePath, 'sfdx');
-    if (fs.existsSync(sfdxSrc)) {
-      const mdapiOut = path.join(releasePath, 'mdapi');
-      if (fs.existsSync(mdapiOut)) fs.rmSync(mdapiOut, { recursive: true, force: true });
+    // 6) Deploy Regular Metadata (always via MDAPI)
+    const sfdxPath = path.join(releasePath, 'sfdx');
+    if (fs.existsSync(sfdxPath)) {
+    const mdapiOut = path.join(releasePath, 'mdapi');
+    if (fs.existsSync(mdapiOut)) fs.rmSync(mdapiOut, { recursive: true, force: true });
 
-      const convertCmd = `sf project convert source --root-dir "${toPosix(sfdxSrc)}" --output-dir "${toPosix(mdapiOut)}"`;
-      console.log('▶ Convert to MDAPI:', convertCmd);
-      execSync(convertCmd, { stdio: 'inherit', shell: true });
+    const convertCmd = `sf project convert source --root-dir "${toPosix(sfdxPath)}" --output-dir "${toPosix(mdapiOut)}"`;
+    console.log('▶ Convert to MDAPI:', convertCmd);
+    execSync(convertCmd, { stdio: 'inherit', shell: true });
 
-      const deployMdapiCmd = `sf deploy metadata --metadata-dir "${toPosix(mdapiOut)}" --target-org ${targetAlias}`;
-      console.log('▶ MDAPI Deploy:', deployMdapiCmd);
-      execSync(deployMdapiCmd, { stdio: 'inherit', shell: true });
+    const deployMdapiCmd = `sf deploy metadata --metadata-dir "${toPosix(mdapiOut)}" --target-org ${targetAlias}`;
+    console.log('▶ MDAPI Deploy:', deployMdapiCmd);
+    execSync(deployMdapiCmd, { stdio: 'inherit', shell: true });
 
-      regularDeployed = true;
+    console.log('✅ Regular metadata deployed via MDAPI');
     } else {
-      console.log('ℹ No SFDX folder found; skipping Regular metadata deploy.');
+    console.log('ℹ No SFDX folder found; skipping Regular metadata deploy.');
     }
+
 
     // 7) Log success
     if (!Array.isArray(releaseMeta.deployments)) releaseMeta.deployments = [];
