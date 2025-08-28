@@ -3478,10 +3478,10 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     if (fs.existsSync(gitExportDir)) fs.rmSync(gitExportDir, { recursive: true, force: true });
     await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
 
-    if (!fs.existsSync(releasePath)) {
+    if (!fs.existsSync(releaseMetaPath)) {
       return res.status(404).json({
         status: 'error',
-        message: `Release folder '${releaseId}' not found in Git repo`
+        message: `release.json not found for release '${releaseId}'`
       });
     }
 
@@ -3501,8 +3501,8 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       process.env.TARGET_JWT_KEY
     );
 
-    // 3. Deploy OmniStudio components
-    const omniYamlPath = path.join(releasePath, 'deployFromGit.yaml');
+    // 3. Load release.json to build deployFromGit.yaml
+    const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
     const omniYaml = {
       export: {},
       exportPacks: {
@@ -3510,13 +3510,24 @@ app.post('/deploy-to-sandbox', async (req, res) => {
         autoAddDependentFields: true
       }
     };
+
+    for (const [type, comps] of Object.entries(releaseMeta.components)) {
+      if (type === 'RegularMetadata') continue; // handled separately
+      omniYaml.export[type] = {};
+      comps.forEach(name => {
+        omniYaml.export[type][name] = {};
+      });
+    }
+
+    const omniYamlPath = path.posix.join(releasePath, 'deployFromGit.yaml');
     fs.writeFileSync(omniYamlPath, yaml.dump(omniYaml));
 
+    // 4. Deploy OmniStudio components
     const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job ${omniYamlPath} --projectPath ${releasePath} --ignoreAllErrors`;
     console.log('▶ Running OmniStudio Deploy:', deployCmd);
     execSync(deployCmd, { cwd: releasePath, stdio: 'inherit' });
 
-    // 4. Deploy SFDX metadata if exists
+    // 5. Deploy SFDX metadata if exists
     const sfdxPath = path.join(releasePath, 'sfdx');
     if (fs.existsSync(sfdxPath)) {
       const deployCmdSfdx = `sf project deploy start --source-dir ${sfdxPath} --target-org ${targetAlias}`;
@@ -3524,25 +3535,21 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       execSync(deployCmdSfdx, { stdio: 'inherit' });
     }
 
-    // 5. Update release.json with deployment log
-    if (fs.existsSync(releaseMetaPath)) {
-      const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
-      if (!Array.isArray(releaseMeta.deployments)) releaseMeta.deployments = [];
-
-      releaseMeta.deployments.push({
-        targetAlias,
-        deployedAt: new Date().toISOString(),
-        status: 'success',
-        details: `Deployed successfully to ${targetAlias}`
-      });
-
-      fs.writeFileSync(releaseMetaPath, JSON.stringify(releaseMeta, null, 2));
-    }
+    // 6. Update release.json with deployment log
+    if (!Array.isArray(releaseMeta.deployments)) releaseMeta.deployments = [];
+    releaseMeta.deployments.push({
+      targetAlias,
+      deployedAt: new Date().toISOString(),
+      status: 'success',
+      details: `Deployed successfully to ${targetAlias}`
+    });
+    fs.writeFileSync(releaseMetaPath, JSON.stringify(releaseMeta, null, 2));
 
     return res.status(200).json({
       status: 'success',
       message: `Release '${releaseId}' deployed successfully to ${targetAlias}`
     });
+
   } catch (err) {
     console.error('deploy-to-sandbox failed:', err.message);
 
@@ -3551,14 +3558,12 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       if (fs.existsSync(releaseMetaPath)) {
         const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
         if (!Array.isArray(releaseMeta.deployments)) releaseMeta.deployments = [];
-
         releaseMeta.deployments.push({
           targetAlias,
           deployedAt: new Date().toISOString(),
           status: 'error',
           details: err.message
         });
-
         fs.writeFileSync(releaseMetaPath, JSON.stringify(releaseMeta, null, 2));
       }
     } catch (logErr) {
@@ -3571,6 +3576,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     });
   }
 });
+
 
 
 /**
