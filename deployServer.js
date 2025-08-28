@@ -3463,6 +3463,7 @@ app.get('/commits', async (req, res) => {
 
 
 
+
 const toPosix = p => p.replace(/\\/g, '/');
 
 app.post('/deploy-to-sandbox', async (req, res) => {
@@ -3526,7 +3527,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       console.log('ℹ No Omni components found; skipping Omni deploy.');
     }
 
-    // 6. Deploy Regular Metadata
+    // 6. Deploy Regular Metadata (SFDX or MDAPI)
     const sfdxPath = path.join(releasePath, 'sfdx');
     if (fs.existsSync(sfdxPath)) {
       const projectJson = path.join(sfdxPath, 'sfdx-project.json');
