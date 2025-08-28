@@ -3459,7 +3459,11 @@ app.get('/commits', async (req, res) => {
  * Deploy Git Release → Sandbox
  * ===============================================
  */
-//  Deploy a Git release folder to a sandbox
+const { spawnSync } = require('child_process');
+
+// helper: normalize path to POSIX (forward slashes)
+const toPosix = p => p.replace(/\\/g, '/');
+
 app.post('/deploy-to-sandbox', async (req, res) => {
   const { targetAlias, releaseId } = req.body;
 
@@ -3475,7 +3479,7 @@ app.post('/deploy-to-sandbox', async (req, res) => {
   const releaseMetaPath = path.join(releasePath, 'release.json');
 
   try {
-    // 1. Clean & clone repo
+    // 1. Fresh clone
     if (fs.existsSync(gitExportDir)) {
       fs.rmSync(gitExportDir, { recursive: true, force: true });
     }
@@ -3497,37 +3501,61 @@ app.post('/deploy-to-sandbox', async (req, res) => {
       process.env.TARGET_JWT_KEY
     );
 
-    // 3. Read release.json
+    // 3. Read release.json & build deployFromGit.yaml
     const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
-
-    // 4. Prepare Omni deploy yaml
     const omniYaml = { export: {}, exportPacks: { autoAddDependencies: true, autoAddDependentFields: true } };
-    for (const [type, comps] of Object.entries(releaseMeta.components)) {
+
+    for (const [type, comps] of Object.entries(releaseMeta.components || {})) {
       if (type === 'RegularMetadata') continue;
       omniYaml.export[type] = {};
       (Array.isArray(comps) ? comps : []).forEach(name => {
         omniYaml.export[type][name] = {};
       });
     }
+
     const omniYamlPath = path.join(releasePath, 'deployFromGit.yaml');
     fs.writeFileSync(omniYamlPath, yaml.dump(omniYaml));
 
-    // 5. Deploy OmniStudio
+    const omniYamlPathPosix = toPosix(omniYamlPath);
+    const releasePathPosix = toPosix(releasePath);
+
+    // 4. Deploy OmniStudio
     if (Object.keys(omniYaml.export).length > 0) {
-      const deployCmd = `npx vlocity -sfdx.username ${targetAlias} packDeploy -job ${omniYamlPath} --projectPath ${releasePath} --ignoreAllErrors`;
-      console.log('▶ Omni Deploy:', deployCmd);
-      execSync(deployCmd, { cwd: releasePath, stdio: 'inherit' });
+      const vlocityArgs = [
+        'vlocity',
+        '-sfdx.username', targetAlias,
+        '-job', omniYamlPathPosix,
+        '--projectPath', releasePathPosix,
+        '--ignoreAllErrors',
+        'packDeploy'
+      ];
+
+      console.log('▶ Omni Deploy:', ['npx', ...vlocityArgs].join(' '));
+
+      const run = spawnSync('npx', vlocityArgs, {
+        cwd: releasePath,
+        stdio: 'inherit',
+        shell: false
+      });
+
+      if (run.status !== 0) {
+        throw new Error(`Vlocity packDeploy failed with exit code ${run.status}`);
+      }
+    } else {
+      console.log('ℹ No Omni components found; skipping Omni deploy.');
     }
 
-    // 6. Deploy SFDX metadata
+    // 5. Deploy SFDX metadata (if exists)
     const sfdxPath = path.join(releasePath, 'sfdx');
     if (fs.existsSync(sfdxPath)) {
-      const deployCmdSfdx = `sf project deploy start --source-dir ${sfdxPath} --target-org ${targetAlias}`;
+      const deployCmdSfdx = `sf project deploy start --source-dir ${toPosix(sfdxPath)} --target-org ${targetAlias}`;
       console.log('▶ SFDX Deploy:', deployCmdSfdx);
       execSync(deployCmdSfdx, { stdio: 'inherit' });
+    } else {
+      console.log('ℹ No SFDX folder found; skipping SFDX deploy.');
     }
 
-    // 7. Update release.json log
+    // 6. Update release.json log
     if (!Array.isArray(releaseMeta.deployments)) releaseMeta.deployments = [];
     releaseMeta.deployments.push({
       targetAlias,
@@ -3543,9 +3571,9 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('deploy-to-sandbox failed:', err.message);
+    console.error('deploy-to-sandbox failed:', err?.stack || err);
 
-    // Append error log
+    // log failure in release.json
     try {
       if (fs.existsSync(releaseMetaPath)) {
         const releaseMeta = JSON.parse(fs.readFileSync(releaseMetaPath, 'utf-8'));
@@ -3554,12 +3582,12 @@ app.post('/deploy-to-sandbox', async (req, res) => {
           targetAlias,
           deployedAt: new Date().toISOString(),
           status: 'error',
-          details: err.message
+          details: err.message || String(err)
         });
         fs.writeFileSync(releaseMetaPath, JSON.stringify(releaseMeta, null, 2));
       }
     } catch (logErr) {
-      console.error('Failed to log deploy error:', logErr.message);
+      console.error('Failed to update release.json with error:', logErr?.message || logErr);
     }
 
     return res.status(500).json({
@@ -3568,7 +3596,6 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     });
   }
 });
-
 
 
 
