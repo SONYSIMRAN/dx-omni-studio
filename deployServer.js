@@ -3534,30 +3534,55 @@ app.post('/deploy-to-sandbox', async (req, res) => {
     }
 
     // 6) Deploy Regular Metadata (always via MDAPI)
+    // 6) Deploy Regular Metadata (create temp SFDX project → convert → MDAPI deploy)
     const sfdxPath = path.join(releasePath, 'sfdx');
     if (fs.existsSync(sfdxPath)) {
-    const mdapiOut = path.join(releasePath, 'mdapi');
-    if (fs.existsSync(mdapiOut)) fs.rmSync(mdapiOut, { recursive: true, force: true });
+    // Make a throwaway SFDX project so "sf project convert source" is happy
+    const tmpProj = path.join(releasePath, '.tmp-sfproj');
+    const tmpSrc  = path.join(tmpProj, 'src');
+    const mdapiOut = path.join(tmpProj, 'mdapi');
+
+    // Clean slate
+    if (fs.existsSync(tmpProj)) fs.rmSync(tmpProj, { recursive: true, force: true });
+    fs.mkdirSync(tmpSrc, { recursive: true });
+
+    // Copy raw source into temp project's "src"
+    // Node 16+ has fs.cpSync; if you're on older Node, replace with a small recursive copy
+    fs.cpSync(sfdxPath, tmpSrc, { recursive: true });
+
+    // Minimal sfdx-project.json so the CLI treats tmpProj as a valid project
+    const projJson = {
+        packageDirectories: [{ path: "src", default: true }],
+        namespace: "",
+        sfdcLoginUrl: process.env.TARGET_LOGIN_URL || "https://login.salesforce.com",
+        sourceApiVersion: (releaseMeta && releaseMeta.apiVersion) || "59.0"
+    };
+    fs.writeFileSync(path.join(tmpProj, 'sfdx-project.json'), JSON.stringify(projJson, null, 2));
 
     try {
-        const convertCmd = `sf project convert source --root-dir "${toPosix(sfdxPath)}" --output-dir "${toPosix(mdapiOut)}"`;
-        console.log('▶ Convert to MDAPI:', convertCmd);
-        execSync(convertCmd, { stdio: 'inherit', shell: true });
+        // Convert to MDAPI (run INSIDE the temp project)
+        const convertCmd = `sf project convert source --root-dir "src" --output-dir "mdapi"`;
+        console.log('▶ Convert to MDAPI:', convertCmd, '\n  cwd =', tmpProj);
+        execSync(convertCmd, { stdio: 'inherit', shell: true, cwd: tmpProj });
 
-        // sanity check: did conversion actually create a package?
+        // Sanity check
         const pkgXml = path.join(mdapiOut, 'package.xml');
         if (!fs.existsSync(pkgXml)) {
         throw new Error(`MDAPI conversion produced no package.xml at ${pkgXml} — nothing to deploy.`);
         }
 
-        const deployMdapiCmd = `sf deploy metadata --metadata-dir "${toPosix(mdapiOut)}" --target-org ${targetAlias}`;
-        console.log('▶ MDAPI Deploy:', deployMdapiCmd);
-        execSync(deployMdapiCmd, { stdio: 'inherit', shell: true });
+        // Deploy MDAPI (still inside the temp project)
+        const deployMdapiCmd = `sf deploy metadata --metadata-dir "mdapi" --target-org ${targetAlias}`;
+        console.log('▶ MDAPI Deploy:', deployMdapiCmd, '\n  cwd =', tmpProj);
+        execSync(deployMdapiCmd, { stdio: 'inherit', shell: true, cwd: tmpProj });
 
         console.log('✅ Regular metadata deployed via MDAPI');
     } catch (e) {
         console.error('❌ Regular metadata deploy failed:', e?.message || e);
-        throw e; // bubble up to your main catch (so it logs into release.json and returns 500)
+        throw e;
+    } finally {
+        // optional: clean up the temp project
+        try { fs.rmSync(tmpProj, { recursive: true, force: true }); } catch {}
     }
     } else {
     console.log('ℹ No SFDX folder found; skipping Regular metadata deploy.');
