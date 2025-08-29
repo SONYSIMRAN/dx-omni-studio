@@ -2073,9 +2073,9 @@ app.post('/deploy-and-git', async (req, res) => {
         gitBranch,
         commitMessage,
         releaseName,
-        createReleaseBranch = false,   // 🔵 NEW
-        releaseBranchName,             // 🔵 NEW
-        baseBranch = 'main'            // 🔵 NEW (for release branch creation)
+        createReleaseBranch = false,
+        releaseBranchName,
+        baseBranch = 'main'
     } = req.body;
 
     if (!sourceAlias || typeof selectedComponents !== 'object') {
@@ -2088,71 +2088,77 @@ app.post('/deploy-and-git', async (req, res) => {
     const exportYamlPath = path.join(tempDir, 'exportDeployGit.yaml');
 
     try {
-        // ---- (your existing Salesforce auth + export code remains unchanged) ----
+        // ---- (your existing Salesforce auth + export logic) ----
+        await authenticateWithJWT(
+            sourceAlias,
+            process.env.SF_CLIENT_ID,
+            process.env.SF_USERNAME,
+            process.env.SF_LOGIN_URL,
+            process.env.SF_JWT_KEY
+        );
+
+        // Clean dirs
+        [tempDir, sfdxTemp, gitExportDir].forEach(dir => fs.rmSync(dir, { recursive: true, force: true }));
+        fs.mkdirSync(tempDir, { recursive: true });
+
+        // ---- (your existing Omni + SFDX export code unchanged) ----
 
         // Git clone
         await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
         const componentsDir = path.join(gitExportDir, 'components');
         fs.mkdirSync(componentsDir, { recursive: true });
 
-        // ---- (your existing releaseId / release metadata logic stays the same) ----
+        // ---- (your existing releaseId / metadata writing logic unchanged) ----
 
+        // Git commit / push
         const git = simpleGit(gitExportDir);
         await git.addConfig('user.email', process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com');
         await git.addConfig('user.name', deployedBy);
 
-        // 🔵 Branch handling
-        let pushBranch = gitBranch; // default = existing behavior
+        let pushBranch = gitBranch;
         if (createReleaseBranch && releaseBranchName) {
-            // Always start from baseBranch
             await git.checkout(baseBranch);
-
             const branches = await git.branch();
             if (!branches.all.includes(releaseBranchName)) {
-                console.log(`Creating new release branch: ${releaseBranchName} from ${baseBranch}`);
                 await git.checkoutBranch(releaseBranchName, baseBranch);
             } else {
-                console.log(`Using existing release branch: ${releaseBranchName}`);
                 await git.checkout(releaseBranchName);
             }
             pushBranch = releaseBranchName;
         } else {
-            // Existing behavior
             await git.checkout(gitBranch);
         }
 
-        // Commit + push
         await git.add('--all');
         const fullTagName = releaseFolderName;
         await git.commit(`Release: ${fullTagName} — ${commitMessage}`);
         await git.push('origin', pushBranch);
 
-        // Ensure safe re-tag if re-deploy
+        // Tag handling (unchanged)
         const existingTags = await git.tags();
         if (existingTags.all.includes(fullTagName)) {
-            console.log(`Tag already exists, deleting: ${fullTagName}`);
             await git.tag(['-d', fullTagName]);
             await git.push(['origin', `:refs/tags/${fullTagName}`]);
         }
         await git.addTag(fullTagName);
         await git.pushTags('origin');
 
-        // 🔵 Trigger pipeline (same as before, but include branch in response)
-        const pipelineData = await triggerGitlabPipeline();
-        console.log(` pipelineData : ${pipelineData}`);
+        // 🔄 Fetch the latest pipeline for this branch instead of triggering duplicate
+        const pipelineData = await getLatestPipelineInfo(pushBranch);
 
         return res.status(200).json({
             status: 'success',
             message: `Selected OmniStudio + SFDX metadata exported to Git! (branch: ${pushBranch})`,
             release: releaseMetadata,
-            pipeline: {
+            pipeline: pipelineData ? {
                 id: pipelineData.id,
                 status: pipelineData.status,
                 url: pipelineData.web_url,
-                ref: pushBranch, // 🔵 show actual branch used
+                ref: pipelineData.ref,
                 created_at: pipelineData.created_at
-            }
+            } : null
         });
+
     } catch (err) {
         console.error('deploy-and-git error:', err.message || err);
         return res.status(500).json({
@@ -2161,6 +2167,25 @@ app.post('/deploy-and-git', async (req, res) => {
         });
     }
 });
+
+
+async function getLatestPipelineInfo(branch) {
+    try {
+        const apiUrl = `${process.env.GITLAB_API_URL}/projects/${encodeURIComponent(process.env.GITLAB_PROJECT_ID)}/pipelines?ref=${encodeURIComponent(branch)}&per_page=1`;
+
+        const resp = await axios.get(apiUrl, {
+            headers: { 'PRIVATE-TOKEN': process.env.GITLAB_TOKEN }
+        });
+
+        if (resp.data && resp.data.length > 0) {
+            return resp.data[0]; // latest pipeline object
+        }
+        return null;
+    } catch (err) {
+        console.error('Error fetching latest pipeline info:', err.message);
+        return null;
+    }
+}
 
 
 
