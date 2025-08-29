@@ -2073,9 +2073,9 @@ app.post('/deploy-and-git', async (req, res) => {
         gitBranch,
         commitMessage,
         releaseName,
-        createReleaseBranch = false,
-        releaseBranchName,
-        baseBranch = 'main'
+        createReleaseBranch = false,   // NEW
+        releaseBranchName,             // NEW
+        baseBranch = 'main'            // NEW
     } = req.body;
 
     if (!sourceAlias || typeof selectedComponents !== 'object') {
@@ -2088,7 +2088,7 @@ app.post('/deploy-and-git', async (req, res) => {
     const exportYamlPath = path.join(tempDir, 'exportDeployGit.yaml');
 
     try {
-        // ---- (your existing Salesforce auth + export logic) ----
+        // ---- your existing Salesforce auth + export logic (unchanged) ----
         await authenticateWithJWT(
             sourceAlias,
             process.env.SF_CLIENT_ID,
@@ -2097,35 +2097,40 @@ app.post('/deploy-and-git', async (req, res) => {
             process.env.SF_JWT_KEY
         );
 
-        // Clean dirs
+        // clean dirs
         [tempDir, sfdxTemp, gitExportDir].forEach(dir => fs.rmSync(dir, { recursive: true, force: true }));
         fs.mkdirSync(tempDir, { recursive: true });
 
-        // ---- (your existing Omni + SFDX export code unchanged) ----
+        // ---- your existing Vlocity export + SFDX retrieve logic (unchanged) ----
 
-        // Git clone
+        // git clone
         await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
         const componentsDir = path.join(gitExportDir, 'components');
         fs.mkdirSync(componentsDir, { recursive: true });
 
-        // ---- (your existing releaseId / metadata writing logic unchanged) ----
+        // ---- your existing releaseId / metadata writing logic (unchanged) ----
 
-        // Git commit / push
+        // git commit / push
         const git = simpleGit(gitExportDir);
         await git.addConfig('user.email', process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com');
         await git.addConfig('user.name', deployedBy);
 
-        let pushBranch = gitBranch;
+        let pushBranch = gitBranch; // default
         if (createReleaseBranch && releaseBranchName) {
+            await git.fetch();
             await git.checkout(baseBranch);
+
             const branches = await git.branch();
             if (!branches.all.includes(releaseBranchName)) {
+                console.log(`Creating new release branch: ${releaseBranchName} from ${baseBranch}`);
                 await git.checkoutBranch(releaseBranchName, baseBranch);
             } else {
+                console.log(`Using existing release branch: ${releaseBranchName}`);
                 await git.checkout(releaseBranchName);
             }
             pushBranch = releaseBranchName;
         } else {
+            console.log(`Using existing branch: ${gitBranch}`);
             await git.checkout(gitBranch);
         }
 
@@ -2134,7 +2139,7 @@ app.post('/deploy-and-git', async (req, res) => {
         await git.commit(`Release: ${fullTagName} — ${commitMessage}`);
         await git.push('origin', pushBranch);
 
-        // Tag handling (unchanged)
+        // re-tag logic (unchanged)
         const existingTags = await git.tags();
         if (existingTags.all.includes(fullTagName)) {
             await git.tag(['-d', fullTagName]);
@@ -2143,7 +2148,7 @@ app.post('/deploy-and-git', async (req, res) => {
         await git.addTag(fullTagName);
         await git.pushTags('origin');
 
-        // 🔄 Fetch the latest pipeline for this branch instead of triggering duplicate
+        // fetch latest pipeline instead of triggering duplicate
         const pipelineData = await getLatestPipelineInfo(pushBranch);
 
         return res.status(200).json({
@@ -2167,6 +2172,7 @@ app.post('/deploy-and-git', async (req, res) => {
         });
     }
 });
+
 
 
 async function getLatestPipelineInfo(branch) {
