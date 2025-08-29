@@ -2073,9 +2073,9 @@ app.post('/deploy-and-git', async (req, res) => {
         gitBranch,
         commitMessage,
         releaseName,
-        createReleaseBranch = false,   // NEW
-        releaseBranchName,             // NEW
-        baseBranch = 'main'            // NEW
+        createReleaseBranch = false,
+        releaseBranchName,
+        baseBranch = 'main'
     } = req.body;
 
     if (!sourceAlias || typeof selectedComponents !== 'object') {
@@ -2088,7 +2088,11 @@ app.post('/deploy-and-git', async (req, res) => {
     const exportYamlPath = path.join(tempDir, 'exportDeployGit.yaml');
 
     try {
-        // ---- your existing Salesforce auth + export logic (unchanged) ----
+        // --- Author info (fix for deployedBy undefined) ---
+        const deployedBy = process.env.GIT_COMMIT_NAME || 'Omni Deployer';
+        const deployedEmail = process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com';
+
+        // ---- Salesforce Auth ----
         await authenticateWithJWT(
             sourceAlias,
             process.env.SF_CLIENT_ID,
@@ -2097,25 +2101,55 @@ app.post('/deploy-and-git', async (req, res) => {
             process.env.SF_JWT_KEY
         );
 
-        // clean dirs
+        // Clean dirs
         [tempDir, sfdxTemp, gitExportDir].forEach(dir => fs.rmSync(dir, { recursive: true, force: true }));
         fs.mkdirSync(tempDir, { recursive: true });
 
-        // ---- your existing Vlocity export + SFDX retrieve logic (unchanged) ----
+        // ---- your existing Vlocity + SFDX export/retrieve logic (unchanged) ----
 
-        // git clone
+        // Git clone repo
         await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
         const componentsDir = path.join(gitExportDir, 'components');
         fs.mkdirSync(componentsDir, { recursive: true });
 
-        // ---- your existing releaseId / metadata writing logic (unchanged) ----
+        // ---- releaseId / release metadata (unchanged) ----
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+        const releaseId = `release-${timestamp}Z`;
+        const releaseFolderName = releaseId;
 
-        // git commit / push
+        const releaseMetadata = {
+            releaseId,
+            releaseName: releaseName || '',
+            deployedAt: now.toISOString(),
+            deployedBy,
+            sourceAlias,
+            components: flattenSelectedComponents(selectedComponents),
+            gitBranch
+        };
+
+        // Save release.json locally + in repo
+        const releaseFolder = path.join(componentsDir, releaseFolderName);
+        fsExtra.mkdirpSync(releaseFolder);
+        fs.writeFileSync(path.join(releaseFolder, 'release.json'), JSON.stringify(releaseMetadata, null, 2));
+
+        const releaseHistoryDir = path.join(componentsDir, 'releases');
+        fs.mkdirSync(releaseHistoryDir, { recursive: true });
+        fs.writeFileSync(path.join(releaseHistoryDir, `${releaseId}.json`), JSON.stringify(releaseMetadata, null, 2));
+
+        // Local storage (for /releases API)
+        const localReleaseDir = path.join(__dirname, 'storage', sourceAlias, 'releases');
+        fs.mkdirSync(localReleaseDir, { recursive: true });
+        fs.writeFileSync(path.join(localReleaseDir, `${releaseId}.json`), JSON.stringify(releaseMetadata, null, 2));
+
+        // ---- Git commit / branch logic ----
         const git = simpleGit(gitExportDir);
-        await git.addConfig('user.email', process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com');
+        await git.addConfig('user.email', deployedEmail);
         await git.addConfig('user.name', deployedBy);
 
-        let pushBranch = gitBranch; // default
+        let targetBranch = gitBranch || 'main';
+
         if (createReleaseBranch && releaseBranchName) {
             await git.fetch();
             await git.checkout(baseBranch);
@@ -2128,18 +2162,19 @@ app.post('/deploy-and-git', async (req, res) => {
                 console.log(`Using existing release branch: ${releaseBranchName}`);
                 await git.checkout(releaseBranchName);
             }
-            pushBranch = releaseBranchName;
+            targetBranch = releaseBranchName;
         } else {
             console.log(`Using existing branch: ${gitBranch}`);
             await git.checkout(gitBranch);
         }
 
+        // Stage + commit + push
         await git.add('--all');
         const fullTagName = releaseFolderName;
         await git.commit(`Release: ${fullTagName} — ${commitMessage}`);
-        await git.push('origin', pushBranch);
+        await git.push('origin', targetBranch);
 
-        // re-tag logic (unchanged)
+        // Tag handling
         const existingTags = await git.tags();
         if (existingTags.all.includes(fullTagName)) {
             await git.tag(['-d', fullTagName]);
@@ -2148,12 +2183,12 @@ app.post('/deploy-and-git', async (req, res) => {
         await git.addTag(fullTagName);
         await git.pushTags('origin');
 
-        // fetch latest pipeline instead of triggering duplicate
-        const pipelineData = await getLatestPipelineInfo(pushBranch);
+        // ---- Fetch pipeline info (no duplicate trigger) ----
+        const pipelineData = await getLatestPipelineInfo(targetBranch);
 
         return res.status(200).json({
             status: 'success',
-            message: `Selected OmniStudio + SFDX metadata exported to Git! (branch: ${pushBranch})`,
+            message: `Selected OmniStudio + SFDX metadata exported to Git! (branch: ${targetBranch})`,
             release: releaseMetadata,
             pipeline: pipelineData ? {
                 id: pipelineData.id,
@@ -2175,16 +2210,16 @@ app.post('/deploy-and-git', async (req, res) => {
 
 
 
+
+
 async function getLatestPipelineInfo(branch) {
     try {
         const apiUrl = `${process.env.GITLAB_API_URL}/projects/${encodeURIComponent(process.env.GITLAB_PROJECT_ID)}/pipelines?ref=${encodeURIComponent(branch)}&per_page=1`;
-
         const resp = await axios.get(apiUrl, {
             headers: { 'PRIVATE-TOKEN': process.env.GITLAB_TOKEN }
         });
-
         if (resp.data && resp.data.length > 0) {
-            return resp.data[0]; // latest pipeline object
+            return resp.data[0];
         }
         return null;
     } catch (err) {
