@@ -29,7 +29,7 @@ const {
 const {
     timeAgo,
     inferComponentDetails,
-    getLatestPipelineInfo
+    // getLatestPipelineInfo
 } = require('./dxUtils');
 const STORAGE_DIR = path.join(__dirname, 'storage');
 const repoUrl = process.env.GITLAB_REPO_URL;
