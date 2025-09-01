@@ -2209,19 +2209,38 @@ app.get('/release-history', async (req, res) => {
 // });
 
 
+// ---- fetch latest pipeline for a ref (branch or tag) ----
+async function getLatestPipelineInfo(ref) {
+  try {
+    const apiUrl =
+      `${process.env.GITLAB_API_URL}/projects/${encodeURIComponent(process.env.GITLAB_PROJECT_ID)}` +
+      `/pipelines?ref=${encodeURIComponent(ref)}&per_page=1`;
+    const resp = await axios.get(apiUrl, {
+      headers: { 'PRIVATE-TOKEN': process.env.GITLAB_TOKEN }
+    });
+    if (resp.data && resp.data.length > 0) return resp.data[0];
+    return null;
+  } catch (err) {
+    console.error('Error fetching latest pipeline info:', err.message);
+    return null;
+  }
+}
+
 app.post('/deploy-and-git', async (req, res) => {
   const {
     sourceAlias,
     selectedComponents,
-    gitBranch,
+    gitBranch,                 // ui branch choice (e.g., "main")
     commitMessage,
     releaseName,
-    // NEW toggles (non-breaking defaults)
+
+    // new flags for release branch behavior (safe defaults)
     createReleaseBranch = false,
-    releaseBranchName,
+    releaseBranchName,         // e.g., "rel/2025-09-01-1234" (optional if createReleaseBranch=false)
     baseBranch = 'main',
-    triggerReleasePipeline = false,   // NEW: when true, tag is created & pushed
-    releaseTagName                    // NEW: optional explicit tag (else we use releaseId)
+
+    // which target sandbox to deploy later in the pipeline; defaults to current TARGET_* creds
+    targetSandbox = 'target'
   } = req.body;
 
   if (!sourceAlias || typeof selectedComponents !== 'object') {
@@ -2234,11 +2253,11 @@ app.post('/deploy-and-git', async (req, res) => {
   const exportYamlPath = path.join(tempDir, 'exportDeployGit.yaml');
 
   try {
-    // --- Author info ---
+    // author info (prevents deployedBy undefined)
     const deployedBy   = process.env.GIT_COMMIT_NAME  || 'Omni Deployer';
     const deployedEmail= process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com';
 
-    // ---- Salesforce Auth ----
+    // ---- Salesforce auth (unchanged) ----
     await authenticateWithJWT(
       sourceAlias,
       process.env.SF_CLIENT_ID,
@@ -2247,135 +2266,197 @@ app.post('/deploy-and-git', async (req, res) => {
       process.env.SF_JWT_KEY
     );
 
-    // Clean dirs
-    [tempDir, sfdxTemp, gitExportDir].forEach(dir => fs.rmSync(dir, { recursive: true, force: true }));
+    // clean scratch dirs
+    [tempDir, sfdxTemp, gitExportDir].forEach(d => fs.rmSync(d, { recursive: true, force: true }));
     fs.mkdirSync(tempDir, { recursive: true });
 
-    // ========= YOUR EXISTING EXPORT LOGIC (unchanged) =========
-    // - build exportDeployGit.yaml out of selectedComponents (Omni)
-    // - vlocity packExport
-    // - retrieve SFDX metadata for RegularMetadata types into sfdxTemp
-    // ==========================================================
+    // ---------- build vlocity export job yaml (unchanged behavior) ----------
+    const exportYaml = {
+      export: {},
+      exportPacks: { autoAddDependencies: true, autoAddDependentFields: true }
+    };
+    for (const [type, names] of Object.entries(selectedComponents)) {
+      if (type === 'RegularMetadata') continue;
+      exportYaml.export[type] = {};
+      (names || []).forEach(n => { exportYaml.export[type][n] = {}; });
+    }
+    fs.writeFileSync(exportYamlPath, yaml.dump(exportYaml), 'utf8');
 
-    // Git clone repo
+    // run vlocity export
+    if (Object.keys(exportYaml.export).length > 0) {
+      const exportCmd = `npx vlocity -sfdx.username ${sourceAlias} packExport -job ${exportYamlPath} --projectPath ${__dirname} --ignoreAllErrors`;
+      console.log('Running Vlocity Export:', exportCmd);
+      execSync(exportCmd, { cwd: __dirname, stdio: 'inherit' });
+
+      // copy only selected Omni components
+      for (const [type, names] of Object.entries(selectedComponents)) {
+        if (type === 'RegularMetadata') continue;
+        const srcBase  = path.join(__dirname, type);
+        const destBase = path.join(tempDir, type);
+        if (!fs.existsSync(srcBase)) continue;
+        fsExtra.mkdirpSync(destBase);
+        for (const name of (names || [])) {
+          const srcPath = path.join(srcBase, name);
+          const dstPath = path.join(destBase, name);
+          if (fs.existsSync(srcPath)) fsExtra.copySync(srcPath, dstPath, { overwrite: true });
+        }
+      }
+    }
+
+    // ---------- retrieve RegularMetadata via SFDX (unchanged behavior) ----------
+    if (selectedComponents.RegularMetadata) {
+      const forceAppPath = path.join(sfdxTemp, 'force-app', 'main', 'default');
+      fsExtra.mkdirpSync(forceAppPath);
+      fs.writeFileSync(
+        path.join(sfdxTemp, 'sfdx-project.json'),
+        JSON.stringify({
+          packageDirectories: [{ path: 'force-app', default: true }],
+          namespace: '',
+          sourceApiVersion: '59.0'
+        }, null, 2)
+      );
+
+      const metadataList = Object.entries(selectedComponents.RegularMetadata)
+        .flatMap(([t, names]) => (names || []).map(n => `${t}:${n}`));
+      if (metadataList.length) {
+        const metadataArgs = metadataList.map(x => `--metadata ${x}`).join(' ');
+        const retrieveCmd = `sf project retrieve start ${metadataArgs} --target-org ${sourceAlias} --output-dir retrieve-temp`;
+        execSync(retrieveCmd, { cwd: sfdxTemp, stdio: 'inherit' });
+      }
+    }
+
+    // ---------- Git clone ----------
     await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
     const componentsDir = path.join(gitExportDir, 'components');
     fs.mkdirSync(componentsDir, { recursive: true });
 
-    // ---- releaseId & metadata ----
+    // ---------- release id / folder ----------
     const now = new Date();
-    const pad = (n) => n.toString().padStart(2, '0');
-    const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+    const pad = n => String(n).padStart(2,'0');
+    const timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
     const releaseId = `release-${timestamp}Z`;
-    const releaseFolderName = releaseId;
-
-    // Write release folder + files (your existing copies into /components/<releaseId> …)
-    const releaseFolder = path.join(componentsDir, releaseFolderName);
+    const releaseFolder = path.join(componentsDir, releaseId);
     fsExtra.mkdirpSync(releaseFolder);
 
-    // (copy Omni exported folders into releaseFolder/*)
-    // (copy retrieved SFDX into releaseFolder/sfdx/force-app/main/default)
-    // (write sfdx-project.json under releaseFolder/sfdx)
+    // copy Omni export
+    if (fs.existsSync(tempDir)) {
+      fs.readdirSync(tempDir).forEach(typeFolder => {
+        const src = path.join(tempDir, typeFolder);
+        if (fs.statSync(src).isDirectory()) {
+          fsExtra.copySync(src, path.join(releaseFolder, typeFolder), { overwrite: true });
+        }
+      });
+    }
+    // copy retrieved sfdx
+    const retrievedPath = path.join(sfdxTemp, 'retrieve-temp');
+    const sfdxTarget = path.join(releaseFolder, 'sfdx', 'force-app', 'main', 'default');
+    fsExtra.mkdirpSync(sfdxTarget);
+    if (fs.existsSync(retrievedPath)) {
+      fsExtra.copySync(retrievedPath, sfdxTarget, { overwrite: true });
+    }
+    fs.writeFileSync(
+      path.join(releaseFolder, 'sfdx', 'sfdx-project.json'),
+      JSON.stringify({
+        packageDirectories: [{ path: 'force-app', default: true }],
+        namespace: '',
+        sourceApiVersion: '59.0'
+      }, null, 2)
+    );
 
-    const flattenedComponents = flattenSelectedComponents(selectedComponents);
-
+    // ---------- write release metadata ----------
     const releaseMetadata = {
       releaseId,
       releaseName: releaseName || '',
       deployedAt: now.toISOString(),
       deployedAtFormatted: now.toLocaleString('en-IN', {
-        weekday: 'long', year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', hour12: true,
-        timeZone: 'Asia/Kolkata', timeZoneName: 'short'
+        weekday: 'long',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Kolkata',
+        timeZoneName: 'short'
       }),
       deployedBy,
       sourceAlias,
-      components: flattenedComponents,
-      gitBranch
+      components: flattenSelectedComponents(selectedComponents),
+      gitBranch: gitBranch || 'main',
+      targetSandbox: targetSandbox || 'target'
     };
 
     fs.writeFileSync(path.join(releaseFolder, 'release.json'), JSON.stringify(releaseMetadata, null, 2));
+    const relHistDir = path.join(componentsDir, 'releases');
+    fs.mkdirSync(relHistDir, { recursive: true });
+    fs.writeFileSync(path.join(relHistDir, `${releaseId}.json`), JSON.stringify(releaseMetadata, null, 2));
 
-    // Release history file
-    const releaseHistoryDir = path.join(componentsDir, 'releases');
-    fs.mkdirSync(releaseHistoryDir, { recursive: true });
-    fs.writeFileSync(path.join(releaseHistoryDir, `${releaseId}.json`), JSON.stringify(releaseMetadata, null, 2));
-
-    // Local storage for /releases route
+    // local cache for /releases API
     const localReleaseDir = path.join(__dirname, 'storage', sourceAlias, 'releases');
     fs.mkdirSync(localReleaseDir, { recursive: true });
     fs.writeFileSync(path.join(localReleaseDir, `${releaseId}.json`), JSON.stringify(releaseMetadata, null, 2));
 
-    // Timestamp marker (optional)
+    // timestamp marker
     const metaDir = path.join(componentsDir, '.meta');
     fsExtra.mkdirpSync(metaDir);
-    fs.writeFileSync(path.join(metaDir, `.last-deploy-${Date.now()}.txt`), `Deployed at ${now.toISOString()}`);
+    fs.writeFileSync(path.join(metaDir, `.last-deploy-${Date.now()}.txt`), `Deployed at ${releaseMetadata.deployedAt}`);
 
-    // ---- Git: branch strategy ----
+    // ---------- Git commit / branch logic ----------
     const git = simpleGit(gitExportDir);
     await git.addConfig('user.email', deployedEmail);
     await git.addConfig('user.name', deployedBy);
 
-    let targetBranch = gitBranch || 'main';
+    let targetRef = gitBranch || 'main'; // final branch we push to
+    await git.fetch();
 
     if (createReleaseBranch && releaseBranchName) {
-      await git.fetch();
+      // create or reuse a release branch off baseBranch
       await git.checkout(baseBranch);
       const branches = await git.branch();
       if (!branches.all.includes(releaseBranchName)) {
-        console.log(`Creating new release branch: ${releaseBranchName} from ${baseBranch}`);
+        console.log(`Creating release branch ${releaseBranchName} from ${baseBranch}`);
         await git.checkoutBranch(releaseBranchName, baseBranch);
       } else {
-        console.log(`Using existing release branch: ${releaseBranchName}`);
+        console.log(`Using existing release branch ${releaseBranchName}`);
         await git.checkout(releaseBranchName);
       }
-      targetBranch = releaseBranchName;
+      targetRef = releaseBranchName;
     } else {
-      console.log(`Using branch: ${targetBranch}`);
-      await git.checkout(targetBranch);
+      console.log(`Using branch ${targetRef}`);
+      await git.checkout(targetRef);
     }
 
-    // Stage + commit + push branch
     await git.add('--all');
-    await git.commit(`Release: ${releaseFolderName} — ${commitMessage}`);
-    await git.push('origin', targetBranch);
+    await git.commit(`Release: ${releaseId} — ${commitMessage || ''}`);
+    await git.push('origin', targetRef);
 
-    // ---- Tag for Release pipeline (only when requested) ----
-    let tagName = releaseTagName || releaseFolderName; // default tag == releaseId
-    let pipelineData = null;
-
-    if (triggerReleasePipeline) {
-      // safe re-tag
-      const existingTags = await git.tags();
-      if (existingTags.all.includes(tagName)) {
-        console.log(`Tag exists, deleting: ${tagName}`);
-        await git.tag(['-d', tagName]);
-        await git.push(['origin', `:refs/tags/${tagName}`]);
-      }
-      await git.addTag(tagName);
-      await git.pushTags('origin');
-
-      // fetch latest pipeline created for this tag
-      pipelineData = await getLatestPipelineInfo(tagName);
+    // tag for the release (idempotent)
+    const existing = await git.tags();
+    if (existing.all.includes(releaseId)) {
+      await git.tag(['-d', releaseId]);
+      await git.push(['origin', `:refs/tags/${releaseId}`]);
     }
+    await git.addTag(releaseId);
+    await git.pushTags('origin');
+
+    // ---------- read pipeline created by this push (no extra trigger) ----------
+    const pipeline = await getLatestPipelineInfo(targetRef);
 
     return res.status(200).json({
       status: 'success',
-      message: `Selected OmniStudio + SFDX metadata exported to Git! (branch: ${targetBranch}${triggerReleasePipeline ? `, tag: ${tagName}` : ''})`,
-      release: { ...releaseMetadata, gitBranch: targetBranch, tagName: triggerReleasePipeline ? tagName : null },
-      pipeline: pipelineData
-        ? {
-            id: pipelineData.id,
-            status: pipelineData.status,
-            url: pipelineData.web_url,
-            ref: pipelineData.ref,
-            created_at: pipelineData.created_at
-          }
-        : null
+      message: `Selected OmniStudio + SFDX metadata exported to Git! (branch: ${targetRef})`,
+      release: releaseMetadata,
+      pipeline: pipeline ? {
+        id: pipeline.id,
+        status: pipeline.status,
+        url: pipeline.web_url,
+        ref: pipeline.ref,
+        created_at: pipeline.created_at
+      } : null
     });
 
   } catch (err) {
-    console.error('deploy-and-git error:', err.message || err);
+    console.error('deploy-and-git error:', err.stack || err.message || err);
     return res.status(500).json({
       status: 'error',
       message: err.message || 'Unexpected error during deploy-and-git'
@@ -2383,38 +2464,103 @@ app.post('/deploy-and-git', async (req, res) => {
   }
 });
 
-// unchanged helper – works for tags or branches as "ref"
-// async function getLatestPipelineInfo(ref) {
-//   try {
-//     const apiUrl = `${process.env.GITLAB_API_URL}/projects/${encodeURIComponent(process.env.GITLAB_PROJECT_ID)}/pipelines?ref=${encodeURIComponent(ref)}&per_page=1`;
-//     const resp = await axios.get(apiUrl, {
-//       headers: { 'PRIVATE-TOKEN': process.env.GITLAB_TOKEN }
-//     });
-//     return (resp.data && resp.data.length > 0) ? resp.data[0] : null;
-//   } catch (err) {
-//     console.error('Error fetching latest pipeline info:', err.message);
-//     return null;
-//   }
-// }
+app.post('/cut-release', async (req, res) => {
+  const {
+    releaseBranchName,   // required, e.g. "rel/2025-09-01_1"
+    releaseName,         // optional: "Release Sept 1 Official"
+    commitMessage        // optional: default fallback commit message
+  } = req.body;
 
+  if (!releaseBranchName) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'releaseBranchName is required'
+    });
+  }
 
+  try {
+    const deployedBy    = process.env.GIT_COMMIT_NAME  || 'Omni Deployer';
+    const deployedEmail = process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com';
 
+    // clone repo fresh
+    const gitExportDir = './git-export';
+    fs.rmSync(gitExportDir, { recursive: true, force: true });
+    await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
 
-async function getLatestPipelineInfo(branch) {
-    try {
-        const apiUrl = `${process.env.GITLAB_API_URL}/projects/${encodeURIComponent(process.env.GITLAB_PROJECT_ID)}/pipelines?ref=${encodeURIComponent(branch)}&per_page=1`;
-        const resp = await axios.get(apiUrl, {
-            headers: { 'PRIVATE-TOKEN': process.env.GITLAB_TOKEN }
-        });
-        if (resp.data && resp.data.length > 0) {
-            return resp.data[0];
-        }
-        return null;
-    } catch (err) {
-        console.error('Error fetching latest pipeline info:', err.message);
-        return null;
+    const git = simpleGit(gitExportDir);
+    await git.addConfig('user.email', deployedEmail);
+    await git.addConfig('user.name', deployedBy);
+
+    // checkout the release branch
+    await git.fetch();
+    await git.checkout(releaseBranchName);
+
+    // create release tag
+    const now = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    const timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+    const tagName = `release-${timestamp}Z`;
+
+    // commit if needed
+    await git.commit(commitMessage || `Cut Release: ${releaseName || tagName}`, [], { '--allow-empty': null });
+
+    // tag & push
+    const tags = await git.tags();
+    if (tags.all.includes(tagName)) {
+      await git.tag(['-d', tagName]);
+      await git.push(['origin', `:refs/tags/${tagName}`]);
     }
-}
+    await git.addTag(tagName);
+    await git.pushTags('origin');
+
+    // fetch pipeline info for this tag
+    const pipeline = await getLatestPipelineInfo(tagName);
+
+    return res.status(200).json({
+      status: 'success',
+      message: `Release cut from ${releaseBranchName} as ${tagName}`,
+      release: {
+        branch: releaseBranchName,
+        tag: tagName,
+        releaseName: releaseName || '',
+        cutBy: deployedBy,
+        cutAt: now.toISOString()
+      },
+      pipeline: pipeline ? {
+        id: pipeline.id,
+        status: pipeline.status,
+        url: pipeline.web_url,
+        ref: pipeline.ref,
+        created_at: pipeline.created_at
+      } : null
+    });
+
+  } catch (err) {
+    console.error('cut-release error:', err.stack || err.message || err);
+    return res.status(500).json({
+      status: 'error',
+      message: err.message || 'Unexpected error during cut-release'
+    });
+  }
+});
+
+
+
+// async function getLatestPipelineInfo(branch) {
+//     try {
+//         const apiUrl = `${process.env.GITLAB_API_URL}/projects/${encodeURIComponent(process.env.GITLAB_PROJECT_ID)}/pipelines?ref=${encodeURIComponent(branch)}&per_page=1`;
+//         const resp = await axios.get(apiUrl, {
+//             headers: { 'PRIVATE-TOKEN': process.env.GITLAB_TOKEN }
+//         });
+//         if (resp.data && resp.data.length > 0) {
+//             return resp.data[0];
+//         }
+//         return null;
+//     } catch (err) {
+//         console.error('Error fetching latest pipeline info:', err.message);
+//         return null;
+//     }
+// }
 
 
 
