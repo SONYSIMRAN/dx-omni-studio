@@ -2319,7 +2319,7 @@ async function getLatestPipelineInfo(branch) {
 // ----------------------------------------------------
 // POST /deploy-and-git
 // ----------------------------------------------------
-router.post('/deploy-and-git', async (req, res) => {
+app.post('/deploy-and-git', async (req, res) => {
   const {
     sourceAlias,
     selectedComponents,
