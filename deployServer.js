@@ -2586,29 +2586,57 @@ app.post('/deploy-and-git', async (req, res) => {
     // ----------------------------------------------------
     // Get the pipeline produced by THIS push (no explicit trigger)
     // ----------------------------------------------------
-    const pipelineData = await getLatestPipelineInfo(targetBranch);
+//     const pipelineData = await getLatestPipelineInfo(targetBranch);
 
-    return res.status(200).json({
-      status: 'success',
-      message: `Selected OmniStudio + SFDX metadata exported to Git! (branch: ${targetBranch})`,
-      release: releaseMetadata,
-      pipeline: pipelineData
-        ? {
-            id: pipelineData.id,
-            status: pipelineData.status,
-            url: pipelineData.web_url,
-            ref: pipelineData.ref,
-            created_at: pipelineData.created_at,
-          }
-        : null,
-    });
-  } catch (err) {
+//     return res.status(200).json({
+//       status: 'success',
+//       message: `Selected OmniStudio + SFDX metadata exported to Git! (branch: ${targetBranch})`,
+//       release: releaseMetadata,
+//       pipeline: pipelineData
+//         ? {
+//             id: pipelineData.id,
+//             status: pipelineData.status,
+//             url: pipelineData.web_url,
+//             ref: pipelineData.ref,
+//             created_at: pipelineData.created_at,
+//           }
+//         : null,
+//     });
+//   } catch (err) {
+//     console.error('deploy-and-git error:', err.message || err);
+//     return res.status(500).json({
+//       status: 'error',
+//       message: err.message || 'Unexpected error during deploy-and-git',
+//     });
+//   }
+
+
+  // ... after commit/push/tag logic ...
+
+// Wait for the branch pipeline created by THIS push
+const pipelineData = await waitForPipeline(targetBranch, { attempts: 12, intervalMs: 1500 });
+
+return res.status(200).json({
+  status: 'success',
+  message: `Selected OmniStudio + SFDX metadata exported to Git! (branch: ${targetBranch})`,
+  release: releaseMetadata,
+  pipeline: pipelineData ? {
+    id: pipelineData.id,
+    status: pipelineData.status,
+    url: pipelineData.web_url,
+    ref: pipelineData.ref,
+    created_at: pipelineData.created_at
+  } : null
+});
+} catch (err) {
     console.error('deploy-and-git error:', err.message || err);
     return res.status(500).json({
       status: 'error',
       message: err.message || 'Unexpected error during deploy-and-git',
     });
   }
+
+
 });
 
 
@@ -2713,6 +2741,19 @@ async function getLatestPipelineInfo(branch) {
         console.error('Error fetching latest pipeline info:', err.message);
         return null;
     }
+}
+
+// ---------- helpers (place once near your other helpers/imports) ----------
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Poll GitLab for the newest pipeline on a ref (branch OR tag)
+async function waitForPipeline(ref, { attempts = 12, intervalMs = 1500 } = {}) {
+  for (let i = 0; i < attempts; i++) {
+    const p = await getLatestPipelineInfo(ref);   // you already have this helper
+    if (p) return p;
+    await sleep(intervalMs);
+  }
+  return null;
 }
 
 
