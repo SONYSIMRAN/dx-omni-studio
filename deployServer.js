@@ -2634,7 +2634,7 @@ app.post('/cut-release', async (req, res) => {
     const deployedBy    = process.env.GIT_COMMIT_NAME  || 'Omni Deployer';
     const deployedEmail = process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com';
 
-    // clone repo fresh
+    // fresh clone
     const gitExportDir = './git-export';
     fs.rmSync(gitExportDir, { recursive: true, force: true });
     await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
@@ -2643,20 +2643,20 @@ app.post('/cut-release', async (req, res) => {
     await git.addConfig('user.email', deployedEmail);
     await git.addConfig('user.name', deployedBy);
 
-    // checkout the release branch
     await git.fetch();
-    await git.checkout(releaseBranchName);
+    // safer checkout: link local branch to remote
+    await git.checkout(['-B', releaseBranchName, `origin/${releaseBranchName}`]);
 
-    // create release tag
+    // create tag
     const now = new Date();
-    const pad = n => String(n).padStart(2,'0');
+    const pad = n => String(n).padStart(2, '0');
     const timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
     const tagName = `release-${timestamp}Z`;
 
-    // commit if needed
+    // commit placeholder if no changes
     await git.commit(commitMessage || `Cut Release: ${releaseName || tagName}`, [], { '--allow-empty': null });
 
-    // tag & push
+    // push tag
     const tags = await git.tags();
     if (tags.all.includes(tagName)) {
       await git.tag(['-d', tagName]);
@@ -2665,7 +2665,7 @@ app.post('/cut-release', async (req, res) => {
     await git.addTag(tagName);
     await git.pushTags('origin');
 
-    // fetch pipeline info for this tag
+    // get pipeline for this tag
     const pipeline = await getLatestPipelineInfo(tagName);
 
     return res.status(200).json({
@@ -2695,6 +2695,7 @@ app.post('/cut-release', async (req, res) => {
     });
   }
 });
+
 
 
 
