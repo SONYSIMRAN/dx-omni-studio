@@ -2298,23 +2298,23 @@ async function safePushWithRetry(git, targetBranch, { allowForceWithLease = fals
 }
 
 // Get the latest pipeline for a branch (avoid duplicate triggers)
-async function getLatestPipelineInfo(branch) {
-  try {
-    const apiUrl =
-      `${process.env.GITLAB_API_URL}/projects/` +
-      `${encodeURIComponent(process.env.GITLAB_PROJECT_ID)}` +
-      `/pipelines?ref=${encodeURIComponent(branch)}&per_page=1`;
+// async function getLatestPipelineInfo(branch) {
+//   try {
+//     const apiUrl =
+//       `${process.env.GITLAB_API_URL}/projects/` +
+//       `${encodeURIComponent(process.env.GITLAB_PROJECT_ID)}` +
+//       `/pipelines?ref=${encodeURIComponent(branch)}&per_page=1`;
 
-    const resp = await axios.get(apiUrl, {
-      headers: { 'PRIVATE-TOKEN': process.env.GITLAB_TOKEN },
-    });
-    if (resp.data && resp.data.length > 0) return resp.data[0];
-    return null;
-  } catch (err) {
-    console.error('Error fetching latest pipeline info:', err.message);
-    return null;
-  }
-}
+//     const resp = await axios.get(apiUrl, {
+//       headers: { 'PRIVATE-TOKEN': process.env.GITLAB_TOKEN },
+//     });
+//     if (resp.data && resp.data.length > 0) return resp.data[0];
+//     return null;
+//   } catch (err) {
+//     console.error('Error fetching latest pipeline info:', err.message);
+//     return null;
+//   }
+// }
 
 // ----------------------------------------------------
 // POST /deploy-and-git
@@ -2699,21 +2699,21 @@ app.post('/cut-release', async (req, res) => {
 
 
 
-// async function getLatestPipelineInfo(branch) {
-//     try {
-//         const apiUrl = `${process.env.GITLAB_API_URL}/projects/${encodeURIComponent(process.env.GITLAB_PROJECT_ID)}/pipelines?ref=${encodeURIComponent(branch)}&per_page=1`;
-//         const resp = await axios.get(apiUrl, {
-//             headers: { 'PRIVATE-TOKEN': process.env.GITLAB_TOKEN }
-//         });
-//         if (resp.data && resp.data.length > 0) {
-//             return resp.data[0];
-//         }
-//         return null;
-//     } catch (err) {
-//         console.error('Error fetching latest pipeline info:', err.message);
-//         return null;
-//     }
-// }
+async function getLatestPipelineInfo(branch) {
+    try {
+        const apiUrl = `${process.env.GITLAB_API_URL}/projects/${encodeURIComponent(process.env.GITLAB_PROJECT_ID)}/pipelines?ref=${encodeURIComponent(branch)}&per_page=1`;
+        const resp = await axios.get(apiUrl, {
+            headers: { 'PRIVATE-TOKEN': process.env.GITLAB_TOKEN }
+        });
+        if (resp.data && resp.data.length > 0) {
+            return resp.data[0];
+        }
+        return null;
+    } catch (err) {
+        console.error('Error fetching latest pipeline info:', err.message);
+        return null;
+    }
+}
 
 
 
