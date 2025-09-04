@@ -2810,38 +2810,33 @@ async function ensureBranchReady(git, targetBranch, baseBranch = 'main', createR
   const hasLocal = branches.all.includes(targetBranch);
 
   if (createReleaseBranch) {
-    // 🔹 CREATE MODE: allow new branch creation
+    // ✅ CREATE MODE
     if (!hasLocal && !hasRemote) {
       console.log(`Creating new branch ${targetBranch} from ${baseBranch}`);
-      await git.checkoutBranch(targetBranch, baseBranch);   // cut new from base
+      await git.checkoutBranch(targetBranch, `origin/${baseBranch}`);
     } else if (!hasLocal && hasRemote) {
-      console.log(`Tracking existing remote branch ${remoteRef}`);
+      console.log(`Checking out remote branch ${remoteRef}`);
       await git.checkout(['-t', remoteRef]);
     } else {
-      console.log(`Using existing local branch ${targetBranch}`);
+      console.log(`Branch ${targetBranch} already exists locally, reusing`);
       await git.checkout(targetBranch);
       try {
         await git.pull('origin', targetBranch, { '--rebase': 'true' });
-      } catch (_) {
-        // ignore conflicts here, caller handles
+      } catch (e) {
+        console.warn(`Pull warning on ${targetBranch}:`, e.message);
       }
     }
   } else {
-    // 🔹 EXISTING MODE: must already exist
-    if (!hasLocal && !hasRemote) {
+    // ✅ EXISTING MODE
+    if (!hasRemote) {
       throw new Error(`Branch ${targetBranch} does not exist in origin`);
     }
-    if (!hasLocal && hasRemote) {
-      console.log(`Checking out existing remote branch ${remoteRef}`);
-      await git.checkout(['-t', remoteRef]);
-    } else {
-      console.log(`Using existing local branch ${targetBranch}`);
-      await git.checkout(targetBranch);
-      try {
-        await git.pull('origin', targetBranch, { '--rebase': 'true' });
-      } catch (_) {
-        // ignore conflicts here, caller handles
-      }
+    console.log(`Using existing branch ${targetBranch}`);
+    await git.checkout(targetBranch);
+    try {
+      await git.pull('origin', targetBranch, { '--rebase': 'true' });
+    } catch (e) {
+      console.warn(`Pull warning on ${targetBranch}:`, e.message);
     }
   }
 }
