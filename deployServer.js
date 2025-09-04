@@ -3216,7 +3216,6 @@ app.post('/deploy-and-git', async (req, res) => {
 //     return res.status(500).json({ status: 'error', message: err.message || 'Unexpected error during cut-release' });
 //   }
 // });
-
 app.post('/cut-release', async (req, res) => {
   const { releaseBranchName, releaseName, commitMessage } = req.body;
 
@@ -3247,13 +3246,13 @@ app.post('/cut-release', async (req, res) => {
       await git.checkout(['-B', releaseBranchName, 'origin/main']);
     }
 
-    // Tag name
+    // New tag name
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
     const ts  = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
     const tagName = `release-${ts}Z`;
 
-    // ---------- Copy latest components/release-*/ into components/<tag>/ ----------
+    // Copy latest components/release-* into components/<tag>
     const componentsDir = path.join(gitExportDir, 'components');
     fs.mkdirSync(componentsDir, { recursive: true });
 
@@ -3265,7 +3264,7 @@ app.post('/cut-release', async (req, res) => {
     if (releaseDirs.length === 0) {
       return res.status(400).json({
         status: 'error',
-        message: 'No existing release folder found under components/. Run /deploy-and-git first.',
+        message: 'No components/release-* found. Run /deploy-and-git first.',
       });
     }
 
@@ -3276,7 +3275,7 @@ app.post('/cut-release', async (req, res) => {
     fs.rmSync(destDir, { recursive: true, force: true });
     fsExtra.copySync(srcDir, destDir, { overwrite: true });
 
-    // Ensure sfdx folder + project json exist
+    // Ensure SFDX skeleton
     const sfdxDir = path.join(destDir, 'sfdx');
     fsExtra.mkdirpSync(path.join(sfdxDir, 'force-app'));
     const sfdxProject = path.join(sfdxDir, 'sfdx-project.json');
@@ -3295,7 +3294,7 @@ app.post('/cut-release', async (req, res) => {
     const releaseJsonPath = path.join(destDir, 'release.json');
     let releaseJson = {};
     if (fs.existsSync(releaseJsonPath)) {
-      releaseJson = JSON.parse(fs.readFileSync(releaseJsonPath, 'utf8'));
+      try { releaseJson = JSON.parse(fs.readFileSync(releaseJsonPath, 'utf8')); } catch (_) {}
     }
     releaseJson.releaseId   = tagName;
     releaseJson.releaseName = releaseName || releaseJson.releaseName || '';
@@ -3304,14 +3303,15 @@ app.post('/cut-release', async (req, res) => {
     releaseJson.gitBranch   = releaseBranchName;
     fs.writeFileSync(releaseJsonPath, JSON.stringify(releaseJson, null, 2));
 
-    // Commit the new folder + push branch
+    // Commit (allow-empty just in case)
     await git.add(['-A', path.posix.join('components', tagName)]);
     await git.commit(
-      commitMessage || `Cut Release: ${releaseName || tagName} (materialize components/${tagName})`
+      commitMessage || `Cut Release: ${releaseName || tagName}`,
+      [],
+      { '--allow-empty': null }
     );
-    await git.push(['-u', 'origin', releaseBranchName]);
 
-    // Tag & push
+    // Push tag (branch push skipped to avoid non-FF)
     const tags = await git.tags();
     if (tags.all.includes(tagName)) {
       await git.tag(['-d', tagName]);
@@ -3320,7 +3320,7 @@ app.post('/cut-release', async (req, res) => {
     await git.addTag(tagName);
     await git.pushTags('origin');
 
-    // Wait for pipeline
+    // Wait for GitLab pipeline for this tag
     const pipeline = await waitForPipeline(tagName, { attempts: 20, intervalMs: 2000 });
 
     return res.status(200).json({
@@ -3351,6 +3351,7 @@ app.post('/cut-release', async (req, res) => {
     });
   }
 });
+
 
 
 
