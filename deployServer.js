@@ -2805,38 +2805,33 @@ async function ensureBranchReady(git, targetBranch, baseBranch = 'main', createR
   await git.fetch();
 
   const branches = await git.branch(['-a']);
-  const remoteRef = `origin/${targetBranch}`;
-  const hasRemote = branches.all.includes(remoteRef);
+  const hasRemote = branches.all.some(b => b.endsWith(`/${targetBranch}`));
   const hasLocal = branches.all.includes(targetBranch);
 
   if (createReleaseBranch) {
-    // ✅ CREATE MODE
+    // CREATE MODE
     if (!hasLocal && !hasRemote) {
       console.log(`Creating new branch ${targetBranch} from ${baseBranch}`);
       await git.checkoutBranch(targetBranch, `origin/${baseBranch}`);
     } else if (!hasLocal && hasRemote) {
-      console.log(`Checking out remote branch ${remoteRef}`);
-      await git.checkout(['-t', remoteRef]);
+      console.log(`Checking out remote branch origin/${targetBranch}`);
+      await git.checkout(['-t', `origin/${targetBranch}`]);
     } else {
-      console.log(`Branch ${targetBranch} already exists locally, reusing`);
+      console.log(`Branch ${targetBranch} already exists locally`);
       await git.checkout(targetBranch);
-      try {
-        await git.pull('origin', targetBranch, { '--rebase': 'true' });
-      } catch (e) {
-        console.warn(`Pull warning on ${targetBranch}:`, e.message);
-      }
+      try { await git.pull('origin', targetBranch, { '--rebase': 'true' }); } catch {}
     }
   } else {
-    // ✅ EXISTING MODE
+    // EXISTING MODE
     if (!hasRemote) {
       throw new Error(`Branch ${targetBranch} does not exist in origin`);
     }
     console.log(`Using existing branch ${targetBranch}`);
-    await git.checkout(targetBranch);
-    try {
-      await git.pull('origin', targetBranch, { '--rebase': 'true' });
-    } catch (e) {
-      console.warn(`Pull warning on ${targetBranch}:`, e.message);
+    if (!hasLocal) {
+      await git.checkout(['-t', `origin/${targetBranch}`]);
+    } else {
+      await git.checkout(targetBranch);
+      try { await git.pull('origin', targetBranch, { '--rebase': 'true' }); } catch {}
     }
   }
 }
