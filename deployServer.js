@@ -3221,10 +3221,7 @@ app.post('/cut-release', async (req, res) => {
   const { releaseBranchName, releaseName, commitMessage } = req.body;
 
   if (!releaseBranchName) {
-    return res.status(400).json({
-      status: 'error',
-      message: 'releaseBranchName is required',
-    });
+    return res.status(400).json({ status: 'error', message: 'releaseBranchName is required' });
   }
 
   try {
@@ -3241,116 +3238,80 @@ app.post('/cut-release', async (req, res) => {
     await git.addConfig('user.name', deployedBy);
     await git.fetch();
 
-    // Checkout the release branch (or create locally tracking remote)
+    // Checkout release branch or fallback to main
     const branches  = await git.branch(['-a']);
     const remoteRef = `origin/${releaseBranchName}`;
     if (branches.all.includes(remoteRef)) {
-      await git.checkout(['-B', releaseBranchName, remoteRef]); // track remote
+      await git.checkout(['-B', releaseBranchName, remoteRef]);
     } else {
-      // Fallback to main if branch doesn't exist remotely
       await git.checkout(['-B', releaseBranchName, 'origin/main']);
     }
-    // Make sure we’re up-to-date
-    try {
-      await git.pull('origin', releaseBranchName, { '--rebase': 'true' });
-    } catch (_) {
-      // ignore rebase conflicts for now; user will resolve in repo
-    }
 
-    // Build new tag name
+    // Tag name
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
     const ts  = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
     const tagName = `release-${ts}Z`;
 
-    // ---------- Materialize components/<tag>/ from latest components/release-*/ ----------
+    // ---------- Copy latest components/release-*/ into components/<tag>/ ----------
     const componentsDir = path.join(gitExportDir, 'components');
     fs.mkdirSync(componentsDir, { recursive: true });
 
-    // Find the latest existing components/release-*/ dir (by name, which sorts well for your format)
-    const allEntries = fs.readdirSync(componentsDir, { withFileTypes: true });
-    const releaseDirs = allEntries
+    const releaseDirs = fs.readdirSync(componentsDir, { withFileTypes: true })
       .filter(d => d.isDirectory() && d.name.startsWith('release-'))
       .map(d => d.name)
-      .sort(); // lexicographic works for YYYY-MM-DD_HH-MM-SSZ
+      .sort();
 
     if (releaseDirs.length === 0) {
       return res.status(400).json({
         status: 'error',
-        message:
-          'No existing components/release-*/ folder found on the branch to copy from. Run /deploy-and-git first to create a release folder, then cut a release.',
+        message: 'No existing release folder found under components/. Run /deploy-and-git first.',
       });
     }
 
-    const latestReleaseName = releaseDirs[releaseDirs.length - 1];
-    const srcReleaseDir     = path.join(componentsDir, latestReleaseName);
-    const destReleaseDir    = path.join(componentsDir, tagName);
+    const latestRelease = releaseDirs[releaseDirs.length - 1];
+    const srcDir  = path.join(componentsDir, latestRelease);
+    const destDir = path.join(componentsDir, tagName);
 
-    // Recreate destination cleanly if it already exists
-    fs.rmSync(destReleaseDir, { recursive: true, force: true });
-    fsExtra.mkdirpSync(destReleaseDir);
+    fs.rmSync(destDir, { recursive: true, force: true });
+    fsExtra.copySync(srcDir, destDir, { overwrite: true });
 
-    // Copy all contents from latest release into the new tag-named folder
-    fsExtra.copySync(srcReleaseDir, destReleaseDir, { overwrite: true, errorOnExist: false });
-
-    // Ensure sfdx minimal structure exists (prevents MissingPackageDirectoryError in CI)
-    const sfdxDir = path.join(destReleaseDir, 'sfdx');
-    const forceAppDir = path.join(sfdxDir, 'force-app');
-    fsExtra.mkdirpSync(forceAppDir);
-    const sfdxProjectPath = path.join(destReleaseDir, 'sfdx', 'sfdx-project.json');
-    if (!fs.existsSync(sfdxProjectPath)) {
+    // Ensure sfdx folder + project json exist
+    const sfdxDir = path.join(destDir, 'sfdx');
+    fsExtra.mkdirpSync(path.join(sfdxDir, 'force-app'));
+    const sfdxProject = path.join(sfdxDir, 'sfdx-project.json');
+    if (!fs.existsSync(sfdxProject)) {
       fs.writeFileSync(
-        sfdxProjectPath,
-        JSON.stringify(
-          {
-            packageDirectories: [{ path: 'force-app', default: true }],
-            namespace: '',
-            sourceApiVersion: '59.0',
-          },
-          null,
-          2
-        ),
-        'utf8'
+        sfdxProject,
+        JSON.stringify({
+          packageDirectories: [{ path: 'force-app', default: true }],
+          namespace: '',
+          sourceApiVersion: '59.0',
+        }, null, 2)
       );
     }
 
-    // Optionally refresh release.json with tag metadata (non-breaking: if exists, augment; else create)
-    const releaseJsonPath = path.join(destReleaseDir, 'release.json');
-    let releaseJson;
-    try {
+    // Refresh release.json
+    const releaseJsonPath = path.join(destDir, 'release.json');
+    let releaseJson = {};
+    if (fs.existsSync(releaseJsonPath)) {
       releaseJson = JSON.parse(fs.readFileSync(releaseJsonPath, 'utf8'));
-    } catch {
-      releaseJson = {};
     }
     releaseJson.releaseId   = tagName;
-    releaseJson.releaseName = releaseName || (releaseJson.releaseName || '');
+    releaseJson.releaseName = releaseName || releaseJson.releaseName || '';
     releaseJson.deployedAt  = now.toISOString();
-    releaseJson.deployedAtFormatted = now.toLocaleString('en-IN', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'Asia/Kolkata',
-      timeZoneName: 'short',
-    });
     releaseJson.deployedBy  = deployedBy;
     releaseJson.gitBranch   = releaseBranchName;
-
     fs.writeFileSync(releaseJsonPath, JSON.stringify(releaseJson, null, 2));
 
-    // Stage & commit the new tag folder
+    // Commit the new folder + push branch
     await git.add(['-A', path.posix.join('components', tagName)]);
     await git.commit(
       commitMessage || `Cut Release: ${releaseName || tagName} (materialize components/${tagName})`
     );
-
-    // Push the branch so the folder exists server-side
     await git.push(['-u', 'origin', releaseBranchName]);
 
-    // Tag this commit and push tag
+    // Tag & push
     const tags = await git.tags();
     if (tags.all.includes(tagName)) {
       await git.tag(['-d', tagName]);
@@ -3359,7 +3320,7 @@ app.post('/cut-release', async (req, res) => {
     await git.addTag(tagName);
     await git.pushTags('origin');
 
-    // Wait for the tag pipeline
+    // Wait for pipeline
     const pipeline = await waitForPipeline(tagName, { attempts: 20, intervalMs: 2000 });
 
     return res.status(200).json({
@@ -3371,18 +3332,17 @@ app.post('/cut-release', async (req, res) => {
         releaseName: releaseName || '',
         cutBy: deployedBy,
         cutAt: now.toISOString(),
-        source: latestReleaseName, // for traceability
+        source: latestRelease
       },
-      pipeline: pipeline
-        ? {
-            id: pipeline.id,
-            status: pipeline.status,
-            url: pipeline.web_url,
-            ref: pipeline.ref,
-            created_at: pipeline.created_at,
-          }
-        : null,
+      pipeline: pipeline ? {
+        id: pipeline.id,
+        status: pipeline.status,
+        url: pipeline.web_url,
+        ref: pipeline.ref,
+        created_at: pipeline.created_at
+      } : null
     });
+
   } catch (err) {
     console.error('cut-release error:', err.stack || err.message || err);
     return res.status(500).json({
