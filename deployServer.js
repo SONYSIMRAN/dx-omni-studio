@@ -3139,11 +3139,92 @@ app.post('/deploy-and-git', async (req, res) => {
 // ----------------------------------------------------
 // POST /cut-release  (drop-in replacement)
 // ----------------------------------------------------
+// app.post('/cut-release', async (req, res) => {
+//   const { releaseBranchName, releaseName, commitMessage } = req.body;
+
+//   if (!releaseBranchName) {
+//     return res.status(400).json({ status: 'error', message: 'releaseBranchName is required' });
+//   }
+
+//   try {
+//     const deployedBy    = process.env.GIT_COMMIT_NAME  || 'Omni Deployer';
+//     const deployedEmail = process.env.GIT_COMMIT_EMAIL || 'omni-deploy@tgs.com';
+
+//     // fresh clone
+//     const gitExportDir = './git-export';
+//     fs.rmSync(gitExportDir, { recursive: true, force: true });
+//     await simpleGit().clone(process.env.GITLAB_REPO_URL, gitExportDir);
+
+//     const git = simpleGit(gitExportDir);
+//     await git.addConfig('user.email', deployedEmail);
+//     await git.addConfig('user.name', deployedBy);
+
+//     await git.fetch();
+
+//     // Safer checkout (works whether remote branch exists or not)
+//     const branches = await git.branch(['-a']);
+//     const remoteRef = `origin/${releaseBranchName}`;
+//     if (branches.all.includes(remoteRef)) {
+//       await git.checkout(['-B', releaseBranchName, remoteRef]);   // link to remote
+//     } else {
+//       // Fallback: cut from main if remote not found
+//       await git.checkout(['-B', releaseBranchName, 'origin/main']);
+//     }
+
+//     // create tag
+//     const now = new Date();
+//     const pad = n => String(n).padStart(2, '0');
+//     const timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+//     const tagName = `release-${timestamp}Z`;
+
+//     // commit placeholder if no changes
+//     await git.commit(commitMessage || `Cut Release: ${releaseName || tagName}`, [], { '--allow-empty': null });
+
+//     // push tag (safe re-create)
+//     const tags = await git.tags();
+//     if (tags.all.includes(tagName)) {
+//       await git.tag(['-d', tagName]);
+//       await git.push(['origin', `:refs/tags/${tagName}`]);
+//     }
+//     await git.addTag(tagName);
+//     await git.pushTags('origin');
+
+//     // wait for pipeline on this tag (no more null)
+//     const pipeline = await waitForPipeline(tagName, { attempts: 20, intervalMs: 2000 });
+
+//     return res.status(200).json({
+//       status: 'success',
+//       message: `Release cut from ${releaseBranchName} as ${tagName}`,
+//       release: {
+//         branch: releaseBranchName,
+//         tag: tagName,
+//         releaseName: releaseName || '',
+//         cutBy: deployedBy,
+//         cutAt: now.toISOString()
+//       },
+//       pipeline: pipeline ? {
+//         id: pipeline.id,
+//         status: pipeline.status,
+//         url: pipeline.web_url,
+//         ref: pipeline.ref,
+//         created_at: pipeline.created_at
+//       } : null
+//     });
+
+//   } catch (err) {
+//     console.error('cut-release error:', err.stack || err.message || err);
+//     return res.status(500).json({ status: 'error', message: err.message || 'Unexpected error during cut-release' });
+//   }
+// });
+
 app.post('/cut-release', async (req, res) => {
   const { releaseBranchName, releaseName, commitMessage } = req.body;
 
   if (!releaseBranchName) {
-    return res.status(400).json({ status: 'error', message: 'releaseBranchName is required' });
+    return res.status(400).json({
+      status: 'error',
+      message: 'releaseBranchName is required',
+    });
   }
 
   try {
@@ -3158,29 +3239,118 @@ app.post('/cut-release', async (req, res) => {
     const git = simpleGit(gitExportDir);
     await git.addConfig('user.email', deployedEmail);
     await git.addConfig('user.name', deployedBy);
-
     await git.fetch();
 
-    // Safer checkout (works whether remote branch exists or not)
-    const branches = await git.branch(['-a']);
+    // Checkout the release branch (or create locally tracking remote)
+    const branches  = await git.branch(['-a']);
     const remoteRef = `origin/${releaseBranchName}`;
     if (branches.all.includes(remoteRef)) {
-      await git.checkout(['-B', releaseBranchName, remoteRef]);   // link to remote
+      await git.checkout(['-B', releaseBranchName, remoteRef]); // track remote
     } else {
-      // Fallback: cut from main if remote not found
+      // Fallback to main if branch doesn't exist remotely
       await git.checkout(['-B', releaseBranchName, 'origin/main']);
     }
+    // Make sure we’re up-to-date
+    try {
+      await git.pull('origin', releaseBranchName, { '--rebase': 'true' });
+    } catch (_) {
+      // ignore rebase conflicts for now; user will resolve in repo
+    }
 
-    // create tag
+    // Build new tag name
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
-    const timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
-    const tagName = `release-${timestamp}Z`;
+    const ts  = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+    const tagName = `release-${ts}Z`;
 
-    // commit placeholder if no changes
-    await git.commit(commitMessage || `Cut Release: ${releaseName || tagName}`, [], { '--allow-empty': null });
+    // ---------- Materialize components/<tag>/ from latest components/release-*/ ----------
+    const componentsDir = path.join(gitExportDir, 'components');
+    fs.mkdirSync(componentsDir, { recursive: true });
 
-    // push tag (safe re-create)
+    // Find the latest existing components/release-*/ dir (by name, which sorts well for your format)
+    const allEntries = fs.readdirSync(componentsDir, { withFileTypes: true });
+    const releaseDirs = allEntries
+      .filter(d => d.isDirectory() && d.name.startsWith('release-'))
+      .map(d => d.name)
+      .sort(); // lexicographic works for YYYY-MM-DD_HH-MM-SSZ
+
+    if (releaseDirs.length === 0) {
+      return res.status(400).json({
+        status: 'error',
+        message:
+          'No existing components/release-*/ folder found on the branch to copy from. Run /deploy-and-git first to create a release folder, then cut a release.',
+      });
+    }
+
+    const latestReleaseName = releaseDirs[releaseDirs.length - 1];
+    const srcReleaseDir     = path.join(componentsDir, latestReleaseName);
+    const destReleaseDir    = path.join(componentsDir, tagName);
+
+    // Recreate destination cleanly if it already exists
+    fs.rmSync(destReleaseDir, { recursive: true, force: true });
+    fsExtra.mkdirpSync(destReleaseDir);
+
+    // Copy all contents from latest release into the new tag-named folder
+    fsExtra.copySync(srcReleaseDir, destReleaseDir, { overwrite: true, errorOnExist: false });
+
+    // Ensure sfdx minimal structure exists (prevents MissingPackageDirectoryError in CI)
+    const sfdxDir = path.join(destReleaseDir, 'sfdx');
+    const forceAppDir = path.join(sfdxDir, 'force-app');
+    fsExtra.mkdirpSync(forceAppDir);
+    const sfdxProjectPath = path.join(destReleaseDir, 'sfdx', 'sfdx-project.json');
+    if (!fs.existsSync(sfdxProjectPath)) {
+      fs.writeFileSync(
+        sfdxProjectPath,
+        JSON.stringify(
+          {
+            packageDirectories: [{ path: 'force-app', default: true }],
+            namespace: '',
+            sourceApiVersion: '59.0',
+          },
+          null,
+          2
+        ),
+        'utf8'
+      );
+    }
+
+    // Optionally refresh release.json with tag metadata (non-breaking: if exists, augment; else create)
+    const releaseJsonPath = path.join(destReleaseDir, 'release.json');
+    let releaseJson;
+    try {
+      releaseJson = JSON.parse(fs.readFileSync(releaseJsonPath, 'utf8'));
+    } catch {
+      releaseJson = {};
+    }
+    releaseJson.releaseId   = tagName;
+    releaseJson.releaseName = releaseName || (releaseJson.releaseName || '');
+    releaseJson.deployedAt  = now.toISOString();
+    releaseJson.deployedAtFormatted = now.toLocaleString('en-IN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Kolkata',
+      timeZoneName: 'short',
+    });
+    releaseJson.deployedBy  = deployedBy;
+    releaseJson.gitBranch   = releaseBranchName;
+
+    fs.writeFileSync(releaseJsonPath, JSON.stringify(releaseJson, null, 2));
+
+    // Stage & commit the new tag folder
+    await git.add(['-A', path.posix.join('components', tagName)]);
+    await git.commit(
+      commitMessage || `Cut Release: ${releaseName || tagName} (materialize components/${tagName})`
+    );
+
+    // Push the branch so the folder exists server-side
+    await git.push(['-u', 'origin', releaseBranchName]);
+
+    // Tag this commit and push tag
     const tags = await git.tags();
     if (tags.all.includes(tagName)) {
       await git.tag(['-d', tagName]);
@@ -3189,7 +3359,7 @@ app.post('/cut-release', async (req, res) => {
     await git.addTag(tagName);
     await git.pushTags('origin');
 
-    // wait for pipeline on this tag (no more null)
+    // Wait for the tag pipeline
     const pipeline = await waitForPipeline(tagName, { attempts: 20, intervalMs: 2000 });
 
     return res.status(200).json({
@@ -3200,22 +3370,28 @@ app.post('/cut-release', async (req, res) => {
         tag: tagName,
         releaseName: releaseName || '',
         cutBy: deployedBy,
-        cutAt: now.toISOString()
+        cutAt: now.toISOString(),
+        source: latestReleaseName, // for traceability
       },
-      pipeline: pipeline ? {
-        id: pipeline.id,
-        status: pipeline.status,
-        url: pipeline.web_url,
-        ref: pipeline.ref,
-        created_at: pipeline.created_at
-      } : null
+      pipeline: pipeline
+        ? {
+            id: pipeline.id,
+            status: pipeline.status,
+            url: pipeline.web_url,
+            ref: pipeline.ref,
+            created_at: pipeline.created_at,
+          }
+        : null,
     });
-
   } catch (err) {
     console.error('cut-release error:', err.stack || err.message || err);
-    return res.status(500).json({ status: 'error', message: err.message || 'Unexpected error during cut-release' });
+    return res.status(500).json({
+      status: 'error',
+      message: err.message || 'Unexpected error during cut-release',
+    });
   }
 });
+
 
 
 
