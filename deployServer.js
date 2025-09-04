@@ -2775,31 +2775,59 @@ function sanitizeBranchName(name) {
     .toLowerCase();
 }
 
-async function ensureBranchReady(git, targetBranch, baseBranch = 'main') {
+// async function ensureBranchReady(git, targetBranch, baseBranch = 'main') {
+//   await git.fetch();
+
+//   // Refresh base
+//   await git.checkout(baseBranch);
+//   await git.pull('origin', baseBranch, { '--rebase': 'true' });
+
+//   const branches = await git.branch(['-a']);
+//   const remoteRef = `origin/${targetBranch}`;
+//   const hasRemote = branches.all.includes(remoteRef);
+//   const hasLocal = branches.all.includes(targetBranch);
+
+//   if (!hasLocal && !hasRemote) {
+//     await git.checkoutBranch(targetBranch, baseBranch);        // new from base
+//   } else if (!hasLocal && hasRemote) {
+//     await git.checkout(['-t', remoteRef]);                     // track remote
+//   } else {
+//     await git.checkout(targetBranch);
+//     try {
+//       await git.pull('origin', targetBranch, { '--rebase': 'true' });
+//     } catch (_) {
+//       // leave conflict handling to caller/logs
+//     }
+//   }
+// }
+
+async function ensureBranchReady(git, targetBranch, baseBranch, createReleaseBranch) {
   await git.fetch();
 
-  // Refresh base
-  await git.checkout(baseBranch);
-  await git.pull('origin', baseBranch, { '--rebase': 'true' });
+  const branches = await git.branch(['-r']);
+  const exists = branches.all.some(b => b.includes(`origin/${targetBranch}`));
 
-  const branches = await git.branch(['-a']);
-  const remoteRef = `origin/${targetBranch}`;
-  const hasRemote = branches.all.includes(remoteRef);
-  const hasLocal = branches.all.includes(targetBranch);
-
-  if (!hasLocal && !hasRemote) {
-    await git.checkoutBranch(targetBranch, baseBranch);        // new from base
-  } else if (!hasLocal && hasRemote) {
-    await git.checkout(['-t', remoteRef]);                     // track remote
-  } else {
-    await git.checkout(targetBranch);
-    try {
-      await git.pull('origin', targetBranch, { '--rebase': 'true' });
-    } catch (_) {
-      // leave conflict handling to caller/logs
+  if (createReleaseBranch) {
+    // CREATE MODE
+    if (exists) {
+      console.log(`Branch ${targetBranch} already exists → checkout`);
+      await git.checkout(targetBranch);
+      await git.pull('origin', targetBranch);
+    } else {
+      console.log(`Creating new branch ${targetBranch} from ${baseBranch}`);
+      await git.checkout(['-b', targetBranch, `origin/${baseBranch}`]);
     }
+  } else {
+    // EXISTING MODE
+    if (!exists) {
+      throw new Error(`Branch ${targetBranch} does not exist in origin`);
+    }
+    console.log(`Using existing branch ${targetBranch}`);
+    await git.checkout(targetBranch);
+    await git.pull('origin', targetBranch);
   }
 }
+
 
 async function safePushWithRetry(git, targetBranch, { allowForceWithLease = false } = {}) {
   try {
@@ -3083,7 +3111,9 @@ app.post('/deploy-and-git', async (req, res) => {
     }
 
     // Ensure branch exists/up-to-date (cut from base if new)
-    await ensureBranchReady(git, targetBranch, baseBranch);
+    // await ensureBranchReady(git, targetBranch, baseBranch);
+    await ensureBranchReady(git, targetBranch, baseBranch, createReleaseBranch);
+
 
     // Stage + commit
     await git.add('--all');
