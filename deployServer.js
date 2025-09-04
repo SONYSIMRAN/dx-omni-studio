@@ -2801,30 +2801,48 @@ function sanitizeBranchName(name) {
 //   }
 // }
 
-async function ensureBranchReady(git, targetBranch, baseBranch, createReleaseBranch) {
+async function ensureBranchReady(git, targetBranch, baseBranch = 'main', createReleaseBranch = false) {
   await git.fetch();
 
-  const branches = await git.branch(['-r']);
-  const exists = branches.all.some(b => b.includes(`origin/${targetBranch}`));
+  const branches = await git.branch(['-a']);
+  const remoteRef = `origin/${targetBranch}`;
+  const hasRemote = branches.all.includes(remoteRef);
+  const hasLocal = branches.all.includes(targetBranch);
 
   if (createReleaseBranch) {
-    // CREATE MODE
-    if (exists) {
-      console.log(`Branch ${targetBranch} already exists → checkout`);
-      await git.checkout(targetBranch);
-      await git.pull('origin', targetBranch);
-    } else {
+    // 🔹 CREATE MODE: allow new branch creation
+    if (!hasLocal && !hasRemote) {
       console.log(`Creating new branch ${targetBranch} from ${baseBranch}`);
-      await git.checkout(['-b', targetBranch, `origin/${baseBranch}`]);
+      await git.checkoutBranch(targetBranch, baseBranch);   // cut new from base
+    } else if (!hasLocal && hasRemote) {
+      console.log(`Tracking existing remote branch ${remoteRef}`);
+      await git.checkout(['-t', remoteRef]);
+    } else {
+      console.log(`Using existing local branch ${targetBranch}`);
+      await git.checkout(targetBranch);
+      try {
+        await git.pull('origin', targetBranch, { '--rebase': 'true' });
+      } catch (_) {
+        // ignore conflicts here, caller handles
+      }
     }
   } else {
-    // EXISTING MODE
-    if (!exists) {
+    // 🔹 EXISTING MODE: must already exist
+    if (!hasLocal && !hasRemote) {
       throw new Error(`Branch ${targetBranch} does not exist in origin`);
     }
-    console.log(`Using existing branch ${targetBranch}`);
-    await git.checkout(targetBranch);
-    await git.pull('origin', targetBranch);
+    if (!hasLocal && hasRemote) {
+      console.log(`Checking out existing remote branch ${remoteRef}`);
+      await git.checkout(['-t', remoteRef]);
+    } else {
+      console.log(`Using existing local branch ${targetBranch}`);
+      await git.checkout(targetBranch);
+      try {
+        await git.pull('origin', targetBranch, { '--rebase': 'true' });
+      } catch (_) {
+        // ignore conflicts here, caller handles
+      }
+    }
   }
 }
 
