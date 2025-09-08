@@ -3976,25 +3976,65 @@ app.post('/deploy-and-git', async (req, res) => {
     // ----------------------------------------------------
     // 🔹 Capture deploy logs
     // ----------------------------------------------------
-    try {
-      const sfdxRoot = path.join(releaseFolder, 'sfdx');
-      const deployCmd = `sf project deploy start --source-dir force-app --target-org ${sourceAlias} --json --ignore-conflicts`;
-      console.log('Running deploy for logs:', deployCmd);
-      const deployOutput = execSync(deployCmd, { cwd: sfdxRoot, encoding: 'utf8' });
-      const deployResult = JSON.parse(deployOutput);
-      fs.writeFileSync(path.join(releaseFolder, 'deploy-log.json'), JSON.stringify(deployResult, null, 2));
-    } catch (e) {
-      fs.writeFileSync(path.join(releaseFolder, 'deploy-log-error.log'), e.stdout || e.stderr || e.message || 'Deploy failed');
-    }
+    // try {
+    //   const sfdxRoot = path.join(releaseFolder, 'sfdx');
+    //   const deployCmd = `sf project deploy start --source-dir force-app --target-org ${sourceAlias} --json --ignore-conflicts`;
+    //   console.log('Running deploy for logs:', deployCmd);
+    //   const deployOutput = execSync(deployCmd, { cwd: sfdxRoot, encoding: 'utf8' });
+    //   const deployResult = JSON.parse(deployOutput);
+    //   fs.writeFileSync(path.join(releaseFolder, 'deploy-log.json'), JSON.stringify(deployResult, null, 2));
+    // } catch (e) {
+    //   fs.writeFileSync(path.join(releaseFolder, 'deploy-log-error.log'), e.stdout || e.stderr || e.message || 'Deploy failed');
+    // }
 
-    try {
-      const omniLogFile = path.join(releaseFolder, 'omni-deploy.log');
-      const omniCmd = `npx vlocity -sfdx.username ${sourceAlias} packDeploy -projectPath ${releaseFolder} -job ${exportYamlPath} --verbose`;
-      console.log('Running Omni deploy for logs:', omniCmd);
-      execSync(omniCmd + ` > "${omniLogFile}" 2>&1`, { cwd: __dirname, shell: '/bin/bash' });
-    } catch (e) {
-      fs.appendFileSync(path.join(releaseFolder, 'omni-deploy.log'), '\n[ERROR]\n' + (e.stdout || e.stderr || e.message));
-    }
+    // try {
+    //   const omniLogFile = path.join(releaseFolder, 'omni-deploy.log');
+    //   const omniCmd = `npx vlocity -sfdx.username ${sourceAlias} packDeploy -projectPath ${releaseFolder} -job ${exportYamlPath} --verbose`;
+    //   console.log('Running Omni deploy for logs:', omniCmd);
+    //   execSync(omniCmd + ` > "${omniLogFile}" 2>&1`, { cwd: __dirname, shell: '/bin/bash' });
+    // } catch (e) {
+    //   fs.appendFileSync(path.join(releaseFolder, 'omni-deploy.log'), '\n[ERROR]\n' + (e.stdout || e.stderr || e.message));
+    // }
+
+
+// ----------------------------------------------------
+// 🔹 Capture deploy logs
+// ----------------------------------------------------
+try {
+  const sfdxRoot = path.join(releaseFolder, 'sfdx');
+  const deployCmd = `sf project deploy start --source-dir force-app --target-org ${sourceAlias} --json --ignore-conflicts`;
+  console.log('Running deploy for logs:', deployCmd);
+  const deployOutput = execSync(deployCmd, { cwd: sfdxRoot, encoding: 'utf8' });
+  const deployResult = JSON.parse(deployOutput);
+  fs.writeFileSync(path.join(releaseFolder, 'deploy-log.json'), JSON.stringify(deployResult, null, 2));
+} catch (e) {
+  fs.writeFileSync(path.join(releaseFolder, 'deploy-log-error.log'), e.stdout || e.stderr || e.message || 'Deploy failed');
+}
+
+try {
+  const omniLogFile = path.join(releaseFolder, 'omni-deploy.log');
+  const omniCmd = `npx vlocity -sfdx.username ${sourceAlias} packDeploy -projectPath ${releaseFolder} -job ${exportYamlPath} --verbose`;
+  console.log('Running Omni deploy for logs:', omniCmd);
+  execSync(omniCmd + ` > "${omniLogFile}" 2>&1`, { cwd: __dirname, shell: '/bin/bash' });
+} catch (e) {
+  fs.appendFileSync(path.join(releaseFolder, 'omni-deploy.log'), '\n[ERROR]\n' + (e.stdout || e.stderr || e.message));
+}
+
+// ----------------------------------------------------
+// 🔹 Sync logs into local storage (for Apex fetch)
+// ----------------------------------------------------
+const localReleaseDirLogs = path.join(__dirname, 'storage', sourceAlias, 'releases', releaseId);
+fs.mkdirSync(localReleaseDirLogs, { recursive: true });
+
+['deploy-log.json', 'deploy-log-error.log', 'omni-deploy.log', 'pipeline.log'].forEach((logFile) => {
+  const srcPath = path.join(releaseFolder, logFile);
+  if (fs.existsSync(srcPath)) {
+    const destPath = path.join(localReleaseDirLogs, logFile);
+    fs.copyFileSync(srcPath, destPath);
+    console.log(`📄 Synced ${logFile} → ${destPath}`);
+  }
+});
+
 
     // ----------------------------------------------------
     // Git commit / branch handling
